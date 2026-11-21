@@ -27,7 +27,7 @@ A reader must be able to trust the atlas. That is the reason for nearly every ru
 2. `repositories/<folder>/scan-state.yml`. Its `in-progress` section names the commit being scanned, the mode (`full` or `changed`) and each component as `done` or `pending`.
 3. Check the checkout is at that commit: `git -C <checkout> rev-parse HEAD` must match `in-progress.commit`. If it does not, stop and return the summary with `status: blocked`; your evidence would point at the wrong code.
 4. The entries of the **pending** components only, under `repositories/<folder>/components/`. A component marked `done` is finished; do not open it.
-5. In `changed` mode, run `cartographer changed <repository>` to see which files changed in each pending component, and start from those.
+5. In `changed` mode, run `cartographer changed <repository> --path <checkout>` to see which files changed in each pending component, and start from those.
 
 Do not read other repositories' entries unless a step below sends you to one, and then read only its frontmatter and the part you need. Do not read `_generated/` indexes in bulk. Your context is the scarce thing here.
 
@@ -43,7 +43,7 @@ A **component** is something built, deployed or run by itself: a library, servic
 
 Work through the pending components one at a time. For each:
 
-**A summary.** Replace the `summary` with one line, at most 200 characters, saying what the component does. This line is all most readers will ever see of the entry, in indexes and search results.
+**A summary.** Replace the placeholder `summary` (it ends "not yet described") with one line, at most 200 characters, saying what the component does. This line is all most readers will ever see of the entry, in indexes and search results.
 
 **An Overview.** Two or three short paragraphs a product person can read: what it is for, who or what uses it, what data it handles. No class names, no file paths, no jargon that is not the organisation's own.
 
@@ -60,7 +60,7 @@ Name a target you are sure exists by its ID (`cartographer find <name>` prints I
 
 **Which library types it uses.** For each `depends-on` link to one of the organisation's own libraries:
 
-1. Run `cartographer candidates <repository> --library <library component id>`. It prints places where the library's namespaces and types appear in the text.
+1. Run `cartographer candidates <repository> --library <library component id> --path <checkout>`. It prints places where the library's namespaces and types appear in the text. If it says the library provides no namespace (a COM or VB6 library, for example), search the checkout yourself for the names under the library entry's `provides`.
 2. Read the candidates that fall inside this component. Text search over-matches; count only real uses.
 3. On that link, set `uses` to the library's public types the component really uses, and `count` to the number of usage sites. Types, not methods.
 
@@ -77,13 +77,22 @@ Name a target you are sure exists by its ID (`cartographer find <name>` prints I
 
 **Existing questions.** If the entry has open questions, try them, those with `Raised by: person` first. One you can now answer from the code: write the answer into the entry as links and prose, then delete its `### q…` block. One with text after `Answer:` was answered by a person: fold it in as described under "People win" below. One you tried and could not answer: `cartographer question attempt <entry> <q>`.
 
-**Check your work, then mark it done.** Run `cartographer check`. It validates the whole atlas; fix every `error:` line that names an entry you touched and ignore lines about other repositories, which another agent may be editing. When the component's entry is clean, set that component to `done` under `in-progress.components` in `scan-state.yml`. That one value is the only thing in `scan-state.yml` you may change, although the atlas's `AGENTS.md` says the file belongs to the tool: it is how an interrupted scan knows where to resume.
+**Check your work, then mark it done.** Run `cartographer check`. It validates the whole atlas; fix every `error:` line that names an entry you touched and ignore lines about other repositories, which another agent may be editing. When the component's entry is clean, run `cartographer done <repository> <component>`, where `<component>` is the name it has in `scan-state.yml`. It prints how many are still pending. This is how an interrupted scan knows where to resume.
 
-### 4. Complete the repository entry
+### 4. Complete the database entries this repository defines
 
-Last, write the repository entry's `summary` and Overview: what the repository is for and what components it holds. Keep it short; the components carry the detail.
+A repository that holds a database's schema has no components for it; the mechanical pass writes a database entry and one entry per table, view, routine and trigger. They are listed under `entries` in `scan-state.yml`. An entry nobody has completed still has a summary ending "not yet described", so `grep -rl "not yet described" databases/<database>` shows what is left, in this session or a resumed one.
 
-### 5. Return the summary
+- **Every entry** gets a real one-line `summary`.
+- **The database entry, and routines and triggers,** get an Overview and Technical detail as a component does. Read each routine and trigger body for what the parser could not link: SQL built as a string and executed, objects in other databases. Add those as `inferred` links.
+- **Tables and views** get an Overview only when the name and columns do not already say what the row is. Do not add business-data tags; a later pass does that with the whole estate in view.
+- A database with thousands of objects will not fit in one sitting. Do summaries first, then routines and triggers, and stop as described under "Running low on context".
+
+### 5. Complete the repository entry
+
+Last, write the repository entry's `summary` and Overview: what the repository is for and what components or databases it holds. Keep it short; the other entries carry the detail.
+
+### 6. Return the summary
 
 Return the block under "What to return" and nothing else.
 
@@ -91,7 +100,7 @@ Return the block under "What to return" and nothing else.
 
 **Never change what a person said.** A fact with basis `stated`, and any text between `<!-- person -->` and `<!-- /person -->`, came from someone who knows the organisation better than the code shows. Leave both exactly as they are, even when the code seems to disagree. If you find evidence against a stated fact, add an open question that describes the conflict and waits on `person`. Only a person changes it. If agents overwrote people, nobody would bother correcting the atlas.
 
-**Never change what the tool extracted.** Links, provided names and other facts with basis `extracted`, the `<!-- extracted -->` block, `packages`, `locations`, `instances`, `drift` and `verified` are rewritten by the tool on every scan. An edit would be lost, and a wrong edit would be believed until then. The one thing you add to an extracted link is `uses` and `count` on a `depends-on`.
+**Never change what the tool extracted.** Links, provided names and other facts with basis `extracted`, the `<!-- extracted -->` block, `packages`, `locations`, `instances`, `drift` and `verified` are rewritten by the tool on every scan. An edit would be lost, and a wrong edit would be believed until then. The one thing you add to an extracted link is `uses` and `count` on a `depends-on`; the tool keeps those across scans.
 
 **An inferred link that can no longer be supported is removed.** Do not keep a link because it was probably true once. A stale link sends someone to check code that no longer exists.
 
@@ -106,7 +115,7 @@ cartographer question add <entry id> --missing "<the exact fact that is missing>
 - `--waiting-on` is `repository <id>` (a repository not yet completed), `name <provided name>` (a name nothing provides yet), `entry <id>` (a specific entry) or `person` (the code cannot say).
 - A good question is specific and checkable: someone who has never seen the code can tell whether a proposed answer settles it. "How does billing work?" is not a question. "Which queue `OrderWorker` reads; its name comes from the setting `Orders:Queue`, which has no value in the repository" is.
 - The command refuses a duplicate and says so; that is fine, carry on. Read the entry's `### Dismissed` notes first and do not raise anything listed there.
-- The command rewrites the entry in the tool's fixed layout. Read the entry again before your next edit to it, and do your hand edits to an entry before or after a batch of `question` commands, not in between.
+- The command rewrites that entry in the tool's fixed layout. Read the entry again before your next edit to it.
 - More than five questions on one entry is too many to work through. Keep the ones that matter most to a reader.
 - Never dismiss a question during a scan. A question leaves an entry only when it has been answered: by you from the code, or by a person whose answer you are folding in.
 
@@ -122,7 +131,7 @@ cartographer question add <entry id> --missing "<the exact fact that is missing>
 
 **Stay inside your repository's folder.** Write only under `repositories/<folder>/`, plus the entries of a database this repository defines, plus a new channel, external-system or database entry that did not exist. Other agents are working on other repositories at the same moment. If another repository's entry looks wrong, add a question to your own entry that waits on `entry <its id>`.
 
-**Do not edit generated or tool-owned files.** `_generated/`, `changes/`, `layouts/` and, apart from marking a component done, `scan-state.yml`.
+**Do not edit generated or tool-owned files.** `_generated/`, `changes/`, `layouts/` and `scan-state.yml`. Do not commit either; the agent that started you does that.
 
 ### People win: folding in an answer
 
@@ -142,7 +151,7 @@ A large repository may not fit in one sitting, and that is expected. Stop early 
 When you see that you will not finish:
 
 1. Finish the component you are on, or put its entry back into a valid state.
-2. Make sure every component you completed is marked `done` in `scan-state.yml`, and the rest still say `pending`.
+2. Make sure you ran `cartographer done` for every component you completed, and for no other.
 3. Return the summary with `status: partial`.
 
 Nothing is lost. The repository stays due, and a later session gives the remaining components to a fresh agent, who will read only those.
@@ -153,7 +162,7 @@ For JavaScript, Python, infrastructure code and anything else the tool has no ex
 
 - Decide the components by the same rule: built, deployed or run by itself. Read manifests (`package.json`, `pyproject.toml`, Dockerfiles, pipeline definitions) as text to find them.
 - Create `repositories/<folder>/components/<name>.md` for each: `kind: component`, `name`, `type`, `summary`, `repository`, `stack`, `sources`, then `provides` and `links` with basis `inferred`, then the body. Use `entry-format.md` for the key order.
-- If other code refers to the component by a published name, record it under `provides` with `as: namespace`.
+- If other code refers to the component by a published name, record it under `provides` with `as: package` (an npm or PyPI package name, for example).
 - Dependencies on the organisation's own components are `depends-on` links with a `to`. Public packages are not recorded for these repositories.
 - Without an extractor there is less to lean on, so expect more open questions. That is the honest result.
 
@@ -163,9 +172,9 @@ Databases other than SQL Server (Oracle, MySQL, Access and others) are handled t
 
 Sometimes code talks to a database whose name never appears: it arrives in a connection string at run time, or differs per customer or site. The database still needs an entry so that links have somewhere to point.
 
-1. Look for an existing entry first: `cartographer find <any name or pattern you saw>`. Another repository may have met the same database.
+1. Look for an existing entry first: `cartographer find <any name or pattern you saw>`. Another repository may have met the same database, or may define it under a different name (a schema repository's database is named after its folder). If its tables and routines are plainly the ones your code uses, add the name you saw to that entry's `aliases` and stop here. This is the one edit you may make to an entry outside your repository.
 2. If there is none, create `databases/<working-name>/database.md`. Choose a working name from the strongest evidence you have: the connection-string key, the schema project's folder, the name the code's comments use.
-3. Put every name and pattern the database goes by under `aliases`, for example `["Site_*", "PrimaryDb"]`.
+3. Put every name and pattern the database goes by under `aliases`, for example `["Site_*", "PrimaryDb"]`. The tool resolves a `uses` link written with only a `name` to the database that has that name or alias.
 4. Say in the summary and the Overview that the name is a working name proposed during a scan.
 5. Add a question waiting on `person`: what the database is really called, with the evidence for your proposal. A person can rename it later and the tool rewrites the links.
 
@@ -184,6 +193,6 @@ questions: <n> added, <n> answered, <n> attempted
 note: <one line, only when status is not complete or something needs a person's eye>
 ```
 
-- `complete`: every component is done and the repository entry is written.
+- `complete`: every component is done, no entry this repository owns is still "not yet described", and the repository entry is written.
 - `partial`: you stopped early; the pending components are named.
 - `blocked`: you could not work at all; `note` says why.

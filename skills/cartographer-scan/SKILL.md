@@ -31,19 +31,19 @@ If the person asked for the first sweep, or the atlas has no repository entries 
 
 ## The session
 
-1. **Start.** `cartographer session start` creates the scan branch. Nothing a scan writes goes to the atlas's main branch directly.
-2. **What is due.** `cartographer repos due` lists repositories with the reason each is due. Take the first ones up to the cap. If none are due, end the session and say so.
+1. **Start.** `cartographer session start` creates the scan branch and prints its name. It refuses an atlas with uncommitted changes; if it does, report that and stop. Nothing a scan writes goes to the atlas's main branch directly.
+2. **What is due.** `cartographer repos due` prints one line per repository, `<repository>: <reasons>`, then a count. Take the first ones up to the cap. If none are due, end the session and say so.
 3. **Work in waves** of as many repositories as the sub-agent cap allows. For each wave:
-   1. **Mechanical pass**, one repository after another, not in parallel: `cartographer scan <repository>`. Skip this for a repository that is due only because an earlier scan of it is incomplete; its mechanical pass is done and re-running it would discard progress. If `scan` fails for a repository, note the last line of its output, drop that repository from the wave and carry on.
+   1. **Mechanical pass**, one repository after another, not in parallel: `cartographer scan <repository>`. It prints what it found and how many components are left to revisit, and exits 1 if the atlas no longer validates. Run it even for a repository whose earlier scan was left unfinished; components already marked done stay done. If `scan` fails for a repository, note the last line of its output, drop that repository from the wave and carry on.
    2. **Checkout path.** `cartographer clone <repository>` prints where the code is.
    3. **One fresh sub-agent per repository**, all of the wave at once. Give each the prompt below and nothing more. A fresh context per repository keeps one repository's code from colouring another's entries.
    4. **Read the summaries** when they return. Each is a short block with a `status`. Do not open the entries to check them; the next step does that.
-   5. **Validate.** `cartographer check`. It prints one line per problem, `error: <entry id>: <message>`, and exits 1 if there are errors. For each repository with errors, start one fresh sub-agent with the same prompt plus a `Fix:` section holding those error lines. Then run `check` once more.
-   6. **Index.** `cartographer index`.
-   7. **Finish** each repository whose summary said `complete` and which has no errors: `cartographer finish <repository>`. That writes its change summary and commits its files on the scan branch, one commit per repository. Do not finish a repository that is `partial`, `blocked` or still has errors. It stays due and its progress is recorded in the atlas, so a later session resumes it.
+   5. **Validate.** `cartographer check` prints one line per problem, `error: <entry id>: <message>` or `warning: …`, and exits 1 if there are errors. Warnings do not block. For each repository with errors, start one fresh sub-agent with the same prompt plus a `Fix:` section holding those error lines. Then run `check` once more.
+   6. **Finish** each repository whose summary said `complete` and which has no errors: `cartographer finish <repository>`. It writes the change summary, rebuilds the indexes and commits that repository's files on the scan branch, one commit per repository. `finish` does not check that every component is done, so never run it for a repository that is `partial`, `blocked` or still has errors.
+   7. **Keep partial work.** If the wave left any repository unfinished, run `cartographer session commit --message "Partial scan of <repositories>"`. That commits their progress, so a later session, on any machine, resumes them; they stay due.
 4. **Stop** when the repository cap is reached, nothing is due, or your own context is running low. Do not start a wave you cannot see through.
-5. **End.** `cartographer session end`, or `cartographer session end --pull-request` if the person chose a pull request at the start.
-6. **Report** in a few lines: repositories completed, those left partial or blocked and why, questions raised, how many now wait on a person, and whether a pull request was opened.
+5. **End.** `cartographer session end` keeps the branch local and prints how to review it. `cartographer session end --pull-request` pushes it and opens a pull request; use it only if the person chose that at the start. It needs the atlas to have a git remote; if it fails, end local-only and say why.
+6. **Report** in a few lines: repositories completed, those left partial or blocked and why, questions raised, how many now wait on a person, and the branch name or pull request.
 
 ## The sub-agent prompt
 

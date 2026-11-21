@@ -38,7 +38,7 @@ Keys appear in this order. Leave out a key that has nothing in it. A key not in 
 | `aliases` | database | Other names and name patterns the database is known by. |
 | `instances` | database | Written by the CLI from live reads. |
 | `sources` | all | Map of short key to evidence pointer. Declared once, cited by key. |
-| `provides` | component | List of `{name, as, basis, source}`. `as` is `nuget`, `assembly`, `progid`, `typelib` or `namespace`. |
+| `provides` | component | List of `{name, as, basis, source}`. `as` is `nuget`, `assembly`, `progid`, `typelib`, `namespace`, `contract` (a WCF service contract) or `package` (a package name in another ecosystem, such as npm or PyPI). |
 | `systems` | component, database | List of `{id, basis, source}`. |
 | `tags` | table, view | List of `{name, basis, source}`: business-data tags such as `customer` or `payment`. |
 | `owner` | all | `{name, basis, source}`. |
@@ -78,6 +78,7 @@ links:
 - `uses` is the list of a library's types the consumer uses; `count` is the number of usage sites.
 - `via` is the ID of the library a link was reached through.
 - `uses` (the link type) is the fallback when only the connection to a database is known and no table or routine can be named.
+- Links the CLI extracted keep the real `name` beside `to`. You need not add `name` to a link that has a `to`.
 - **An unresolved link** has no `to`. It has a `name` and, optionally, a `database` name hint. Use it when you know the real name of the table or routine but not its entry: write `name: dbo.Orders` and `database: Billing`, and the CLI fills in `to` when exactly one entry matches. This is safer than guessing an ID.
 - Two links on one entry with the same `type`, `to` and `via` are an error. One link per target; cite the clearest evidence.
 

@@ -17,14 +17,13 @@ Run every command from the atlas root (the directory holding `cartographer.yml`)
 
 ## Steps
 
-1. **Start a branch.** `cartographer session start`, so that nothing lands on the atlas's main branch directly.
-2. **Find answers people wrote.** `grep -rn '^- Answer: *[^ ]' repositories databases systems channels external flows 2>/dev/null` lists questions with text after `Answer:`. Fold each one in first; someone took the trouble to write it.
-3. **Find questions worth retrying.** `cartographer question retry` lists open questions whose `Waiting on` target has changed since they were last tried. A question whose blocker has not moved is not retried: the answer would be the same and the attempt would count against it.
+1. **Start a branch.** `cartographer session start`, so that nothing lands on the atlas's main branch directly. It refuses an atlas with uncommitted changes; if it does, report that and stop.
+2. **Find answers people wrote.** `grep -rn '^- Answer: *[^ ]' repositories databases systems channels external flows 2>/dev/null` lists questions with text after `Answer:`; `_generated/open-questions.md` also groups them under `answered`. Fold each one in first; someone took the trouble to write it.
+3. **Find questions worth retrying.** `cartographer question retry` lists open questions whose `Waiting on` target has changed since they were last tried; it prints `0 questions to retry` when there are none. A question whose blocker has not moved is not retried: the answer would be the same and the attempt would count against it.
 4. **Take them in this order:** raised by a person, then by an agent, then by the CLI. For each, open only the entry it is on, and follow [references/working-questions.md](references/working-questions.md) for how to answer it, fold it in, record a failed attempt or dismiss it.
-5. **Validate and index.** `cartographer check`, fix any `error:` line on an entry you touched, then `cartographer index`.
-6. **Commit** on the scan branch with plain git: `git add -A`, then `git commit -m "Work open questions: <n> folded in, <n> answered, <n> attempted"`.
-7. **End.** `cartographer session end`, or with `--pull-request` if the person asked for one.
-8. **Report** briefly: how many answers were folded in, how many questions were answered from code, how many attempts failed, which questions now need a person (entry and question id), and any answer you could not use and why.
+5. **Commit.** `cartographer session commit --message "Work open questions: <n> folded in, <n> answered, <n> attempted"`. It validates, rebuilds the indexes and commits on the scan branch. If it prints `error:` lines, fix those entries and run it again.
+6. **End.** `cartographer session end`, or with `--pull-request` if the person asked for one.
+7. **Report** briefly: how many answers were folded in, how many questions were answered from code, how many attempts failed, which questions now need a person (entry and question id), and any answer you could not use and why.
 
 If there are many questions, work in batches of about twenty and stop when your context runs low. Whatever is left is still in the atlas for next time.
 

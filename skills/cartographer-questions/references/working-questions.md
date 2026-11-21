@@ -53,7 +53,7 @@ Turn that into proper content so that later scans treat it as known and never as
 3. **Write the facts** the answer supports, each with basis `stated` and that source:
    - a link, for example a `sends-to` to an external system the person named, creating a minimal entry for the target if it has none;
    - an `owner`, a `systems` membership, or a `tags` item;
-   - for "it is public" answers about a package, there is no link to write: say so in Technical detail and add the line to `### Dismissed` (see below) so that the question is not raised again.
+   - for "it is public" answers about a package, there is no link to write: add a line to `### Dismissed` (see below) that contains the package's name exactly. The CLI reads those lines and stops asking which component provides that name.
 4. **Update the prose** to say what is now known. If the person explained something that is not a link, such as why a thing exists, put their explanation in the Overview or Technical detail between `<!-- person -->` and `<!-- /person -->` markers, in their words. Text between those markers is theirs; agents leave it alone from then on.
 5. **Delete the question's block.**
 
@@ -92,7 +92,7 @@ To dismiss: delete the question's block and add one line under `### Dismissed` a
 - Whether Acme.Logging is provided internally: no, a person stated it is a public package mirrored on the internal feed.
 ```
 
-That line is a "do not ask again" note. Before adding any new question to an entry, read its Dismissed lines.
+That line is a "do not ask again" note. Name the thing in it (the package name, file name or entry ID) exactly as the question's `Waiting on` did, because the CLI matches on that. Before adding any new question to an entry, read its Dismissed lines.
 
 ## Adding a question
 
@@ -100,4 +100,4 @@ That line is a "do not ask again" note. Before adding any new question to an ent
 cartographer question add <entry id> --missing "<the exact fact that is missing>" --waiting-on "<repository <id> | name <name> | entry <id> | person>" --answer-looks-like "<what would settle it>" --raised-by agent
 ```
 
-The CLI numbers the question and refuses a duplicate. It rewrites the entry in its fixed layout, so read the entry again before editing it further.
+The CLI numbers the question and refuses a duplicate (it says so and exits 1; carry on). It rewrites that entry in its fixed layout, so read the entry again before editing it further.

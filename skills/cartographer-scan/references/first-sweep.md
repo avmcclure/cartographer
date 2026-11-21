@@ -8,6 +8,8 @@ Use one scan branch for the whole sweep, and run every session local-only until 
 cartographer session start --branch first-sweep
 ```
 
+The setup skill creates this branch; when it already exists the command switches to it. If `cartographer repos list` says no repositories are known yet, run `cartographer repos list --refresh` once, after starting the session.
+
 The person reviews locally as the sweep goes (see the end of this file) and publishes one large pull request when it is done, unless they ask for one per stage.
 
 Work out which stage the sweep is at from the atlas, not from memory: `cartographer repos due` and the root index tell you.
@@ -25,11 +27,10 @@ cartographer check
 
 Why this comes first: a consumer's reference to a package can only be recognised as internal once the repository that provides that name has been read. Stage 1 builds the index of every provided name across the estate, so that by the time agents read a consumer, its `depends-on` links already point at the right components.
 
-When `check` passes, commit the result on the scan branch with plain git, so that the mechanical pass is one reviewable unit holding only extracted facts:
+When `check` passes, commit the result on the scan branch, so that the mechanical pass is one reviewable unit holding only extracted facts:
 
 ```
-git add -A
-git commit -m "Mechanical pass over every repository"
+cartographer session commit --message "Mechanical pass over every repository"
 ```
 
 Every repository now has a `scan-state.yml` with its components pending, so every repository is still due: it is waiting for an agent.
@@ -63,7 +64,7 @@ That prints, for one project, the number of links into it from outside it. Proje
 
 **Every repository gets an agent**, dormant ones included. Do not skip a repository because nothing has been committed to it for years: old code that still runs is what people most need mapped.
 
-**Within the session**, follow the ordinary loop in `SKILL.md`, limited to that project's repositories. The mechanical pass is already done for them, so the loop skips it. Stop at the cap; the project carries on next session.
+**Within the session**, follow the ordinary loop in `SKILL.md`, limited to that project's repositories. Stop at the cap; the project carries on next session.
 
 When a project has nothing left due, tell the person it is ready to review and name the next one.
 
@@ -91,18 +92,17 @@ Do this when no repository is due, or when the person asks for it. Keep your own
 
 The rules in `repository-agent.md` about people's facts, secrets, repository text and never asking apply to these sub-agents too; give them that file's path and tell them to read its section "The rules, and why".
 
-Then run `cartographer check` and `cartographer index`, and commit with plain git:
+Then commit. The command validates and rebuilds the indexes first; if it reports errors, give the error lines to a fresh sub-agent to fix and run it again.
 
 ```
-git add -A
-git commit -m "Propose systems and business-data tags"
+cartographer session commit --message "Propose systems and business-data tags"
 ```
 
 ## Review and publishing
 
 Nothing reaches the atlas's main branch except by a merged pull request. During the sweep everything is on the local scan branch, where the person can:
 
-- build the site from it (`cartographer site build --out <dir>`) and look around;
+- build the site from it (`cartographer site build --out <dir>`, which needs Node.js) and look around;
 - read a sample of entries per project and the list of questions that need a person (`_generated/open-questions.md`);
 - correct entries by hand. Corrections marked as theirs stick: later scans leave them alone.
 
