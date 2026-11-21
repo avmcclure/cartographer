@@ -1,0 +1,6 @@
+{
+ "https://dev.azure.com/acme/_apis/git/repositories?api-version=7.1": {
+  "status": 203,
+  "body": "<html><head><title>Azure DevOps Services | Sign In</title></head><body>Sign in to continue</body></html>"
+ }
+}

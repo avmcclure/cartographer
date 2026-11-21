@@ -1,0 +1,39 @@
+{
+ "https://api.github.com/orgs/jane/repos?per_page=100": {
+  "status": 404,
+  "body": {
+   "message": "Not Found",
+   "status": "404"
+  }
+ },
+ "https://api.github.com/users/jane/repos?per_page=100": {
+  "body": [
+   {
+    "id": 301,
+    "name": "dotfiles",
+    "full_name": "jane/dotfiles",
+    "private": false,
+    "owner": {
+     "login": "jane",
+     "type": "User"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "visibility": "private"
+   }
+  ]
+ },
+ "https://api.github.com/repos/jane/dotfiles/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "4141414141414141414141414141414141414141",
+    "type": "commit"
+   }
+  }
+ }
+}

@@ -1,0 +1,413 @@
+{
+ "https://dev.azure.com/acme/_apis/git/repositories?api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "id": "r-billing",
+     "name": "billing",
+     "project": {
+      "id": "p-finance",
+      "name": "Finance",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Finance/_git/billing",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-ledger",
+     "name": "ledger",
+     "project": {
+      "id": "p-finance-core",
+      "name": "Finance-Core",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Finance-Core/_git/ledger",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-core-ledger",
+     "name": "Core-ledger",
+     "project": {
+      "id": "p-finance",
+      "name": "Finance",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Finance/_git/Core-ledger",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-tools",
+     "name": "tools",
+     "project": {
+      "id": "p-ops",
+      "name": "Ops",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Ops/_git/tools",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-old-site",
+     "name": "old-site",
+     "project": {
+      "id": "p-ops",
+      "name": "Ops",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Ops/_git/old-site",
+     "isDisabled": true,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-scratch",
+     "name": "scratch",
+     "project": {
+      "id": "p-ops",
+      "name": "Ops",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 0,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Ops/_git/scratch",
+     "isDisabled": false,
+     "isInMaintenance": false
+    },
+    {
+     "id": "r-payroll",
+     "name": "payroll",
+     "project": {
+      "id": "p-legacy-apps",
+      "name": "Legacy Apps",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Legacy%20Apps/_git/payroll",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/master"
+    },
+    {
+     "id": "r-play",
+     "name": "play",
+     "project": {
+      "id": "p-sandbox",
+      "name": "Sandbox",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Sandbox/_git/play",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    }
+   ],
+   "count": 8
+  }
+ },
+ "https://dev.azure.com/acme/Finance/_apis/git/repositories/r-billing/refs?filter=heads/main&api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "name": "refs/heads/main-old",
+     "objectId": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0"
+    },
+    {
+     "name": "refs/heads/main",
+     "objectId": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+    }
+   ],
+   "count": 2
+  }
+ },
+ "https://dev.azure.com/acme/Finance-Core/_apis/git/repositories/r-ledger/refs?filter=heads/main&api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "name": "refs/heads/main",
+     "objectId": "b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1"
+    }
+   ],
+   "count": 1
+  }
+ },
+ "https://dev.azure.com/acme/Finance/_apis/git/repositories/r-core-ledger/refs?filter=heads/main&api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "name": "refs/heads/main",
+     "objectId": "c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1"
+    }
+   ],
+   "count": 1
+  }
+ },
+ "https://dev.azure.com/acme/Ops/_apis/git/repositories/r-tools/refs?filter=heads/main&api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "name": "refs/heads/main",
+     "objectId": "d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1"
+    }
+   ],
+   "count": 1
+  }
+ },
+ "https://dev.azure.com/acme/Legacy%20Apps/_apis/git/repositories/r-payroll/refs?filter=heads/master&api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "name": "refs/heads/master",
+     "objectId": "e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1"
+    }
+   ],
+   "count": 1
+  }
+ },
+ "https://dev.azure.com/acme/Sandbox/_apis/git/repositories/r-play/refs?filter=heads/main&api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "name": "refs/heads/main",
+     "objectId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1"
+    }
+   ],
+   "count": 1
+  }
+ },
+ "https://api.github.com/orgs/acme/repos?per_page=100": {
+  "link": "<https://api.github.com/organizations/42/repos?per_page=100&page=2>; rel=\"next\", <https://api.github.com/organizations/42/repos?per_page=100&page=2>; rel=\"last\"",
+  "body": [
+   {
+    "id": 101,
+    "name": "Finance-billing",
+    "full_name": "acme/Finance-billing",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "visibility": "private"
+   },
+   {
+    "id": 102,
+    "name": "Finance-Core-ledger",
+    "full_name": "acme/Finance-Core-ledger",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "visibility": "private"
+   },
+   {
+    "id": 103,
+    "name": "Ops-tools",
+    "full_name": "acme/Ops-tools",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "visibility": "private"
+   }
+  ]
+ },
+ "https://api.github.com/organizations/42/repos?per_page=100&page=2": {
+  "link": "<https://api.github.com/organizations/42/repos?per_page=100&page=1>; rel=\"prev\", <https://api.github.com/organizations/42/repos?per_page=100&page=1>; rel=\"first\"",
+  "body": [
+   {
+    "id": 104,
+    "name": "Legacy-Apps-payroll",
+    "full_name": "acme/Legacy-Apps-payroll",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "visibility": "private"
+   },
+   {
+    "id": 105,
+    "name": "website",
+    "full_name": "acme/website",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "visibility": "private"
+   },
+   {
+    "id": 106,
+    "name": "empty-repo",
+    "full_name": "acme/empty-repo",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 0,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "visibility": "private"
+   },
+   {
+    "id": 107,
+    "name": "old-mirror",
+    "full_name": "acme/old-mirror",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": true,
+    "visibility": "private"
+   },
+   {
+    "id": 108,
+    "name": "docs-archive",
+    "full_name": "acme/docs-archive",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": true,
+    "disabled": false,
+    "visibility": "private"
+   }
+  ]
+ },
+ "https://api.github.com/repos/acme/Finance-billing/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+    "type": "commit"
+   }
+  }
+ },
+ "https://api.github.com/repos/acme/Finance-Core-ledger/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1",
+    "type": "commit"
+   }
+  }
+ },
+ "https://api.github.com/repos/acme/Ops-tools/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "9999999999999999999999999999999999999999",
+    "type": "commit"
+   }
+  }
+ },
+ "https://api.github.com/repos/acme/Legacy-Apps-payroll/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2",
+    "type": "commit"
+   }
+  }
+ },
+ "https://api.github.com/repos/acme/website/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "7777777777777777777777777777777777777777",
+    "type": "commit"
+   }
+  }
+ },
+ "https://api.github.com/repos/acme/docs-archive/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "8888888888888888888888888888888888888888",
+    "type": "commit"
+   }
+  }
+ },
+ "https://api.github.com/repos/acme/empty-repo/git/ref/heads/main": {
+  "status": 409,
+  "body": {
+   "message": "Git Repository is empty.",
+   "status": "409"
+  }
+ },
+ "https://api.github.com/repos/acme/Legacy-Apps-payroll/commits/e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1": {
+  "body": {
+   "sha": "e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1",
+   "commit": {
+    "message": "Last change before the move to GitHub"
+   }
+  }
+ }
+}
