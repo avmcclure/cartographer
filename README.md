@@ -1,19 +1,42 @@
 # Cartographer
 
-An agent-first documentation framework and toolset. It crawls the repositories of an organisation (Azure DevOps, GitHub, or another SCM) and builds a graph of the dependencies and data flows within it.
+Maps an organisation's repositories, databases and the links between them into an **atlas**: a git repository of Markdown entries that agents and people can both read, with a static site of drawn plans built from it.
 
-Status: planning. Nothing is built yet; the design is being worked out in this repo's issues.
+- A deterministic CLI (C#/.NET, never calls a model) reads what can be read mechanically: project files, config, VB6 and classic ASP, SQL Server schema from files and from live instances.
+- Agent skills, run inside Claude Code or GitHub Copilot, add what needs judgement: plain-language descriptions, links found by reading code, systems, open questions.
+- Every fact says how it is known: **extracted**, **inferred** or **stated** by a person. What could not be determined is an open question, retried on later scans.
 
-## The idea
+Status: v1 is built and tested against fixtures and public repositories. It has not yet been run on a real organisation's estate.
 
-- **Findings as flat files in git.** Versioned by git history, and the source for a generated static site.
-- **Internal libraries.** Discover where each library is used and how data flows through it.
-- **Databases.** Track constraints (foreign keys, triggers) and stored procedures.
-- **Incremental discovery.** Remember when each repository was last visited, and scan only what changed since.
-- **Open questions.** Keep a list of unanswered questions and try to answer them on later scans.
-- **Progressive disclosure.** Everything is laid out so an agent can load as little context as possible.
+## Start here
 
-## Audience
+- **Using it:** [docs/using.md](docs/using.md). Live databases: [docs/live-databases.md](docs/live-databases.md).
+- **What v1 is:** [docs/spec/v1.md](docs/spec/v1.md), the entry format, commands and boundary.
+- **Words:** [GLOSSARY.md](GLOSSARY.md).
 
-- Product people, to understand the system their decisions land in.
-- Engineers, to write better code against it.
+## Layout of this repository
+
+| Path | What |
+|---|---|
+| `src/Cartographer` | The library: atlas core, extractors, scan sessions, SCM access, live database reading, site data and plan layout. |
+| `src/Cartographer.Cli` | The `cartographer` dotnet tool. |
+| `site/` | The Astro site template the tool ships and builds. |
+| `skills/`, `.claude-plugin/` | The four skills and the plugin that ships them. |
+| `fixtures/` | Small invented repositories and the exact atlas each must produce; `sample-atlas` is a finished atlas. |
+| `tests/` | `dotnet test`. Set `CARTOGRAPHER_ACCEPT=1` to rewrite expected atlases after an intended change, then review the diff. |
+
+## Building
+
+```
+dotnet test
+dotnet pack src/Cartographer.Cli -c Release -o out
+dotnet tool install Cartographer.Cli --global --add-source out
+```
+
+Restoring needs a GitHub token with `read:packages`, because the plan layout library ([Groma](https://github.com/avmcclure/groma)) is on GitHub Packages:
+
+```
+dotnet nuget update source github-avmcclure --username <you> --password <token> --store-password-in-clear-text
+```
+
+Opt-in tests: `CARTOGRAPHER_LIVE_TESTS=1` lists and clones public repositories; `CARTOGRAPHER_TEST_SQL=<connection string>` reads a real SQL Server (see docs/live-databases.md for a throwaway container).
