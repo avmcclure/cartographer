@@ -66,7 +66,7 @@ public static class Validator
         foreach (var p in e.Provides ?? [])
         {
             Fact($"provides {p.Name}", p.Basis, p.Source);
-            if (p.As is not ("nuget" or "assembly" or "progid" or "typelib" or "namespace")) Error($"provides {p.Name}: 'as' must be nuget, assembly, progid, typelib or namespace");
+            if (p.As is not ("nuget" or "assembly" or "progid" or "typelib" or "namespace" or "contract")) Error($"provides {p.Name}: 'as' must be nuget, assembly, progid, typelib, namespace or contract");
         }
         foreach (var s in e.Systems ?? [])
         {
