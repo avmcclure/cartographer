@@ -124,9 +124,9 @@ public static class LinkTypes
     public static readonly IReadOnlyDictionary<string, (string[] From, string[] To)> Rules = new Dictionary<string, (string[], string[])>
     {
         ["depends-on"] = ([Kinds.Component], [Kinds.Component]),
-        ["calls"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger], [Kinds.Component, Kinds.Routine]),
-        ["reads"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger], [Kinds.Table, Kinds.View]),
-        ["writes"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger], [Kinds.Table, Kinds.View]),
+        ["calls"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger, Kinds.View], [Kinds.Component, Kinds.Routine]),
+        ["reads"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger, Kinds.View], [Kinds.Table, Kinds.View]),
+        ["writes"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger, Kinds.View], [Kinds.Table, Kinds.View]),
         ["uses"] = ([Kinds.Component], [Kinds.Database]),
         ["publishes-to"] = ([Kinds.Component], [Kinds.Channel]),
         ["consumes-from"] = ([Kinds.Component], [Kinds.Channel]),
