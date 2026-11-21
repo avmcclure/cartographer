@@ -92,7 +92,7 @@ public sealed class ProjectExtractor : IExtractor
             var binaries = p.Items("Reference").Select(HintPath).Where(h => h is not null && !InPackagesFolder(h)).Select(h => Tick(h!.Replace('\\', '/'))).Distinct().Order(StringComparer.Ordinal).ToList();
             c.Extracted =
                 $"- Project: `{path}` ({(p.Sdk is null ? "legacy" : "SDK")} style{(p.Sdk is null ? "" : $", {p.Sdk}")}).\n" +
-                $"- Output type: {p.Prop("OutputType") ?? "Library (default)"}.\n" +
+                $"- Output type: {p.Prop("OutputType") ?? (p.Sdk is { } sdk && (sdk.Contains("Web") || sdk.Contains("Worker")) ? "Exe (the SDK's default)" : "Library (default)")}.\n" +
                 $"- Target frameworks: {(frameworks.Count > 0 ? string.Join(", ", frameworks) : "not set in the project file")}.\n" +
                 (feeds.Count > 0 ? $"- NuGet feeds from nuget.config: {string.Join(", ", feeds)}.\n" : "") +
                 (binaries.Count > 0 ? $"- Assemblies referenced by file path, origin unknown: {string.Join(", ", binaries)}.\n" : "");

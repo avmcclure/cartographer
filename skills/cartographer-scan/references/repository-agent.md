@@ -144,6 +144,16 @@ When a question has text after `Answer:`, a person has answered it in plain word
 
 If the answer is unclear or answers something else, leave the question as it is and say so in your summary.
 
+## Judgement calls that come up often
+
+- **Finding the types a consumer uses.** `cartographer candidates` searches for a library's namespaces. When many libraries share one namespace its output cannot tell them apart; pass `--library-path` with the library's own checkout (`cartographer clone <its repository>` prints it) so its public type names are searched for instead. You may read other repositories' checkouts for this purpose, and only to learn names.
+- **What `count` counts.** Usage sites are the source lines, outside comments, that name one of the listed types. Use that measure every time so counts compare across entries.
+- **Extension methods.** When a library is used only through extension methods, list the static class that declares them.
+- **Used only through configuration.** A library named only in a config file (a sink, a provider) keeps its `depends-on` link without `uses` or `count`; say in Technical detail where it is named.
+- **Types that arrive through another package.** Do not add a `depends-on` link for a library the project does not reference itself. Say in Technical detail which package brings it.
+- **Samples, demos and test helpers.** A sample project is still a component if it builds and runs by itself; say "sample, not shipped" in its summary. Test projects are skipped by the CLI; mention them in the repository entry and nowhere else.
+- **Local log files and caches** are not channels. A channel is something another component or system consumes.
+
 ## Running low on context
 
 A large repository may not fit in one sitting, and that is expected. Stop early rather than late: an entry abandoned half-edited is worse than one not started.
@@ -188,10 +198,12 @@ commit: <first 7 characters of in-progress.commit>
 status: complete | partial | blocked
 components: <n> done, <n> pending[: <names of pending>]
 entries: <n> changed, <n> created
-links: <n> added, <n> removed
+links: <n> added, <n> removed, <n> given usage detail
 questions: <n> added, <n> answered, <n> attempted
 note: <one line, only when status is not complete or something needs a person's eye>
 ```
+
+`entries` includes the repository entry. `given usage detail` counts existing links you added `uses` and `count` to.
 
 - `complete`: every component is done, no entry this repository owns is still "not yet described", and the repository entry is written.
 - `partial`: you stopped early; the pending components are named.
