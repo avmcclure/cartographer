@@ -24,7 +24,8 @@ public sealed class InstanceConfig
     public string Server { get; set; } = "";
     public string Environment { get; set; } = "";
     public bool Production { get; set; }
-    public bool Allowed { get; set; } = true;
+    /// <summary>Null when the config does not say. A production instance is read only when this is set to true (Db/LiveDb.cs).</summary>
+    public bool? Allowed { get; set; }
     public List<string> Databases { get; set; } = [];
 }
 public sealed class LimitsConfig
