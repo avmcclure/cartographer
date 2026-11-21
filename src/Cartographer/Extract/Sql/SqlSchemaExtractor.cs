@@ -65,27 +65,43 @@ public sealed class SqlSchemaExtractor : IExtractor
         foreach (var f in files) schema.Apply(f.Script, f.Path);
         var db = x.Database(name, source);
         var modules = schema.Views.Values.Concat<SqlModule>(schema.Routines.Values).Concat(schema.Triggers.Values).ToList();
-        db.Extracted =
-            $"- Tables: {schema.Tables.Count}\n- Views: {schema.Views.Count}\n" +
-            $"- Procedures: {schema.Routines.Values.Count(r => !r.IsFunction)}\n- Functions: {schema.Routines.Values.Count(r => r.IsFunction)}\n- Triggers: {schema.Triggers.Count}\n" +
+        db.Extracted = Counts(schema) +
             $"- SQL files: {files.Count} read, {files.Count(f => f.Script.Errors.Count > 0)} with parse errors, {files.Count(f => f.Script.Changes.Count == 0)} without definitions\n" +
             $"- Dynamic SQL statements, not followed: {files.Sum(f => f.Script.DynamicSql) + modules.Sum(m => m.DynamicSql)}\n";
+        Objects(name, schema,
+            (id, kind, objectName, summary) => x.Get(id, kind, objectName, () => summary),
+            (e, file, line) => x.Cite(e, "sql", file, line),
+            m => $"Defined in `{m.File}`, lines {m.Line}-{m.EndLine}.\n");
+    }
 
+    public static string Counts(SqlSchema schema) =>
+        $"- Tables: {schema.Tables.Count}\n- Views: {schema.Views.Count}\n" +
+        $"- Procedures: {schema.Routines.Values.Count(r => !r.IsFunction)}\n- Functions: {schema.Routines.Values.Count(r => r.IsFunction)}\n- Triggers: {schema.Triggers.Count}\n";
+
+    /// <summary>
+    /// The table, view, routine and trigger entries of one database. Shared with the live reader (Db/LiveDb.cs), so that a
+    /// schema read from a repository and from an instance gives the same IDs, names, summaries, links and extracted blocks.
+    /// </summary>
+    /// <param name="start">Makes the entry: ID, kind, name, summary.</param>
+    /// <param name="cite">Declares the source of a fact on an entry and returns its citation: entry, file, line.</param>
+    /// <param name="where">The sentence saying where a module is defined.</param>
+    public static void Objects(string name, SqlSchema schema, Func<string, string, string, string, Entry> start, Func<Entry, string, int?, string> cite, Func<SqlModule, string> where)
+    {
         string Id(string folder, SqlName n) => Ids.DbObject(name, folder, n.Schema, n.Name);
         bool Here(SqlName n) => n.Database is null || n.Database.Equals(name, StringComparison.OrdinalIgnoreCase);
         string? TableId(SqlName n) => Here(n) && (schema.Tables.ContainsKey(n.Key) || schema.Views.ContainsKey(n.Key)) ? Id("tables", n) : null;
         string? RoutineId(SqlName n) => Here(n) && schema.Routines.ContainsKey(n.Key) ? Id("routines", n) : null;
         Entry Start(SqlObject o, string folder, string kind, string what)
         {
-            var e = x.Get(Id(folder, o.Name), kind, o.Name.ToString(), () => $"{what} in {name}; not yet described.");
-            x.Cite(e, "sql", o.File);
+            var e = start(Id(folder, o.Name), kind, o.Name.ToString(), $"{what} in {name}; not yet described.");
+            cite(e, o.File, null);
             return e;
         }
         // A target defined here gets 'to'; anything else is left for the resolver, by name.
         void Link(Entry e, string type, SqlName target, string? to, string file, int line, string? constraint = null) => Extraction.AddLink(e, new Link
         {
             Type = type, To = to, Name = to is null ? target.ToString() : constraint, Database = to is null ? target.Database : null,
-            How = type == "calls" ? "sql" : null, Basis = Basis.Extracted, Source = x.Cite(e, "sql", file, line),
+            How = type == "calls" ? "sql" : null, Basis = Basis.Extracted, Source = cite(e, file, line),
         });
         void Body(Entry e, SqlModule m)
         {
@@ -93,7 +109,7 @@ public sealed class SqlSchemaExtractor : IExtractor
             foreach (var r in m.Writes) Link(e, "writes", r.Name, TableId(r.Name), m.File, r.Line);
             foreach (var r in m.Calls) Link(e, "calls", r.Name, RoutineId(r.Name), m.File, r.Line);
         }
-        string Defined(SqlModule m) => $"Defined in `{m.File}`, lines {m.Line}-{m.EndLine}.\n" +
+        string Defined(SqlModule m) => where(m) +
             (m.DynamicSql > 0 ? $"Runs dynamic SQL in {m.DynamicSql} place{(m.DynamicSql == 1 ? "" : "s")}; what that touches is not recorded.\n" : "");
 
         foreach (var t in schema.Tables.Values)
