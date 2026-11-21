@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "width": 64,
+  "height": 43,
+  "boxes": [
+    { "id": "databases/sales/database", "x": 37, "y": 19, "width": 15, "height": 5 },
+    { "id": "repositories/platform-common/repository", "x": 37, "y": 7, "width": 18, "height": 5 },
+    { "id": "repositories/sales-order-service/repository", "x": 37, "y": 31, "width": 20, "height": 5 },
+    { "id": "repositories/sales-storefront/components/backoffice", "x": 7, "y": 13, "width": 16, "height": 5 },
+    { "id": "repositories/sales-storefront/components/webshop", "x": 7, "y": 25, "width": 13, "height": 5 }
+  ],
+  "links": [
+    { "id": "repositories/sales-storefront/components/backoffice>databases/sales/database", "from": "repositories/sales-storefront/components/backoffice", "to": "databases/sales/database", "points": [[23, 17], [38, 17], [38, 19]], "label": { "x": 25, "y": 15, "width": 12, "height": 4 } },
+    { "id": "repositories/sales-storefront/components/backoffice>repositories/platform-common/repository", "from": "repositories/sales-storefront/components/backoffice", "to": "repositories/platform-common/repository", "points": [[22, 13], [22, 11], [37, 11]], "label": { "x": 24, "y": 10, "width": 8, "height": 2 } },
+    { "id": "repositories/sales-storefront/components/webshop>databases/sales/database", "from": "repositories/sales-storefront/components/webshop", "to": "databases/sales/database", "points": [[19, 25], [19, 23], [37, 23]], "label": { "x": 22, "y": 21, "width": 11, "height": 4 } },
+    { "id": "repositories/sales-storefront/components/webshop>repositories/sales-order-service/repository", "from": "repositories/sales-storefront/components/webshop", "to": "repositories/sales-order-service/repository", "points": [[19, 30], [19, 32], [37, 32]], "label": { "x": 24, "y": 31, "width": 6, "height": 2 } }
+  ]
+}

@@ -1,0 +1,41 @@
+---
+import '../styles/site.css';
+import { site, questions, href } from '../lib/data.js';
+const { title, wide = false } = Astro.props;
+const needing = questions.filter((q) => q.state === 'needs-person').length;
+const nav = [
+  ['/', 'Plans'],
+  ['/gazetteer/', 'Gazetteer'],
+  ['/tags/', 'Data tags'],
+  ['/questions/', `Questions${needing ? ` (${needing})` : ''}`],
+  ['/changes/', 'Recent changes'],
+];
+const here = Astro.url.pathname;
+const current = (p) => (p === '/' ? here === href('/') || here.startsWith(href('/sheet/')) : here.startsWith(href(p)));
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{title} · {site.organisation} atlas</title>
+  </head>
+  <body data-base={href('/')}>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="masthead">
+      <a class="org" href={href('/')}>{site.organisation}<span> atlas</span></a>
+      <nav aria-label="Site">
+        {nav.map(([p, text]) => <a href={href(p)} aria-current={current(p) ? 'page' : undefined}>{text}</a>)}
+      </nav>
+    </header>
+    <p class="carried" id="carried" hidden></p>
+    <main id="main" class={wide ? 'wide' : 'column'}>
+      <slot />
+    </main>
+    <footer class="colophon">Drawn by Cartographer {site.cartographer} from the atlas. Latest scan {site.latestVerified ?? 'never'}.</footer>
+    <script>
+      import '../scripts/carry.js';
+    </script>
+  </body>
+</html>

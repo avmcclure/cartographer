@@ -1,0 +1,107 @@
+{
+ "https://dev.azure.com/acme/_apis/git/repositories?api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "id": "r-billing",
+     "name": "billing",
+     "project": {
+      "id": "p-finance",
+      "name": "Finance",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Finance/_git/billing",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-ledger",
+     "name": "ledger",
+     "project": {
+      "id": "p-finance-core",
+      "name": "Finance-Core",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Finance-Core/_git/ledger",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-core-ledger",
+     "name": "Core-ledger",
+     "project": {
+      "id": "p-finance",
+      "name": "Finance",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Finance/_git/Core-ledger",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-old-site",
+     "name": "old-site",
+     "project": {
+      "id": "p-ops",
+      "name": "Ops",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Ops/_git/old-site",
+     "isDisabled": true,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    },
+    {
+     "id": "r-scratch",
+     "name": "scratch",
+     "project": {
+      "id": "p-ops",
+      "name": "Ops",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 0,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Ops/_git/scratch",
+     "isDisabled": false,
+     "isInMaintenance": false
+    },
+    {
+     "id": "r-play",
+     "name": "play",
+     "project": {
+      "id": "p-sandbox",
+      "name": "Sandbox",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Sandbox/_git/play",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    }
+   ],
+   "count": 6
+  }
+ },
+ "https://api.github.com/repos/acme/website/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "7878787878787878787878787878787878787878",
+    "type": "commit"
+   }
+  }
+ }
+}

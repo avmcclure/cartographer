@@ -1,0 +1,2 @@
+organisation: Acme
+internal-prefixes: ["Acme*"]

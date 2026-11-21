@@ -1,0 +1,12 @@
+{
+  "name": "cartographer",
+  "description": "The Cartographer skills, shipped from the repository that builds the CLI.",
+  "owner": { "name": "Cartographer" },
+  "plugins": [
+    {
+      "name": "cartographer",
+      "source": "./",
+      "description": "Set up an atlas, run scan sessions, work open questions and ask the atlas."
+    }
+  ]
+}

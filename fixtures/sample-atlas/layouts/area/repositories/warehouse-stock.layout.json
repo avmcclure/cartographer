@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "width": 70,
+  "height": 55,
+  "boxes": [
+    { "id": "channels/order-events", "x": 43, "y": 7, "width": 15, "height": 5 },
+    { "id": "databases/sales/database", "x": 43, "y": 43, "width": 15, "height": 5 },
+    { "id": "repositories/platform-common/repository", "x": 43, "y": 19, "width": 18, "height": 5 },
+    { "id": "repositories/sales-order-service/repository", "x": 43, "y": 31, "width": 20, "height": 5 },
+    { "id": "repositories/warehouse-stock/components/stock-service", "x": 7, "y": 21, "width": 22, "height": 5 },
+    { "id": "repositories/warehouse-stock/components/stock-sync", "x": 7, "y": 39, "width": 16, "height": 5 }
+  ],
+  "links": [
+    { "id": "repositories/warehouse-stock/components/stock-service>channels/order-events", "from": "repositories/warehouse-stock/components/stock-service", "to": "channels/order-events", "points": [[28, 21], [28, 11], [43, 11]], "label": { "x": 28, "y": 10, "width": 10, "height": 2 } },
+    { "id": "repositories/warehouse-stock/components/stock-service>databases/sales/database", "from": "repositories/warehouse-stock/components/stock-service", "to": "databases/sales/database", "points": [[28, 26], [28, 44], [43, 44]], "label": { "x": 28, "y": 43, "width": 6, "height": 2 } },
+    { "id": "repositories/warehouse-stock/components/stock-service>repositories/platform-common/repository", "from": "repositories/warehouse-stock/components/stock-service", "to": "repositories/platform-common/repository", "points": [[29, 23], [43, 23]], "label": { "x": 32, "y": 22, "width": 8, "height": 2 } },
+    { "id": "repositories/warehouse-stock/components/stock-service>repositories/sales-order-service/repository", "from": "repositories/warehouse-stock/components/stock-service", "to": "repositories/sales-order-service/repository", "points": [[29, 25], [44, 25], [44, 31]], "label": { "x": 39, "y": 25, "width": 10, "height": 4 } },
+    { "id": "repositories/warehouse-stock/components/stock-sync>databases/sales/database", "from": "repositories/warehouse-stock/components/stock-sync", "to": "databases/sales/database", "points": [[22, 44], [22, 46], [43, 46]], "label": { "x": 26, "y": 45, "width": 10, "height": 2 } }
+  ]
+}

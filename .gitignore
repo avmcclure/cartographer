@@ -1,0 +1,8 @@
+.claude/worktrees/
+bin/
+obj/
+node_modules/
+dist/
+.astro/
+*.nupkg
+TestResults/

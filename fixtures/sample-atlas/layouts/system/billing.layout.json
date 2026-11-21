@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "width": 97,
+  "height": 69,
+  "boxes": [
+    { "id": "channels/order-events", "x": 44, "y": 10, "width": 15, "height": 5 },
+    { "id": "databases/ledger/database", "x": 44, "y": 22, "width": 46, "height": 36 },
+    { "id": "databases/ledger/routines/dbo/usp-postinvoice", "parent": "databases/ledger/database", "x": 46, "y": 27, "width": 20, "height": 5 },
+    { "id": "databases/ledger/tables/dbo/invoices", "parent": "databases/ledger/database", "x": 73, "y": 27, "width": 15, "height": 5 },
+    { "id": "databases/ledger/tables/dbo/ledger-entries", "parent": "databases/ledger/database", "x": 46, "y": 39, "width": 19, "height": 5 },
+    { "id": "repositories/finance-invoicing/components/invoice-job", "parent": "repositories/finance-invoicing/repository", "x": 9, "y": 12, "width": 16, "height": 5 },
+    { "id": "repositories/finance-invoicing/repository", "x": 7, "y": 7, "width": 20, "height": 24 },
+    { "id": "repositories/finance-reports/components/invoice-report", "parent": "repositories/finance-reports/repository", "x": 9, "y": 43, "width": 19, "height": 5 },
+    { "id": "repositories/finance-reports/repository", "x": 7, "y": 38, "width": 23, "height": 24 }
+  ],
+  "links": [
+    { "id": "databases/ledger/database>edge:systems/ordering", "from": "databases/ledger/database", "toEdge": "right", "points": [[90, 40], [97, 40]], "label": { "x": 88, "y": 38, "width": 9, "height": 4 } },
+    { "id": "repositories/finance-invoicing/repository>channels/order-events", "from": "repositories/finance-invoicing/repository", "to": "channels/order-events", "points": [[27, 14], [44, 14]], "label": { "x": 30, "y": 13, "width": 10, "height": 2 } },
+    { "id": "repositories/finance-invoicing/repository>databases/ledger/database", "from": "repositories/finance-invoicing/repository", "to": "databases/ledger/database", "points": [[27, 23], [44, 23]], "label": { "x": 30, "y": 22, "width": 10, "height": 2 } },
+    { "id": "repositories/finance-invoicing/repository>edge:systems/ordering", "from": "repositories/finance-invoicing/repository", "toEdge": "right", "points": [[27, 19], [97, 19]], "label": { "x": 57, "y": 17, "width": 10, "height": 4 } },
+    { "id": "repositories/finance-invoicing/repository>edge:unassigned", "from": "repositories/finance-invoicing/repository", "toEdge": "right", "points": [[27, 21], [97, 21]], "label": { "x": 47, "y": 19, "width": 10, "height": 4 } },
+    { "id": "repositories/finance-reports/repository>databases/ledger/database", "from": "repositories/finance-reports/repository", "to": "databases/ledger/database", "points": [[30, 50], [44, 50]], "label": { "x": 32, "y": 49, "width": 10, "height": 2 } }
+  ]
+}
