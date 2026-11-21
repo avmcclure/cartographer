@@ -51,6 +51,10 @@ public sealed class CoreCommands : ICommands
         File.WriteAllText(Path.Combine(dir, ".gitignore"), "site/\n");
         if (!Directory.Exists(Path.Combine(dir, ".git"))) Checkout.Git(dir, "init", "-b", "main");
         Indexer.Write(Atlas.Load(dir));
+        // A first commit, so that "session start" has a clean tree to branch from.
+        Checkout.Git(dir, "add", "-A");
+        if (Checkout.Git(dir, "commit", "-q", "-m", $"Create the atlas of {organisation}") is null)
+            Console.WriteLine("note: could not make the first commit (is git's user.name and user.email set?); commit by hand before starting a scan session");
         Console.WriteLine($"created an atlas for {organisation} at {dir}");
         return 0;
     }

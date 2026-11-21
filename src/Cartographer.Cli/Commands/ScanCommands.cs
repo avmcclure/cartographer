@@ -14,6 +14,18 @@ public sealed class ScanCommands : ICommands
             Console.WriteLine($"{due.Count} repositories due");
             return 0;
         });
+        cli.Add("done", "done <repository> <component>", "Mark one component's entries complete in the scan in progress.", a =>
+        {
+            var atlas = a.Atlas();
+            var state = ScanState.Load(atlas, Scans.Folder(a.At(0, "repository")));
+            var component = a.At(1, "component").Split('/')[^1];
+            if (state.InProgress is null) throw new UsageException($"{a.At(0, "repository")} has no scan in progress");
+            if (!state.InProgress.Components.ContainsKey(component)) throw new UsageException($"no component '{component}' in this scan; it has: {string.Join(", ", state.InProgress.Components.Keys)}");
+            state.InProgress.Components[component] = "done";
+            state.Save(atlas);
+            Console.WriteLine($"{component}: done; {state.InProgress.Components.Count(c => c.Value != "done")} still pending");
+            return 0;
+        });
         cli.Add("finish", "finish <repository>", "Mark the repository's scan complete, write its change summary and commit its files on the scan branch.", a =>
         {
             var (code, text) = Scans.Finish(a.Atlas(), Repository(a));
