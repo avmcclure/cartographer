@@ -222,7 +222,7 @@ public sealed class World
 
 public static class Sheets
 {
-    public const int Cell = 20, LeafHeight = 5, TitleHeight = 3, MaxInside = 30, MaxNeighbours = 12;
+    public const int Cell = 20, LeafHeight = 5, TitleHeight = 3, MaxInside = 30, MaxNeighbours = 12, MaxBeyond = 3;
     public const string Organisation = "organisation";
 
     public static string AreaSheet(string areaEntry) => "area/" + Ids.Area(areaEntry);
@@ -334,13 +334,29 @@ public static class Sheets
             link.Line = EdgeId(key.Item1, key.Item2, other);
         }
         foreach (var ((a, b), edges) in between) sheet.Lines.Add(Summarise(new Line { Id = $"{a}>{b}", From = a, To = b }, edges));
-        foreach (var ((plot, incoming, other), edges) in beyond)
+        // A plot with links to more than three other sheets in one direction gets one line for all of them:
+        // a line each would bury the plot. The links schedule still names every one.
+        foreach (var side in beyond.GroupBy(b => (b.Key.Plot, b.Key.In)))
         {
-            var group = w.Groups.FirstOrDefault(x => x.Key == other);
-            var line = new Line { Id = EdgeId(plot, incoming, other), From = incoming ? null : plot, To = incoming ? plot : null, In = incoming, Beyond = group?.Name ?? "Unassigned", BeyondSheet = group?.Sheet };
-            Summarise(line, edges);
-            line.Text = $"{(incoming ? "from" : "to")} {line.Beyond} · {line.Text}";
-            sheet.Lines.Add(line);
+            var (plot, incoming) = side.Key;
+            if (side.Count() > MaxBeyond)
+            {
+                var id = EdgeId(plot, incoming, "elsewhere");
+                var merged = side.Select(b => EdgeId(plot, incoming, b.Key.Group)).ToHashSet(StringComparer.Ordinal);
+                foreach (var link in sheet.Links.Where(l => l.Line is not null && merged.Contains(l.Line))) link.Line = id;
+                var all = Summarise(new Line { Id = id, From = incoming ? null : plot, To = incoming ? plot : null, In = incoming, Beyond = $"{side.Count()} other sheets" }, [.. side.SelectMany(b => b.Value)]);
+                all.Text = $"{(incoming ? "from" : "to")} {all.Beyond} · {all.Text}";
+                sheet.Lines.Add(all);
+                continue;
+            }
+            foreach (var ((_, _, other), edges) in side)
+            {
+                var group = w.Groups.FirstOrDefault(x => x.Key == other);
+                var line = new Line { Id = EdgeId(plot, incoming, other), From = incoming ? null : plot, To = incoming ? plot : null, In = incoming, Beyond = group?.Name ?? "Unassigned", BeyondSheet = group?.Sheet };
+                Summarise(line, edges);
+                line.Text = $"{(incoming ? "from" : "to")} {line.Beyond} · {line.Text}";
+                sheet.Lines.Add(line);
+            }
         }
         Finish(w, sheet);
         return sheet;
