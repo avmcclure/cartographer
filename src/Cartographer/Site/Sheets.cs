@@ -277,7 +277,7 @@ public static class Sheets
         foreach (var e in w.Atlas.OfKind(Kinds.Channel, Kinds.External)) AddEntryPlot(w, sheet, e, null, false);
 
         List<string> Homes(string id) => w.Entry(id).Kind is Kinds.Channel or Kinds.External ? [id] : [.. w.GroupsOf(id)];
-        var crossing = new SortedDictionary<(string, string), List<Edge>>();
+        var crossing = new SortedDictionary<(string, string), List<Edge>>(Ord.Pair);
         foreach (var e in w.Edges)
         {
             var (a, b) = (Homes(e.From), Homes(e.To));
@@ -311,8 +311,8 @@ public static class Sheets
         }
 
         string? Top(string id) => !covered.Contains(id) ? null : w.Entry(id).Kind is Kinds.Repository or Kinds.Database ? id : w.AreaEntry(id);
-        var between = new SortedDictionary<(string, string), List<Edge>>();
-        var beyond = new SortedDictionary<(string Plot, bool In, string Group), List<Edge>>();
+        var between = new SortedDictionary<(string, string), List<Edge>>(Ord.Pair);
+        var beyond = new SortedDictionary<(string Plot, bool In, string Group), List<Edge>>(Ord.Triple);
         foreach (var e in w.Edges)
         {
             var (a, b) = (Top(e.From), Top(e.To));
@@ -386,8 +386,8 @@ public static class Sheets
                 if (w.Entry(n).Kind is Kinds.Repository or Kinds.Database) foreach (var p in w.PartsOf(n)) Where(sheet, p.Id, n);
             }
 
-        var lines = new SortedDictionary<(string From, string To), List<Edge>>();
-        var edges = new SortedDictionary<(string Plot, bool In, string Group), List<Edge>>();
+        var lines = new SortedDictionary<(string From, string To), List<Edge>>(Ord.Pair);
+        var edges = new SortedDictionary<(string Plot, bool In, string Group), List<Edge>>(Ord.Triple);
         foreach (var e in touching)
         {
             var link = Scheduled(w, sheet, e);
@@ -473,7 +473,7 @@ public static class Sheets
         line.Text = totalOnly ? edges.Count.ToString() : string.Join(", ", line.Verbs.Select(v => $"{v.Verb} {v.Count}"));
         line.Basis = edges.Any(e => e.Basis == Basis.Inferred) ? Basis.Inferred : edges.Any(e => e.Basis == Basis.Extracted) ? Basis.Extracted : Basis.Stated;
         line.Stated = edges.Any(e => e.Basis == Basis.Stated);
-        line.Pairs = [.. edges.Select(e => (e.From, e.To)).Distinct().OrderBy(p => p).Select(p => new[] { p.From, p.To })];
+        line.Pairs = [.. edges.Select(e => (e.From, e.To)).Distinct().OrderBy(p => p, Ord.Pair).Select(p => new[] { p.From, p.To })];
         return line;
     }
 
@@ -558,4 +558,13 @@ public static class Evidences
         return location.StartsWith("github:") && p.Length == 2 ? $"https://github.com/{p[0]}/{p[1]}"
             : location.StartsWith("azdo:") && p.Length == 3 ? $"https://dev.azure.com/{p[0]}/{Uri.EscapeDataString(p[1])}/_git/{Uri.EscapeDataString(p[2])}" : null;
     }
+}
+
+/// <summary>Ordinal ordering for keys made of strings. The default tuple comparer follows the machine's culture, which differs between operating systems and would make layouts differ with them.</summary>
+static class Ord
+{
+    static int S(string a, string b) => string.CompareOrdinal(a, b);
+    public static readonly Comparer<(string, string)> Pair = Comparer<(string, string)>.Create((a, b) => S(a.Item1, b.Item1) is var c and not 0 ? c : S(a.Item2, b.Item2));
+    public static readonly Comparer<(string, bool, string)> Triple = Comparer<(string, bool, string)>.Create((a, b) =>
+        S(a.Item1, b.Item1) is var c and not 0 ? c : a.Item2.CompareTo(b.Item2) is var d and not 0 ? d : S(a.Item3, b.Item3));
 }

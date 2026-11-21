@@ -133,7 +133,7 @@ public static class Surveyor
             var mine = w.Edges.Where(e => e.From == part.Id || e.To == part.Id)
                 .Select(e => (Edge: e, From: PlotOf(e.From), To: PlotOf(e.To)))
                 .Where(x => x.From is not null && x.To is not null && x.From != x.To && plots[x.From].Parent != x.To && plots[x.To].Parent != x.From)
-                .GroupBy(x => (x.From!, x.To!)).OrderBy(g => g.Key).ToList();
+                .GroupBy(x => (x.From!, x.To!)).OrderBy(g => g.Key, Ord.Pair).ToList();
             if (mine.Count == 0) continue;
             var links = mine.Select((g, i) =>
             {
