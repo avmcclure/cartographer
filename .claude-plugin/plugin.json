@@ -1,0 +1,7 @@
+{
+  "name": "cartographer",
+  "description": "Skills for Cartographer: set up an atlas, run scan sessions, work open questions and ask the atlas.",
+  "author": { "name": "Cartographer" },
+  "repository": "https://github.com/avmcclure/cartographer",
+  "keywords": ["cartographer", "atlas", "documentation", "dependencies"]
+}
