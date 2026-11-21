@@ -21,6 +21,7 @@ provides:
     source: proj#L7
 links:
   - type: calls
+    to: repositories/acme-orders-service/components/acme.orders.service
     name: Acme.Orders.Contracts.IOrderService
     how: wcf
     basis: extracted

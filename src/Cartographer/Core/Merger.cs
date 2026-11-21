@@ -151,10 +151,21 @@ public static class Resolver
 
     public static void Run(Atlas atlas)
     {
-        var providers = atlas.OfKind(Kinds.Component).Where(c => c.Status is null)
-            .SelectMany(c => (c.Provides ?? []).Select(p => (p.Name, c.Id)))
-            .GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => g.Select(x => x.Id).Distinct().Order(StringComparer.Ordinal).ToList(), StringComparer.OrdinalIgnoreCase);
+        var provided = atlas.OfKind(Kinds.Component).Where(c => c.Status is null)
+            .SelectMany(c => (c.Provides ?? []).Select(p => (p.Name, p.As, c.Id))).ToList();
+        // Which components provide a name, counting only the kinds of name this link can mean.
+        List<string> Providers(Entry from, Link l)
+        {
+            string[] kinds = l.Type == "calls" ? [l.How == "com" ? "progid" : "contract"] : ["nuget", "assembly", "typelib"];
+            static string Bare(string n) => Regex.Replace(n, @"\.(dll|exe|ocx|tlb)$", "", RegexOptions.IgnoreCase);
+            var candidates = provided.Where(p => kinds.Contains(p.As) && p.Id != from.Id).ToList();
+            var hits = candidates.Where(p => Bare(p.Name).Equals(Bare(l.Name!), StringComparison.OrdinalIgnoreCase)).ToList();
+            // A generated WCF client often names the contract "<ReferenceName>.IOrderService": fall back to the interface's own name.
+            if (hits.Count == 0 && l.How == "wcf") hits = candidates.Where(p => p.Name.Split('.')[^1].Equals(l.Name!.Split('.')[^1], StringComparison.OrdinalIgnoreCase)).ToList();
+            return hits.Select(p => p.Id).Distinct().Order(StringComparer.Ordinal).ToList();
+        }
+        var packageProviders = provided.Where(p => p.As is "nuget" or "assembly").GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Id).Distinct().ToList(), StringComparer.OrdinalIgnoreCase);
         var prefixes = atlas.Config.InternalPrefixes.Select(p => new Regex("^" + Regex.Escape(p).Replace("\\*", ".*") + "$", RegexOptions.IgnoreCase)).ToList();
         var databases = atlas.OfKind(Kinds.Database).ToList();
 
@@ -166,7 +177,7 @@ public static class Resolver
             foreach (var package in (e.Packages ?? []).ToList())
             {
                 var name = package.Split(' ')[0];
-                if (!providers.TryGetValue(name, out var ids) || ids.All(id => id == e.Id)) continue;
+                if (!packageProviders.TryGetValue(name, out var ids) || ids.All(id => id == e.Id)) continue;
                 e.Packages!.Remove(package);
                 Extraction.AddLink(e, new Link { Type = "depends-on", Name = name, Version = package.Contains(' ') ? package[(name.Length + 1)..] : null, Basis = Basis.Extracted, Source = e.Sources?.Keys.FirstOrDefault() ?? "unknown" });
             }
@@ -176,7 +187,7 @@ public static class Resolver
                 // A COM or WCF call names a provided name just as a depends-on does, but it is never a public package.
                 if ((l.Type == "depends-on" || l is { Type: "calls", How: "com" or "wcf" }) && l.To is null && l.Name is not null)
                 {
-                    var ids = providers.GetValueOrDefault(l.Name)?.Where(id => id != e.Id).ToList() ?? [];
+                    var ids = Providers(e, l);
                     if (ids.Count == 1)
                     {
                         if (e.Links!.Any(o => o != l && o.Type == l.Type && o.To == ids[0])) e.Links!.Remove(l); else l.To = ids[0];
@@ -185,10 +196,21 @@ public static class Resolver
                         wanted.Add(($"{ProviderPrefix}'{l.Name}' for this component; {ids.Count} components provide that name: {string.Join(", ", ids)}.", $"name {l.Name}", "One of the listed components, set as the link's 'to'."));
                     else if (prefixes.Any(p => p.IsMatch(l.Name)))
                         wanted.Add(($"{ProviderPrefix}'{l.Name}'. It matches an internal name prefix but no scanned repository provides it.", $"name {l.Name}", $"A component whose provides list contains {l.Name}, or a person stating it is public."));
+                    else if (l.Type == "calls" || Regex.IsMatch(l.Name, @"^\{|\.(dll|exe|ocx|tlb)$", RegexOptions.IgnoreCase))
+                        // A file, type library or run-time contract is never a public package: it stays an unresolved reference.
+                        wanted.Add(($"{ProviderPrefix}'{l.Name}'. No scanned repository provides it.", $"name {l.Name}", $"A component whose provides list contains {l.Name}, or a person stating it comes from outside the organisation."));
                     else if (l.Basis == Basis.Extracted && l.Type == "depends-on")
                     {
                         e.Links!.Remove(l);
                         (e.Packages ??= []).Add(l.Version is null ? l.Name : $"{l.Name} {l.Version}");
+                    }
+                }
+                else if (l is { Type: "uses", To: null, Name: not null })
+                {
+                    var dbs = databases.Where(d => d.Status is null && (d.Name.Equals(l.Name, StringComparison.OrdinalIgnoreCase) || d.Id == Ids.Database(l.Name) || (d.Aliases ?? []).Contains(l.Name, StringComparer.OrdinalIgnoreCase))).ToList();
+                    if (dbs.Count == 1)
+                    {
+                        if (e.Links!.Any(o => o != l && o.Type == "uses" && o.To == dbs[0].Id)) e.Links!.Remove(l); else l.To = dbs[0].Id;
                     }
                 }
                 else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes")
@@ -204,6 +226,8 @@ public static class Resolver
             Merger.Tidy(e);
             if (e.Packages?.Count == 0) e.Packages = null;
             var existing = QuestionList.Parse(e.Body);
+            // A dismissed note that names the thing means a person or agent has said not to ask again.
+            wanted.RemoveAll(w => existing.Dismissed.Any(d => d.Contains(w.WaitingOn[(w.WaitingOn.IndexOf(' ') + 1)..], StringComparison.OrdinalIgnoreCase)));
             var stale = existing.Items.Where(q => q.RaisedBy == "cli" && q.State == "open" && (q.Missing.StartsWith(ProviderPrefix) || q.Missing.StartsWith(BrokenPrefix)) && wanted.All(w => !SameQuestion(w.Missing, q))).ToList();
             var missing = wanted.Where(w => existing.Items.All(q => !SameQuestion(w.Missing, q))).ToList();
             if (stale.Count == 0 && missing.Count == 0) continue;
