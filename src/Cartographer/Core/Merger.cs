@@ -146,7 +146,8 @@ public static class Resolver
 
             foreach (var l in (e.Links ?? []).ToList())
             {
-                if (l.Type == "depends-on" && l.To is null && l.Name is not null)
+                // A COM or WCF call names a provided name just as a depends-on does, but it is never a public package.
+                if ((l.Type == "depends-on" || l is { Type: "calls", How: "com" or "wcf" }) && l.To is null && l.Name is not null)
                 {
                     var ids = providers.GetValueOrDefault(l.Name)?.Where(id => id != e.Id).ToList() ?? [];
                     if (ids.Count == 1)
@@ -157,7 +158,7 @@ public static class Resolver
                         wanted.Add(($"{ProviderPrefix}'{l.Name}' for this component; {ids.Count} components provide that name: {string.Join(", ", ids)}.", $"name {l.Name}", "One of the listed components, set as the link's 'to'."));
                     else if (prefixes.Any(p => p.IsMatch(l.Name)))
                         wanted.Add(($"{ProviderPrefix}'{l.Name}'. It matches an internal name prefix but no scanned repository provides it.", $"name {l.Name}", $"A component whose provides list contains {l.Name}, or a person stating it is public."));
-                    else if (l.Basis == Basis.Extracted)
+                    else if (l.Basis == Basis.Extracted && l.Type == "depends-on")
                     {
                         e.Links!.Remove(l);
                         (e.Packages ??= []).Add(l.Version is null ? l.Name : $"{l.Name} {l.Version}");

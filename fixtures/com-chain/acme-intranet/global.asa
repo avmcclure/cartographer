@@ -1,0 +1,9 @@
+<script language="VBScript" runat="server">
+Sub Application_OnStart
+    Application("SiteName") = "Acme Intranet"
+End Sub
+
+Sub Session_OnStart
+    Session.Timeout = 20
+End Sub
+</script>
