@@ -1,0 +1,3 @@
+IF DB_ID('Shop') IS NULL
+    CREATE DATABASE Shop;
+GO
