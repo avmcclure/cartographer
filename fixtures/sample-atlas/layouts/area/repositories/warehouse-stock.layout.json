@@ -12,9 +12,9 @@
   ],
   "links": [
     { "id": "repositories/warehouse-stock/components/stock-service>channels/order-events", "from": "repositories/warehouse-stock/components/stock-service", "to": "channels/order-events", "points": [[28, 21], [28, 11], [43, 11]], "label": { "x": 28, "y": 10, "width": 10, "height": 2 } },
-    { "id": "repositories/warehouse-stock/components/stock-service>databases/sales/database", "from": "repositories/warehouse-stock/components/stock-service", "to": "databases/sales/database", "points": [[28, 26], [28, 40], [45, 40], [45, 43]], "label": { "x": 28, "y": 39, "width": 6, "height": 2 } },
+    { "id": "repositories/warehouse-stock/components/stock-service>databases/sales/database", "from": "repositories/warehouse-stock/components/stock-service", "to": "databases/sales/database", "points": [[28, 26], [28, 44], [43, 44]], "label": { "x": 28, "y": 43, "width": 6, "height": 2 } },
     { "id": "repositories/warehouse-stock/components/stock-service>repositories/platform-common/repository", "from": "repositories/warehouse-stock/components/stock-service", "to": "repositories/platform-common/repository", "points": [[29, 23], [43, 23]], "label": { "x": 32, "y": 22, "width": 8, "height": 2 } },
     { "id": "repositories/warehouse-stock/components/stock-service>repositories/sales-order-service/repository", "from": "repositories/warehouse-stock/components/stock-service", "to": "repositories/sales-order-service/repository", "points": [[29, 25], [44, 25], [44, 31]], "label": { "x": 39, "y": 25, "width": 10, "height": 4 } },
-    { "id": "repositories/warehouse-stock/components/stock-sync>databases/sales/database", "from": "repositories/warehouse-stock/components/stock-sync", "to": "databases/sales/database", "points": [[23, 42], [44, 42], [44, 43]], "label": { "x": 29, "y": 41, "width": 10, "height": 2 } }
+    { "id": "repositories/warehouse-stock/components/stock-sync>databases/sales/database", "from": "repositories/warehouse-stock/components/stock-sync", "to": "databases/sales/database", "points": [[22, 44], [22, 46], [43, 46]], "label": { "x": 26, "y": 45, "width": 10, "height": 2 } }
   ]
 }

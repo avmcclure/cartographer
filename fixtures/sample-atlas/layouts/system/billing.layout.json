@@ -17,8 +17,8 @@
     { "id": "databases/ledger/database>edge:systems/ordering", "from": "databases/ledger/database", "toEdge": "right", "points": [[90, 40], [97, 40]], "label": { "x": 88, "y": 38, "width": 9, "height": 4 } },
     { "id": "repositories/finance-invoicing/repository>channels/order-events", "from": "repositories/finance-invoicing/repository", "to": "channels/order-events", "points": [[27, 14], [44, 14]], "label": { "x": 30, "y": 13, "width": 10, "height": 2 } },
     { "id": "repositories/finance-invoicing/repository>databases/ledger/database", "from": "repositories/finance-invoicing/repository", "to": "databases/ledger/database", "points": [[27, 23], [44, 23]], "label": { "x": 30, "y": 22, "width": 10, "height": 2 } },
-    { "id": "repositories/finance-invoicing/repository>edge:systems/ordering", "from": "repositories/finance-invoicing/repository", "toEdge": "right", "points": [[27, 19], [97, 19]], "label": { "x": 47, "y": 17, "width": 10, "height": 4 } },
-    { "id": "repositories/finance-invoicing/repository>edge:unassigned", "from": "repositories/finance-invoicing/repository", "toEdge": "right", "points": [[27, 17], [97, 17]], "label": { "x": 57, "y": 15, "width": 10, "height": 4 } },
+    { "id": "repositories/finance-invoicing/repository>edge:systems/ordering", "from": "repositories/finance-invoicing/repository", "toEdge": "right", "points": [[27, 19], [97, 19]], "label": { "x": 57, "y": 17, "width": 10, "height": 4 } },
+    { "id": "repositories/finance-invoicing/repository>edge:unassigned", "from": "repositories/finance-invoicing/repository", "toEdge": "right", "points": [[27, 21], [97, 21]], "label": { "x": 47, "y": 19, "width": 10, "height": 4 } },
     { "id": "repositories/finance-reports/repository>databases/ledger/database", "from": "repositories/finance-reports/repository", "to": "databases/ledger/database", "points": [[30, 50], [44, 50]], "label": { "x": 32, "y": 49, "width": 10, "height": 2 } }
   ]
 }
