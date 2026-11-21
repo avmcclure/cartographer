@@ -46,6 +46,8 @@ public static class Merger
                 atlas.Entries[p.Id] = p;
                 continue;
             }
+            // What an agent added to an extracted link (the library types used and how often) survives the link being re-extracted.
+            var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null).GroupBy(l => l.Identity).ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count));
             DropFacts(e, origin);
             if (origin.StartsWith("instance:")) RecordDrift(e, p, origin);
             // Rename the incoming source keys that clash with keys kept from another origin.
@@ -75,6 +77,7 @@ public static class Merger
                 e.Links ??= [];
                 // An extracted link replaces the same link an agent inferred; a stated one stays.
                 e.Links.RemoveAll(o => o.Identity == l.Identity && o.Basis == Basis.Inferred);
+                if (usage.TryGetValue(l.Identity, out var kept)) { l.Uses ??= kept.Uses; l.Count ??= kept.Count; }
                 if (!e.Links.Any(o => o.Identity == l.Identity)) e.Links.Add(l);
             }
             foreach (var d in p.Drift ?? []) (e.Drift ??= []).Add(d);

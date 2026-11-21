@@ -67,8 +67,10 @@ public sealed class Atlas
                 var text = File.ReadAllText(file);
                 try
                 {
-                    atlas.Entries[id] = EntryFile.Parse(id, text);
-                    atlas._onDisk[id] = text;
+                    var entry = atlas.Entries[id] = EntryFile.Parse(id, text);
+                    // Remembered in the CLI's own layout, so that saving writes only entries this run changed
+                    // and never rewrites a file another agent is editing just to tidy its formatting.
+                    atlas._onDisk[id] = EntryFile.Write(entry);
                 }
                 catch (EntryFormatException e) { atlas.Unreadable[id] = e.Message; }
             }

@@ -39,6 +39,13 @@ public sealed class ScanCommands : ICommands
             Console.WriteLine($"{items.Count} questions to retry");
             return 0;
         });
+        cli.Add("session commit", "session commit --message <text>", "Commit work that is not one repository's finished scan, on the scan branch.", a =>
+        {
+            var atlas = a.Atlas();
+            if (CoreCommands.Check(atlas) != 0) return 1;
+            Indexer.Write(atlas);
+            return Print(Sessions.Commit(atlas.Root, a.Required("message")) + "\n");
+        });
         cli.Add("session start", "session start [--branch <name>]", "Create the scan branch in the atlas and switch to it.", a => Print(Sessions.Start(a.Atlas().Root, a.Option("branch")) + "\n"));
         cli.Add("session end", "session end [--pull-request]", "Leave the scan branch local, or push it and open a pull request joining its change summaries.", a => Print(Sessions.End(a.Atlas().Root, a.Flag("pull-request"))));
     }

@@ -29,11 +29,23 @@ public static class Sessions
             throw new UsageException("the atlas has uncommitted changes; commit or discard them before starting a session (git status shows them)");
         var name = branch ?? $"scan/{Clock.Today}";
         for (var n = 2; branch is null && Exists(root, "refs/heads/" + name); n++) name = $"scan/{Clock.Today}-{n}";
-        Shell.Git(root, null, "checkout", "-q", "-b", name);
+        // A branch named explicitly that already exists is a session being continued.
+        if (branch is not null && Exists(root, "refs/heads/" + name)) Shell.Git(root, null, "checkout", "-q", name);
+        else Shell.Git(root, null, "checkout", "-q", "-b", name);
         return name;
     }
 
     /// <summary>The change summaries added on this branch, newest first, joined; those that do not fit are counted.</summary>
+    /// <summary>Commits everything changed in the atlas on the scan branch: work that is not one repository's finished scan (a partial scan, answered questions, systems and tags).</summary>
+    public static string Commit(string root, string message)
+    {
+        if (Branch(root) is "main" or "master") throw new UsageException("refusing to commit on the default branch; run: cartographer session start");
+        if (Shell.Git(root, null, "status", "--porcelain").Trim().Length == 0) return "nothing to commit";
+        Shell.Git(root, null, "add", "-A");
+        Shell.Git(root, null, "commit", "-q", "-m", message);
+        return $"committed on {Branch(root)}: {message}";
+    }
+
     public static string PullRequestBody(string root)
     {
         var range = Default(root) is { } d ? $"{d.Ref}..HEAD" : "HEAD";
