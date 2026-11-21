@@ -39,6 +39,8 @@ public sealed class InstanceRead
     public string? Fingerprint { get; set; }
     [YamlMember(ScalarStyle = ScalarStyle.DoubleQuoted)] public string? Read { get; set; }
     public string? Permission { get; set; }
+    /// <summary>What that read could not see, in words; kept because an unchanged database is not read in full again.</summary>
+    public string? NotRead { get; set; }
     /// <summary>Set by a failed read, cleared by the next successful one.</summary>
     [YamlMember(ScalarStyle = ScalarStyle.DoubleQuoted)] public string? Failed { get; set; }
     public string? Reason { get; set; }
@@ -242,17 +244,18 @@ public static class LiveDb
                 foreach (var id in read.Entries.Except(entries.Select(e => e.Id)))
                     if (atlas.Find(id) is { } gone && (gone.Sources ?? []).Values.All(v => Evidence.OriginOf(v) is "person" or null)) gone.Status = "retired";
             read.Entries = entries.Select(e => e.Id).Order(StringComparer.Ordinal).ToList();
-            read.Fingerprint = c.Fingerprint;
+            (read.Fingerprint, read.Permission, read.NotRead) = (c.Fingerprint, Permission(c), NotRead(c) is { Length: > 0 } not ? not : null);
         }
 
         var db = atlas.Entries[dbId];
-        var permission = Permission(c);
+        // An unchanged database was not read in full, so its permission level is the one its last full read found.
+        var permission = read.Permission ?? Permission(c);
         var previous = read.Read;
-        (read.Read, read.Permission, read.Failed, read.Reason) = (Clock.Today, permission, null, null);
+        (read.Read, read.Failed, read.Reason) = (Clock.Today, null, null);
         db.Instances = (db.Instances ?? []).Where(i => i.Name != instance.Name)
             .Append(new Instance { Name = instance.Name, Environment = instance.Environment.Length > 0 ? instance.Environment : null, Read = Clock.Today, Permission = permission })
             .OrderBy(i => i.Name, StringComparer.Ordinal).ToList();
-        Note(db, instance.Name, $": permission {permission}." + (NotRead(c) is { Length: > 0 } not ? $" Not read: {not}." : ""));
+        Note(db, instance.Name, $": permission {permission}." + (read.NotRead is null ? "" : $" Not read: {read.NotRead}."));
 
         // Existence drift: what the repository defines and the instance lacks, and the reverse.
         var repositories = Repositories(db);

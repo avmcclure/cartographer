@@ -176,6 +176,11 @@ public class LiveDbTests
         var db = atlas.Entries["databases/shop/database"];
         Assert.Equal("limited", db.Instances!.Single().Permission);
         Assert.Contains("- Live read of sql-test-01: permission limited. Not read: the identity lacks VIEW DEFINITION on the database, so objects it has no permission on are not listed and absence here does not mean none exist;", db.Body);
+
+        // An unchanged database is not read in full again: the level its last full read had still stands.
+        Assert.EndsWith("not rebuilt", LiveDb.Apply(atlas, Test01, new DbCatalog { Database = "Shop", ViewDefinition = false, Dependencies = false, Objects = c.Objects }));
+        Assert.Equal("limited", db.Instances!.Single().Permission);
+        Assert.Contains("1 encrypted definition", db.Body);
     }
 
     [Fact]
