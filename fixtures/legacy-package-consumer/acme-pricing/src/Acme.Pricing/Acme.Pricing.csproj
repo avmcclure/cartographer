@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <RootNamespace>Acme.Pricing</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackageId>Acme.Pricing</PackageId>
+    <Version>2.1.0</Version>
+    <Description>Price and tax rules shared by Acme applications.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Memory" />
+  </ItemGroup>
+</Project>
