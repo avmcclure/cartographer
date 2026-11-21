@@ -1,0 +1,12 @@
+---
+// A small drawing of a sheet's plots, to show where something is. Never the main drawing.
+const { sheet, mark = null, width = 150 } = Astro.props;
+const k = width / sheet.width;
+const height = Math.max(24, Math.round(sheet.height * k));
+---
+<svg class="locator" width={width} height={height} viewBox={`0 0 ${sheet.width} ${sheet.height}`} aria-hidden="true" data-steps={`${sheet.width} ${sheet.height}`}>
+  <rect class="frame" x="0" y="0" width={sheet.width} height={sheet.height} />
+  {sheet.plots.filter((p) => p.container).map((p) => <rect class={`k-${p.kind}${p.id === mark ? ' here' : ''}`} x={p.x} y={p.y} width={p.w} height={p.h} />)}
+  {sheet.plots.filter((p) => !p.container).map((p) => <rect class={`k-${p.kind}${p.id === mark ? ' here' : ''}`} x={p.x} y={p.y} width={p.w} height={p.h} />)}
+  <rect class="window" x="0" y="0" width="0" height="0" />
+</svg>

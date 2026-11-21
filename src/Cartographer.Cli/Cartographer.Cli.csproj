@@ -7,6 +7,11 @@
     <PackageId>Cartographer.Cli</PackageId>
   </PropertyGroup>
   <ItemGroup>
+    <!-- The Astro project that `site build` builds from, shipped beside the tool as site-template/. -->
+    <None Include="../../site/**" Exclude="../../site/node_modules/**;../../site/dist/**;../../site/data/**;../../site/.astro/**;../../site/screenshots/**"
+          Link="site-template/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../Cartographer/Cartographer.csproj" />
   </ItemGroup>
 </Project>

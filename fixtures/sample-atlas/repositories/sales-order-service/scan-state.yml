@@ -1,0 +1,20 @@
+# Written by the CLI. Do not edit by hand. Git history of this file is the scan log.
+repository: repositories/sales-order-service/repository
+cartographer: "0.1.0"
+locations:
+  - id: github:brackley/sales-order-service
+    primary: true
+    gone: false
+    default-branch: main
+    tip: 4c1e9a27b0d3f5e8a1c6924d7e0b3f5a8c1d6e92
+    seen: "2026-11-12"
+branches:
+  main:
+    role: default
+    scanned-commit: 4c1e9a27b0d3f5e8a1c6924d7e0b3f5a8c1d6e92
+    scanned: "2026-11-12"
+entries:
+  - repositories/sales-order-service/components/order-api
+  - repositories/sales-order-service/components/order-contracts
+  - repositories/sales-order-service/components/order-worker
+  - repositories/sales-order-service/repository

@@ -1,0 +1,62 @@
+---
+// A data-tag plan: each system plan that holds tagged tables, with those tables and what reads or writes them picked out.
+import Base from '../../layouts/Base.astro';
+import Plan from '../../components/Plan.astro';
+import Legend from '../../components/Legend.astro';
+import Basis from '../../components/Basis.astro';
+import Evidence from '../../components/Evidence.astro';
+import { tags, graph, sheet as readSheet, entry as readEntry, entryHref, sheetHref, sheetNumber, kindLabel } from '../../lib/data.js';
+import { reach, marks } from '../../lib/reach.js';
+export function getStaticPaths() {
+  return tags.map((t) => ({ params: { tag: t.name } }));
+}
+const tag = tags.find((t) => t.name === Astro.params.tag);
+const origin = new Set(tag.tables.map((t) => t.entry.id));
+const r = reach(graph, origin);
+const sheets = tag.sheets.map(readSheet);
+const touching = tag.tables.map((t) => ({ ...t, usedBy: (readEntry(t.entry.id).usedBy ?? []).filter((l) => l.type === 'reads' || l.type === 'writes') }));
+const users = new Set(touching.flatMap((t) => t.usedBy.map((l) => l.from.id)));
+---
+<Base title={`Data tag ${tag.name}`} wide>
+  <div class="sheet">
+    <header class="sheet-title">
+      <div><p class="kicker">Data-tag plan</p><h1>{tag.name}</h1></div>
+      <p class="sheet-no">{tag.tables.length} table{tag.tables.length === 1 ? '' : 's'} · read or written by {users.size} part{users.size === 1 ? '' : 's'}</p>
+    </header>
+    <p class="statement-text">Tables tagged <strong>{tag.name}</strong> are filled; whatever reads or writes them, and whatever they refer to, is outlined. {sheets.length === 0 && 'None of the tagged tables is on a system sheet yet.'}</p>
+
+    {sheets.map((s) => (
+      <section>
+        <h2 class="cap">Sheet {sheetNumber(s.id)} · {s.title} · <a href={sheetHref(s.id)}>open the system plan</a></h2>
+        <div class="plan-frame">
+          <div class="plan-view" tabindex="0" role="region" aria-label={`${s.title} plan, tag ${tag.name}. Scroll to pan.`}>
+            <Plan sheet={s} marks={marks(s, r)} label={`Plan of ${s.title} with the tables tagged ${tag.name} picked out: ${tag.tables.map((t) => t.entry.name).join(', ')}. The schedule below lists them and what reads or writes each.`} />
+          </div>
+        </div>
+      </section>
+    ))}
+
+    <section class="schedule">
+      <h2 class="cap">Schedule · where {tag.name} lives and what touches it</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Table</th><th>Tagged</th><th>Verb</th><th>By</th><th>Known by</th></tr></thead>
+          <tbody>
+            {touching.map((t) => (
+              <>
+                <tr class="is-origin">
+                  <td><a href={entryHref(t.entry.id)}>{t.entry.name}</a></td>
+                  <td colspan="4"><Basis basis={t.basis} /><Evidence basis={t.basis} evidence={t.evidence} /></td>
+                </tr>
+                {t.usedBy.map((l) => (
+                  <tr><td></td><td></td><td>{l.type}</td><td><a href={entryHref(l.from.id)}>{l.from.name}</a> <span class="small">{kindLabel(l.from)}</span></td><td><Basis basis={l.basis} /><Evidence basis={l.basis} evidence={l.evidence} /></td></tr>
+                ))}
+              </>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <div class="margin"><Legend level="system" /></div>
+  </div>
+</Base>

@@ -1,0 +1,24 @@
+# Written by the CLI. Do not edit by hand. Git history of this file is the scan log.
+repository: repositories/finance-reports/repository
+cartographer: "0.1.0"
+locations:
+  - id: azdo:brackley/Finance/reports
+    primary: true
+    gone: false
+    default-branch: main
+    tip: e05a1b83d6f9c2a5e8b1d4070a3c6f9e2b5d8a14
+    seen: "2026-10-28"
+branches:
+  main:
+    role: default
+    scanned-commit: e05a1b83d6f9c2a5e8b1d4070a3c6f9e2b5d8a14
+    scanned: "2026-10-28"
+entries:
+  - repositories/finance-reports/components/invoice-report
+  - repositories/finance-reports/repository
+in-progress:
+  branch: main
+  commit: e05a1b83d6f9c2a5e8b1d4070a3c6f9e2b5d8a14
+  mode: full
+  components:
+    invoice-report: done

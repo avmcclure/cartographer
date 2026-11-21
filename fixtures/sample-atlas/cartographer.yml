@@ -1,0 +1,14 @@
+organisation: Brackley
+github: {organisation: brackley}
+azure-devops: {organisation: brackley}
+exclude: ["*-archive"]
+internal-prefixes: ["Brackley.*"]
+locations:                       # mappings a person wrote; they win
+  repositories/sales-storefront: ["azdo:brackley/Sales/storefront", "github:brackley/sales-storefront"]
+instances:
+  - name: sql-test-01
+    server: sql-test-01.brackley.example
+    environment: test
+    production: false
+    allowed: true
+    databases: [Sales, Ledger]

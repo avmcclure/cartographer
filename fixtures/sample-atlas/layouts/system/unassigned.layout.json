@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "width": 86,
+  "height": 38,
+  "boxes": [
+    { "id": "repositories/platform-common/components/brackley-common", "parent": "repositories/platform-common/repository", "x": 9, "y": 12, "width": 17, "height": 5 },
+    { "id": "repositories/platform-common/components/legacy-mailer", "parent": "repositories/platform-common/repository", "x": 33, "y": 12, "width": 17, "height": 5 },
+    { "id": "repositories/platform-common/repository", "x": 7, "y": 7, "width": 45, "height": 24 },
+    { "id": "repositories/warehouse-stock/components/stock-sync", "parent": "repositories/warehouse-stock/repository", "x": 61, "y": 12, "width": 16, "height": 5 },
+    { "id": "repositories/warehouse-stock/repository", "x": 59, "y": 7, "width": 20, "height": 24 }
+  ],
+  "links": [
+    { "id": "edge:systems/billing>repositories/platform-common/repository", "fromEdge": "left", "to": "repositories/platform-common/repository", "points": [[0, 19], [7, 19]], "label": { "x": 0, "y": 17, "width": 9, "height": 4 } },
+    { "id": "edge:systems/ordering>repositories/platform-common/repository", "fromEdge": "left", "to": "repositories/platform-common/repository", "points": [[0, 17], [7, 17]], "label": { "x": 0, "y": 15, "width": 10, "height": 4 } },
+    { "id": "edge:systems/warehouse>repositories/platform-common/repository", "fromEdge": "left", "to": "repositories/platform-common/repository", "points": [[0, 21], [7, 21]], "label": { "x": 0, "y": 19, "width": 10, "height": 4 } },
+    { "id": "repositories/warehouse-stock/repository>edge:systems/ordering", "from": "repositories/warehouse-stock/repository", "toEdge": "right", "points": [[79, 19], [86, 19]], "label": { "x": 76, "y": 17, "width": 10, "height": 4 } }
+  ]
+}

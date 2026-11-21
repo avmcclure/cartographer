@@ -1,0 +1,40 @@
+---
+// What the scans could not find out and only a person can say.
+import Base from '../layouts/Base.astro';
+import { questions, site, entryHref, kindLabel } from '../lib/data.js';
+const need = questions.filter((q) => q.state === 'needs-person');
+const open = questions.filter((q) => q.state === 'open');
+const answered = questions.filter((q) => q.state === 'answered');
+---
+<Base title="Questions that need a person">
+  <article class="page">
+    <p class="kicker">Unsurveyed</p>
+    <h1>Questions that need a person</h1>
+    <p class="lede">{need.length} question{need.length === 1 ? '' : 's'} the scans have given up on. Each is answered by editing the entry's file in the atlas: write the answer after <code>Answer:</code> under the question. The next scan folds it in as a stated fact.</p>
+    {!site.editable && <p class="small">No address for the atlas repository was given when this site was built, so there are no edit links. Build with <code>--edit-url</code> to get them.</p>}
+    <ol class="list">
+      {need.map((q) => (
+        <li>
+          <p><strong>{q.missing}</strong></p>
+          <p class="small">On <a href={entryHref(q.entry.id)}>{q.entry.name}</a> ({kindLabel(q.entry)}), question {q.id}. Raised by {q.raisedBy === 'cli' ? 'the scan' : `a${q.raisedBy === 'agent' ? 'n' : ''} ${q.raisedBy}`}; {q.attempts} attempt{q.attempts === 1 ? '' : 's'}.</p>
+          <p>An answer looks like: {q.answerLooksLike}</p>
+          <p class="id">{q.entry.id}.md{q.editUrl && <> · <a href={q.editUrl} rel="noreferrer">Edit the file to answer</a></>}</p>
+        </li>
+      ))}
+    </ol>
+    {need.length === 0 && <p>None.</p>}
+
+    <section class="sec">
+      <h2 class="cap">Still being worked on by scans · {open.length}</h2>
+      <ul class="rows">
+        {open.map((q) => <li><span></span><span>{q.missing}<span class="what">On <a href={entryHref(q.entry.id)}>{q.entry.name}</a> · waiting on {q.waitingOn} · {q.attempts} attempt{q.attempts === 1 ? '' : 's'}</span></span></li>)}
+      </ul>
+    </section>
+    <section class="sec">
+      <h2 class="cap">Answered, not yet folded in · {answered.length}</h2>
+      <ul class="rows">
+        {answered.map((q) => <li><span></span><span>{q.missing}<span class="what">On <a href={entryHref(q.entry.id)}>{q.entry.name}</a> · {q.answer}</span></span></li>)}
+      </ul>
+    </section>
+  </article>
+</Base>

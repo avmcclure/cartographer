@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "width": 60,
+  "height": 19,
+  "boxes": [
+    { "id": "databases/ledger/database", "x": 40, "y": 7, "width": 13, "height": 5 },
+    { "id": "repositories/finance-reports/components/invoice-report", "x": 7, "y": 7, "width": 19, "height": 5 }
+  ],
+  "links": [
+    { "id": "repositories/finance-reports/components/invoice-report>databases/ledger/database", "from": "repositories/finance-reports/components/invoice-report", "to": "databases/ledger/database", "points": [[26, 9], [40, 9]], "label": { "x": 28, "y": 8, "width": 10, "height": 2 } }
+  ]
+}

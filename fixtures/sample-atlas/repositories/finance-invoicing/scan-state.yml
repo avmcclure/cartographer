@@ -1,0 +1,18 @@
+# Written by the CLI. Do not edit by hand. Git history of this file is the scan log.
+repository: repositories/finance-invoicing/repository
+cartographer: "0.1.0"
+locations:
+  - id: azdo:brackley/Finance/invoicing
+    primary: true
+    gone: false
+    default-branch: main
+    tip: 71d20ce5a8f3b1d6e9c2047a5d8e1b4f7a0c3d69
+    seen: "2026-11-09"
+branches:
+  main:
+    role: default
+    scanned-commit: 71d20ce5a8f3b1d6e9c2047a5d8e1b4f7a0c3d69
+    scanned: "2026-11-09"
+entries:
+  - repositories/finance-invoicing/components/invoice-job
+  - repositories/finance-invoicing/repository

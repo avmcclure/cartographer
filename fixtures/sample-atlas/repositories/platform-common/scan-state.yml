@@ -1,0 +1,19 @@
+# Written by the CLI. Do not edit by hand. Git history of this file is the scan log.
+repository: repositories/platform-common/repository
+cartographer: "0.1.0"
+locations:
+  - id: github:brackley/platform-common
+    primary: true
+    gone: false
+    default-branch: main
+    tip: 2f7c9e41a6d3b8f0c5e2a7941d6b3e8f0a5c2d77
+    seen: "2026-11-03"
+branches:
+  main:
+    role: default
+    scanned-commit: 2f7c9e41a6d3b8f0c5e2a7941d6b3e8f0a5c2d77
+    scanned: "2026-11-03"
+entries:
+  - repositories/platform-common/components/brackley-common
+  - repositories/platform-common/components/legacy-mailer
+  - repositories/platform-common/repository

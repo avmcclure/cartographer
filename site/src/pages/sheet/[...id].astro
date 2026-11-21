@@ -1,0 +1,8 @@
+---
+import SheetPage from '../../components/SheetPage.astro';
+import { site, sheet } from '../../lib/data.js';
+export function getStaticPaths() {
+  return site.sheets.filter((s) => s.id !== 'organisation').map((s) => ({ params: { id: s.id } }));
+}
+---
+<SheetPage sheet={sheet(Astro.params.id)} />

@@ -1,0 +1,7 @@
+---
+// "Extracted · checkout.asp at 9be0713, line 212", linked to the file when its repository's location is known.
+const { basis, evidence } = Astro.props;
+const word = { extracted: 'Extracted', inferred: 'Inferred', stated: 'Stated by a person' }[basis] ?? basis;
+const text = evidence?.label?.startsWith('stated by') && basis === 'stated' ? evidence.label.replace('stated by ', '') : evidence?.label;
+---
+<span class="evidence">{word}{text && <> · {evidence.url ? <a href={evidence.url} rel="noreferrer">{text}</a> : text}</>}</span>

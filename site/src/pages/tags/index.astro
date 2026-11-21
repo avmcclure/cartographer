@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import { tags, href } from '../../lib/data.js';
+---
+<Base title="Data tags">
+  <article class="page">
+    <p class="kicker">Where data lives and flows</p>
+    <h1>Data tags</h1>
+    <p class="lede">A business-data tag marks the tables that hold one kind of data. Each tag has a plan showing those tables and everything that reads or writes them.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Tag</th><th class="n">Tables</th><th>Held in</th></tr></thead>
+        <tbody>
+          {tags.map((t) => (
+            <tr>
+              <td><a class="select" href={href(`/tags/${t.name}/`)}>{t.name}</a></td>
+              <td class="n">{t.tables.length}</td>
+              <td>{t.tables.map((x) => x.entry.name).join(', ')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    {tags.length === 0 && <p>No table carries a tag yet.</p>}
+  </article>
+</Base>
