@@ -1,0 +1,91 @@
+{
+ "https://dev.azure.com/acme/_apis/git/repositories?api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "id": "r-api",
+     "name": "api",
+     "project": {
+      "id": "p-platform",
+      "name": "Platform",
+      "state": "wellFormed",
+      "visibility": "private"
+     },
+     "size": 48211,
+     "remoteUrl": "https://acme@dev.azure.com/acme/Platform/_git/api",
+     "isDisabled": false,
+     "isInMaintenance": false,
+     "defaultBranch": "refs/heads/main"
+    }
+   ],
+   "count": 1
+  }
+ },
+ "https://dev.azure.com/acme/Platform/_apis/git/repositories/r-api/refs?filter=heads/main&api-version=7.1": {
+  "body": {
+   "value": [
+    {
+     "name": "refs/heads/main",
+     "objectId": "3131313131313131313131313131313131313131"
+    }
+   ],
+   "count": 1
+  }
+ },
+ "https://api.github.com/repos/acme/gateway/git/ref/heads/main": {
+  "body": {
+   "ref": "refs/heads/main",
+   "object": {
+    "sha": "3232323232323232323232323232323232323232",
+    "type": "commit"
+   }
+  }
+ },
+ "https://api.github.com/orgs/acme/repos?per_page=100": {
+  "body": [
+   {
+    "id": 201,
+    "name": "gateway",
+    "full_name": "acme/gateway",
+    "private": true,
+    "owner": {
+     "login": "acme",
+     "type": "Organization"
+    },
+    "fork": false,
+    "pushed_at": "2026-11-18T09:14:02Z",
+    "size": 5120,
+    "default_branch": "main",
+    "archived": false,
+    "disabled": false,
+    "visibility": "private"
+   }
+  ]
+ },
+ "https://api.github.com/graphql": {
+  "body": {
+   "data": {
+    "organization": {
+     "repositoryMigrations": {
+      "nodes": [
+       {
+        "sourceUrl": "https://dev.azure.com/acme/Platform/_git/api",
+        "repositoryName": "gateway",
+        "state": "SUCCEEDED"
+       },
+       {
+        "sourceUrl": "https://dev.azure.com/acme/Platform/_git/api",
+        "repositoryName": "gateway-trial",
+        "state": "FAILED"
+       }
+      ],
+      "pageInfo": {
+       "hasNextPage": false,
+       "endCursor": "Y3Vyc29yOjI="
+      }
+     }
+    }
+   }
+  }
+ }
+}
