@@ -1,0 +1,4614 @@
+{
+ "title": "Large system (synthetic)",
+ "synthetic": true,
+ "scans": [
+  {
+   "nodes": [
+    {
+     "id": "orders_db",
+     "name": "orders_db",
+     "kind": "database",
+     "total": 34,
+     "basis": "extracted",
+     "drawn": 8
+    },
+    {
+     "id": "customers_db",
+     "name": "customers_db",
+     "kind": "database",
+     "total": 22,
+     "basis": "extracted",
+     "drawn": 9
+    },
+    {
+     "id": "catalogue_db",
+     "name": "catalogue_db",
+     "kind": "database",
+     "total": 40,
+     "basis": "extracted",
+     "drawn": 10
+    },
+    {
+     "id": "billing_db",
+     "name": "billing_db",
+     "kind": "database",
+     "total": 16,
+     "basis": "extracted",
+     "drawn": 7
+    },
+    {
+     "id": "audit_db",
+     "name": "audit_db",
+     "kind": "database",
+     "total": 10,
+     "basis": "extracted",
+     "drawn": 9
+    },
+    {
+     "id": "web-shop",
+     "name": "web-shop",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "admin-console",
+     "name": "admin-console",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "mobile-api",
+     "name": "mobile-api",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "partner-api",
+     "name": "partner-api",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "support-desk",
+     "name": "support-desk",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "order-service",
+     "name": "order-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "basket-service",
+     "name": "basket-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "customer-service",
+     "name": "customer-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue-service",
+     "name": "catalogue-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "pricing-service",
+     "name": "pricing-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "search-service",
+     "name": "search-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "checkout-service",
+     "name": "checkout-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "payment-service",
+     "name": "payment-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "invoice-service",
+     "name": "invoice-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "shipping-service",
+     "name": "shipping-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "returns-service",
+     "name": "returns-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "promo-service",
+     "name": "promo-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "identity-service",
+     "name": "identity-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "notify-service",
+     "name": "notify-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "invoice-worker",
+     "name": "invoice-worker",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "export-job",
+     "name": "export-job",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "stock-sync",
+     "name": "stock-sync",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit-writer",
+     "name": "audit-writer",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "mail-sender",
+     "name": "mail-sender",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "price-import",
+     "name": "price-import",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "report-builder",
+     "name": "report-builder",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "cleanup-job",
+     "name": "cleanup-job",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "card-processor",
+     "name": "card-processor",
+     "kind": "external",
+     "basis": "inferred"
+    },
+    {
+     "id": "postal-lookup",
+     "name": "postal-lookup",
+     "kind": "external",
+     "basis": "inferred"
+    },
+    {
+     "id": "orders_db/sp_ord_merge",
+     "name": "sp_ord_merge",
+     "kind": "routine",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/sp_ord_archive_all",
+     "name": "sp_ord_archive_all",
+     "kind": "routine",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/sp_cus_merge",
+     "name": "sp_cus_merge",
+     "kind": "routine",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/sp_cus_total_all",
+     "name": "sp_cus_total_all",
+     "kind": "routine",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/sp_cat_archive",
+     "name": "sp_cat_archive",
+     "kind": "routine",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/sp_cat_merge_all",
+     "name": "sp_cat_merge_all",
+     "kind": "routine",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/sp_bil_purge",
+     "name": "sp_bil_purge",
+     "kind": "routine",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/sp_aud_close",
+     "name": "sp_aud_close",
+     "kind": "routine",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_review",
+     "name": "ord_review",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_order",
+     "name": "ord_order",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_bundle",
+     "name": "ord_bundle",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_region",
+     "name": "cus_region",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_tariff",
+     "name": "cus_tariff",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_address",
+     "name": "cus_address",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "customers_db/cus_payment",
+     "name": "cus_payment",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_price",
+     "name": "cat_price",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_line",
+     "name": "cat_line",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_stock",
+     "name": "cat_stock",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "catalogue_db/cat_session",
+     "name": "cat_session",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_ledger",
+     "name": "bil_ledger",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_brand",
+     "name": "bil_brand",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "audit_db/aud_bundle",
+     "name": "aud_bundle",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_product",
+     "name": "aud_product",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_tag",
+     "name": "cat_tag",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_coupon",
+     "name": "ord_coupon",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_event",
+     "name": "aud_event",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_review",
+     "name": "aud_review",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_import_run",
+     "name": "aud_import_run",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_supplier",
+     "name": "aud_supplier",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "catalogue_db/cat_image",
+     "name": "cat_image",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_return",
+     "name": "cat_return",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_order",
+     "name": "aud_order",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_audit_row",
+     "name": "aud_audit_row",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_basket",
+     "name": "ord_basket",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_ledger",
+     "name": "ord_ledger",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_credit",
+     "name": "bil_credit",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_carrier",
+     "name": "bil_carrier",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_account",
+     "name": "bil_account",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "customers_db/cus_event",
+     "name": "cus_event",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_segment",
+     "name": "cat_segment",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_export",
+     "name": "cat_export",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_audit_row",
+     "name": "cus_audit_row",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_batch",
+     "name": "cus_batch",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_supplier",
+     "name": "cus_supplier",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_invoice",
+     "name": "ord_invoice",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_unit",
+     "name": "cus_unit",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_category",
+     "name": "cat_category",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_coupon",
+     "name": "aud_coupon",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_login",
+     "name": "bil_login",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_invoice",
+     "name": "bil_invoice",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_import_run",
+     "name": "ord_import_run",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    }
+   ],
+   "edges": [
+    {
+     "from": "web-shop",
+     "to": "promo-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "web-shop",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "web-shop",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "web-shop",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "search-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "catalogue-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "returns-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "partner-api",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "partner-api",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "identity-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "identity-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "checkout-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "cleanup-job",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "pricing-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "stock-sync",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "pricing-service",
+     "to": "promo-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit-writer",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "mail-sender",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "promo-service",
+     "to": "search-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "promo-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "price-import",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "card-processor",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "card-processor",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "shipping-service",
+     "to": "postal-lookup",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "customer-service",
+     "to": "postal-lookup",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_merge",
+     "to": "orders_db/ord_review",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_merge",
+     "to": "orders_db/ord_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_archive_all",
+     "to": "orders_db/ord_bundle",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_archive_all",
+     "to": "orders_db/ord_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_merge",
+     "to": "customers_db/cus_region",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_merge",
+     "to": "customers_db/cus_tariff",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_total_all",
+     "to": "customers_db/cus_address",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_total_all",
+     "to": "customers_db/cus_payment",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_archive",
+     "to": "catalogue_db/cat_price",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_archive",
+     "to": "catalogue_db/cat_line",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_merge_all",
+     "to": "catalogue_db/cat_stock",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_merge_all",
+     "to": "catalogue_db/cat_session",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "billing_db/sp_bil_purge",
+     "to": "billing_db/bil_ledger",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "billing_db/sp_bil_purge",
+     "to": "billing_db/bil_brand",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/sp_aud_close",
+     "to": "audit_db/aud_bundle",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/sp_aud_close",
+     "to": "audit_db/aud_product",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "catalogue_db/cat_tag",
+     "label": "writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "order-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "catalogue_db/cat_stock",
+     "label": "writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "order-service",
+     "to": "audit_db/aud_event",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_supplier",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "catalogue_db/cat_price",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_session",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_image",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_return",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_bundle",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_order",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_audit_row",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_basket",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_ledger",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/sp_ord_merge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_credit",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_carrier",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_account",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_brand",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_event",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_order",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "checkout-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_bundle",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_review",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_basket",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_image",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_segment",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_export",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_tag",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "catalogue_db/cat_stock",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_audit_row",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "orders_db/ord_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_tariff",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_address",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_audit_row",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_batch",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/sp_cus_merge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "promo-service",
+     "to": "audit_db/aud_supplier",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "promo-service",
+     "to": "catalogue_db/cat_image",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "promo-service",
+     "to": "catalogue_db/cat_price",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "promo-service",
+     "to": "catalogue_db/cat_export",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_supplier",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_unit",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "notify-service",
+     "to": "catalogue_db/cat_stock",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "notify-service",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "notify-service",
+     "to": "catalogue_db/cat_category",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "catalogue_db/cat_export",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_order",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_audit_row",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_import_run",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "audit_db/aud_coupon",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_carrier",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_login",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_credit",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "stock-sync",
+     "to": "audit_db/aud_product",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/ord_review",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "customers_db/cus_supplier",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/ord_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/sp_ord_archive_all",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit-writer",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit-writer",
+     "to": "audit_db/aud_coupon",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "audit-writer",
+     "to": "catalogue_db/cat_stock",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "audit-writer",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "billing_db/bil_login",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/cat_image",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/cat_tag",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/cat_stock",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/sp_cat_merge_all",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_coupon",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_import_run",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db/cat_category",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db/cat_line",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db/cat_image",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_ledger",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_account",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_credit",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_carrier",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "catalogue_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "support-desk",
+     "to": "customers_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "orders_db/ord_invoice",
+     "to": "orders_db/ord_order",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/cus_region",
+     "to": "customers_db/cus_payment",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/aud_import_run",
+     "to": "audit_db/aud_event",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/cat_segment",
+     "to": "catalogue_db/cat_line",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/aud_order",
+     "to": "audit_db/aud_import_run",
+     "label": "references",
+     "basis": "extracted"
+    }
+   ]
+  },
+  {
+   "nodes": [
+    {
+     "id": "orders_db",
+     "name": "orders_db",
+     "kind": "database",
+     "total": 35,
+     "basis": "extracted",
+     "drawn": 9
+    },
+    {
+     "id": "customers_db",
+     "name": "customers_db",
+     "kind": "database",
+     "total": 23,
+     "basis": "extracted",
+     "drawn": 10
+    },
+    {
+     "id": "catalogue_db",
+     "name": "catalogue_db",
+     "kind": "database",
+     "total": 40,
+     "basis": "extracted",
+     "drawn": 10
+    },
+    {
+     "id": "billing_db",
+     "name": "billing_db",
+     "kind": "database",
+     "total": 16,
+     "basis": "extracted",
+     "drawn": 7
+    },
+    {
+     "id": "audit_db",
+     "name": "audit_db",
+     "kind": "database",
+     "total": 10,
+     "basis": "extracted",
+     "drawn": 9
+    },
+    {
+     "id": "web-shop",
+     "name": "web-shop",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "admin-console",
+     "name": "admin-console",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "mobile-api",
+     "name": "mobile-api",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "partner-api",
+     "name": "partner-api",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "support-desk",
+     "name": "support-desk",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "order-service",
+     "name": "order-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "basket-service",
+     "name": "basket-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "customer-service",
+     "name": "customer-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue-service",
+     "name": "catalogue-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "pricing-service",
+     "name": "pricing-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "search-service",
+     "name": "search-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "checkout-service",
+     "name": "checkout-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "payment-service",
+     "name": "payment-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "invoice-service",
+     "name": "invoice-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "shipping-service",
+     "name": "shipping-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "returns-service",
+     "name": "returns-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "identity-service",
+     "name": "identity-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "notify-service",
+     "name": "notify-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "invoice-worker",
+     "name": "invoice-worker",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "export-job",
+     "name": "export-job",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "stock-sync",
+     "name": "stock-sync",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit-writer",
+     "name": "audit-writer",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "mail-sender",
+     "name": "mail-sender",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "price-import",
+     "name": "price-import",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "report-builder",
+     "name": "report-builder",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "cleanup-job",
+     "name": "cleanup-job",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "card-processor",
+     "name": "card-processor",
+     "kind": "external",
+     "basis": "inferred"
+    },
+    {
+     "id": "postal-lookup",
+     "name": "postal-lookup",
+     "kind": "external",
+     "basis": "inferred"
+    },
+    {
+     "id": "orders_db/sp_ord_merge",
+     "name": "sp_ord_merge",
+     "kind": "routine",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/sp_ord_archive_all",
+     "name": "sp_ord_archive_all",
+     "kind": "routine",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/sp_cus_merge",
+     "name": "sp_cus_merge",
+     "kind": "routine",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/sp_cus_total_all",
+     "name": "sp_cus_total_all",
+     "kind": "routine",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/sp_cat_archive",
+     "name": "sp_cat_archive",
+     "kind": "routine",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/sp_cat_merge_all",
+     "name": "sp_cat_merge_all",
+     "kind": "routine",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/sp_bil_purge",
+     "name": "sp_bil_purge",
+     "kind": "routine",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/sp_aud_close",
+     "name": "sp_aud_close",
+     "kind": "routine",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_review",
+     "name": "ord_review",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_order",
+     "name": "ord_order",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_bundle",
+     "name": "ord_bundle",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_region",
+     "name": "cus_region",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_tariff",
+     "name": "cus_tariff",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_address",
+     "name": "cus_address",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "customers_db/cus_payment",
+     "name": "cus_payment",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_price",
+     "name": "cat_price",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_line",
+     "name": "cat_line",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_stock",
+     "name": "cat_stock",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "catalogue_db/cat_session",
+     "name": "cat_session",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_ledger",
+     "name": "bil_ledger",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_brand",
+     "name": "bil_brand",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "audit_db/aud_bundle",
+     "name": "aud_bundle",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_product",
+     "name": "aud_product",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_tag",
+     "name": "cat_tag",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_coupon",
+     "name": "ord_coupon",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_event",
+     "name": "aud_event",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_review",
+     "name": "aud_review",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_import_run",
+     "name": "aud_import_run",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_supplier",
+     "name": "aud_supplier",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "catalogue_db/cat_image",
+     "name": "cat_image",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_return",
+     "name": "cat_return",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_order",
+     "name": "aud_order",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_audit_row",
+     "name": "aud_audit_row",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_basket",
+     "name": "ord_basket",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_ledger",
+     "name": "ord_ledger",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_credit",
+     "name": "bil_credit",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_carrier",
+     "name": "bil_carrier",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_account",
+     "name": "bil_account",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "customers_db/cus_event",
+     "name": "cus_event",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_segment",
+     "name": "cat_segment",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_export",
+     "name": "cat_export",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_audit_row",
+     "name": "cus_audit_row",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_batch",
+     "name": "cus_batch",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_supplier",
+     "name": "cus_supplier",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_invoice",
+     "name": "ord_invoice",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_unit",
+     "name": "cus_unit",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_category",
+     "name": "cat_category",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_coupon",
+     "name": "aud_coupon",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_login",
+     "name": "bil_login",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_invoice",
+     "name": "bil_invoice",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_import_run",
+     "name": "ord_import_run",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "loyalty-service",
+     "name": "loyalty-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_loyalty_point",
+     "name": "cus_loyalty_point",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_gift_card",
+     "name": "ord_gift_card",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    }
+   ],
+   "edges": [
+    {
+     "from": "web-shop",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "web-shop",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "web-shop",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "search-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "catalogue-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "partner-api",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "partner-api",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "identity-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "identity-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "checkout-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "cleanup-job",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "pricing-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "stock-sync",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit-writer",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "mail-sender",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "price-import",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "card-processor",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "card-processor",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "shipping-service",
+     "to": "postal-lookup",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "customer-service",
+     "to": "postal-lookup",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_merge",
+     "to": "orders_db/ord_review",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_merge",
+     "to": "orders_db/ord_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_archive_all",
+     "to": "orders_db/ord_bundle",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_archive_all",
+     "to": "orders_db/ord_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_merge",
+     "to": "customers_db/cus_region",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_merge",
+     "to": "customers_db/cus_tariff",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_total_all",
+     "to": "customers_db/cus_address",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_total_all",
+     "to": "customers_db/cus_payment",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_archive",
+     "to": "catalogue_db/cat_price",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_archive",
+     "to": "catalogue_db/cat_line",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_merge_all",
+     "to": "catalogue_db/cat_stock",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_merge_all",
+     "to": "catalogue_db/cat_session",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "billing_db/sp_bil_purge",
+     "to": "billing_db/bil_ledger",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "billing_db/sp_bil_purge",
+     "to": "billing_db/bil_brand",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/sp_aud_close",
+     "to": "audit_db/aud_bundle",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/sp_aud_close",
+     "to": "audit_db/aud_product",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "catalogue_db/cat_stock",
+     "label": "writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "order-service",
+     "to": "audit_db/aud_event",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_supplier",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "catalogue_db/cat_price",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_session",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_image",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_return",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_bundle",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_order",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_audit_row",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_basket",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_ledger",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/sp_ord_merge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_credit",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_carrier",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_account",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_brand",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_event",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_order",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "checkout-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_bundle",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_review",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_basket",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_image",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_segment",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_export",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_tag",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "catalogue_db/cat_stock",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_audit_row",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "orders_db/ord_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_tariff",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_address",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_audit_row",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/sp_cus_merge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_supplier",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_unit",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "notify-service",
+     "to": "catalogue_db/cat_stock",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "notify-service",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "notify-service",
+     "to": "catalogue_db/cat_category",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "catalogue_db/cat_export",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_order",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_audit_row",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_import_run",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "audit_db/aud_coupon",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_carrier",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_login",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_credit",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "stock-sync",
+     "to": "audit_db/aud_product",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/ord_review",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "customers_db/cus_supplier",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/ord_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/sp_ord_archive_all",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit-writer",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit-writer",
+     "to": "audit_db/aud_coupon",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "audit-writer",
+     "to": "catalogue_db/cat_stock",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "audit-writer",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "billing_db/bil_login",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/cat_image",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/cat_tag",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/cat_stock",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/sp_cat_merge_all",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_coupon",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_import_run",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db/cat_category",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db/cat_line",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db/cat_image",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_ledger",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_account",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_credit",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_carrier",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "catalogue_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "support-desk",
+     "to": "customers_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "orders_db/ord_invoice",
+     "to": "orders_db/ord_order",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/cus_region",
+     "to": "customers_db/cus_payment",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/aud_import_run",
+     "to": "audit_db/aud_event",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/cat_segment",
+     "to": "catalogue_db/cat_line",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/aud_order",
+     "to": "audit_db/aud_import_run",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "loyalty-service",
+     "to": "customers_db/cus_loyalty_point",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "loyalty-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "loyalty-service",
+     "to": "customer-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "orders_db/ord_gift_card",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "orders_db/ord_gift_card",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "web-shop",
+     "to": "returns-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "billing_db/bil_account",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "identity-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit-writer",
+     "to": "audit_db/aud_product",
+     "label": "writes",
+     "basis": "extracted"
+    }
+   ]
+  },
+  {
+   "nodes": [
+    {
+     "id": "orders_db",
+     "name": "orders_db",
+     "kind": "database",
+     "total": 35,
+     "basis": "extracted",
+     "drawn": 9
+    },
+    {
+     "id": "customers_db",
+     "name": "customers_db",
+     "kind": "database",
+     "total": 23,
+     "basis": "extracted",
+     "drawn": 10
+    },
+    {
+     "id": "catalogue_db",
+     "name": "catalogue_db",
+     "kind": "database",
+     "total": 40,
+     "basis": "extracted",
+     "drawn": 10
+    },
+    {
+     "id": "billing_db",
+     "name": "billing_db",
+     "kind": "database",
+     "total": 17,
+     "basis": "extracted",
+     "drawn": 8
+    },
+    {
+     "id": "audit_db",
+     "name": "audit_db",
+     "kind": "database",
+     "total": 10,
+     "basis": "extracted",
+     "drawn": 9
+    },
+    {
+     "id": "web-shop",
+     "name": "web-shop",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "admin-console",
+     "name": "admin-console",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "mobile-api",
+     "name": "mobile-api",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "partner-api",
+     "name": "partner-api",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "support-desk",
+     "name": "support-desk",
+     "kind": "component",
+     "sub": "site",
+     "basis": "extracted"
+    },
+    {
+     "id": "order-service",
+     "name": "order-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "basket-service",
+     "name": "basket-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "customer-service",
+     "name": "customer-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue-service",
+     "name": "catalogue-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "pricing-service",
+     "name": "pricing-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "search-service",
+     "name": "search-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "checkout-service",
+     "name": "checkout-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "payment-service",
+     "name": "payment-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "invoice-service",
+     "name": "invoice-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "shipping-service",
+     "name": "shipping-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "returns-service",
+     "name": "returns-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "identity-service",
+     "name": "identity-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "notify-service",
+     "name": "notify-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "invoice-worker",
+     "name": "invoice-worker",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "export-job",
+     "name": "export-job",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "stock-sync",
+     "name": "stock-sync",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit-writer",
+     "name": "audit-writer",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "mail-sender",
+     "name": "mail-sender",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "price-import",
+     "name": "price-import",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "report-builder",
+     "name": "report-builder",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "cleanup-job",
+     "name": "cleanup-job",
+     "kind": "component",
+     "sub": "job",
+     "basis": "extracted"
+    },
+    {
+     "id": "card-processor",
+     "name": "card-processor",
+     "kind": "external",
+     "basis": "inferred"
+    },
+    {
+     "id": "postal-lookup",
+     "name": "postal-lookup",
+     "kind": "external",
+     "basis": "inferred"
+    },
+    {
+     "id": "orders_db/sp_ord_merge",
+     "name": "sp_ord_merge",
+     "kind": "routine",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/sp_ord_archive_all",
+     "name": "sp_ord_archive_all",
+     "kind": "routine",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/sp_cus_merge",
+     "name": "sp_cus_merge",
+     "kind": "routine",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/sp_cus_total_all",
+     "name": "sp_cus_total_all",
+     "kind": "routine",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/sp_cat_archive",
+     "name": "sp_cat_archive",
+     "kind": "routine",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/sp_cat_merge_all",
+     "name": "sp_cat_merge_all",
+     "kind": "routine",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/sp_bil_purge",
+     "name": "sp_bil_purge",
+     "kind": "routine",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/sp_aud_close",
+     "name": "sp_aud_close",
+     "kind": "routine",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_review",
+     "name": "ord_review",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_order",
+     "name": "ord_order",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_bundle",
+     "name": "ord_bundle",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_region",
+     "name": "cus_region",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_tariff",
+     "name": "cus_tariff",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_address",
+     "name": "cus_address",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "customers_db/cus_payment",
+     "name": "cus_payment",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_price",
+     "name": "cat_price",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_line",
+     "name": "cat_line",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_session",
+     "name": "cat_session",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_ledger",
+     "name": "bil_ledger",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_brand",
+     "name": "bil_brand",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "audit_db/aud_bundle",
+     "name": "aud_bundle",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_product",
+     "name": "aud_product",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_tag",
+     "name": "cat_tag",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_coupon",
+     "name": "ord_coupon",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_event",
+     "name": "aud_event",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_review",
+     "name": "aud_review",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_import_run",
+     "name": "aud_import_run",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_supplier",
+     "name": "aud_supplier",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "catalogue_db/cat_image",
+     "name": "cat_image",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_return",
+     "name": "cat_return",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_order",
+     "name": "aud_order",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_audit_row",
+     "name": "aud_audit_row",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_basket",
+     "name": "ord_basket",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_ledger",
+     "name": "ord_ledger",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_credit",
+     "name": "bil_credit",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_carrier",
+     "name": "bil_carrier",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_account",
+     "name": "bil_account",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "inferred"
+    },
+    {
+     "id": "customers_db/cus_event",
+     "name": "cus_event",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_segment",
+     "name": "cat_segment",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_export",
+     "name": "cat_export",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_audit_row",
+     "name": "cus_audit_row",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_batch",
+     "name": "cus_batch",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_supplier",
+     "name": "cus_supplier",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_invoice",
+     "name": "ord_invoice",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_unit",
+     "name": "cus_unit",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_category",
+     "name": "cat_category",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "audit_db/aud_coupon",
+     "name": "aud_coupon",
+     "kind": "table",
+     "parent": "audit_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_login",
+     "name": "bil_login",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_invoice",
+     "name": "bil_invoice",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_import_run",
+     "name": "ord_import_run",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "loyalty-service",
+     "name": "loyalty-service",
+     "kind": "component",
+     "sub": "service",
+     "basis": "extracted"
+    },
+    {
+     "id": "customers_db/cus_loyalty_point",
+     "name": "cus_loyalty_point",
+     "kind": "table",
+     "parent": "customers_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "orders_db/ord_gift_card",
+     "name": "ord_gift_card",
+     "kind": "table",
+     "parent": "orders_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "catalogue_db/cat_product_variant",
+     "name": "cat_product_variant",
+     "kind": "table",
+     "parent": "catalogue_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/bil_dunning_run",
+     "name": "bil_dunning_run",
+     "kind": "table",
+     "parent": "billing_db",
+     "basis": "extracted"
+    },
+    {
+     "id": "billing_db/sp_bil_dunning",
+     "name": "sp_bil_dunning",
+     "kind": "routine",
+     "parent": "billing_db",
+     "basis": "extracted"
+    }
+   ],
+   "edges": [
+    {
+     "from": "web-shop",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "web-shop",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "web-shop",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "search-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "catalogue-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "partner-api",
+     "to": "notify-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "partner-api",
+     "to": "shipping-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "identity-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "payment-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "identity-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "support-desk",
+     "to": "checkout-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "cleanup-job",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "pricing-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "stock-sync",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit-writer",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "basket-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "mail-sender",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "price-import",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "card-processor",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "card-processor",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "shipping-service",
+     "to": "postal-lookup",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "customer-service",
+     "to": "postal-lookup",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_merge",
+     "to": "orders_db/ord_review",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_merge",
+     "to": "orders_db/ord_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_archive_all",
+     "to": "orders_db/ord_bundle",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "orders_db/sp_ord_archive_all",
+     "to": "orders_db/ord_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_merge",
+     "to": "customers_db/cus_region",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_merge",
+     "to": "customers_db/cus_tariff",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_total_all",
+     "to": "customers_db/cus_address",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/sp_cus_total_all",
+     "to": "customers_db/cus_payment",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_archive",
+     "to": "catalogue_db/cat_price",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_archive",
+     "to": "catalogue_db/cat_line",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/sp_cat_merge_all",
+     "to": "catalogue_db/cat_session",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "billing_db/sp_bil_purge",
+     "to": "billing_db/bil_ledger",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "billing_db/sp_bil_purge",
+     "to": "billing_db/bil_brand",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/sp_aud_close",
+     "to": "audit_db/aud_bundle",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/sp_aud_close",
+     "to": "audit_db/aud_product",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "audit_db/aud_event",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "audit_db/aud_supplier",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "basket-service",
+     "to": "catalogue_db/cat_price",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_session",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_image",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "customer-service",
+     "to": "catalogue_db/cat_return",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_bundle",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_order",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "audit_db/aud_audit_row",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_basket",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/ord_ledger",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "pricing-service",
+     "to": "orders_db/sp_ord_merge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_credit",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_carrier",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_account",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/bil_brand",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_event",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/aud_order",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "checkout-service",
+     "to": "orders_db/ord_coupon",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_bundle",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_review",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "payment-service",
+     "to": "orders_db/ord_basket",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_image",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_segment",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_export",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-service",
+     "to": "catalogue_db/cat_tag",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_audit_row",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "orders_db/ord_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "shipping-service",
+     "to": "audit_db/aud_order",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_tariff",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_address",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/cus_audit_row",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "returns-service",
+     "to": "customers_db/sp_cus_merge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_supplier",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "identity-service",
+     "to": "customers_db/cus_unit",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "notify-service",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "notify-service",
+     "to": "catalogue_db/cat_category",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "catalogue_db/cat_export",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_order",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_audit_row",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/aud_import_run",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "audit_db/aud_coupon",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_carrier",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_login",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_credit",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/bil_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "stock-sync",
+     "to": "audit_db/aud_product",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/ord_review",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "customers_db/cus_supplier",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/ord_import_run",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "orders_db/sp_ord_archive_all",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit-writer",
+     "to": "customers_db/cus_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit-writer",
+     "to": "audit_db/aud_coupon",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "audit-writer",
+     "to": "orders_db/ord_invoice",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "billing_db/bil_login",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/cat_image",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/cat_tag",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mail-sender",
+     "to": "catalogue_db/sp_cat_merge_all",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_coupon",
+     "label": "reads, writes",
+     "basis": "inferred"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_import_run",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_event",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/aud_review",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "price-import",
+     "to": "audit_db/sp_aud_close",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db/cat_category",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db/cat_line",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_ledger",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_account",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/bil_carrier",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db/sp_bil_purge",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "admin-console",
+     "to": "catalogue_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "support-desk",
+     "to": "customers_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "report-builder",
+     "to": "catalogue_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "export-job",
+     "to": "billing_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "cleanup-job",
+     "to": "billing_db",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "orders_db/ord_invoice",
+     "to": "orders_db/ord_order",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "customers_db/cus_region",
+     "to": "customers_db/cus_payment",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/aud_import_run",
+     "to": "audit_db/aud_event",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue_db/cat_segment",
+     "to": "catalogue_db/cat_line",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "audit_db/aud_order",
+     "to": "audit_db/aud_import_run",
+     "label": "references",
+     "basis": "extracted"
+    },
+    {
+     "from": "loyalty-service",
+     "to": "customers_db/cus_loyalty_point",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "loyalty-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "loyalty-service",
+     "to": "customer-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "checkout-service",
+     "to": "orders_db/ord_gift_card",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "order-service",
+     "to": "orders_db/ord_gift_card",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "web-shop",
+     "to": "returns-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "report-builder",
+     "to": "billing_db/bil_account",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "mobile-api",
+     "to": "identity-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "catalogue-service",
+     "to": "catalogue_db/cat_product_variant",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "search-service",
+     "to": "catalogue_db/cat_product_variant",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "billing_db/sp_bil_dunning",
+     "to": "billing_db/bil_dunning_run",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "invoice-worker",
+     "to": "billing_db/sp_bil_dunning",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "partner-api",
+     "to": "pricing-service",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "stock-sync",
+     "to": "catalogue-service",
+     "label": "calls",
+     "basis": "inferred"
+    },
+    {
+     "from": "support-desk",
+     "to": "returns-service",
+     "label": "calls",
+     "basis": "extracted"
+    }
+   ]
+  }
+ ]
+}

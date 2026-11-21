@@ -1,0 +1,1064 @@
+{
+ "title": "CIOC Online Resources (real entries)",
+ "synthetic": false,
+ "scans": [
+  {
+   "nodes": [
+    {
+     "id": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "name": "online-resources-site",
+     "kind": "component",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc-primary",
+     "name": "cioc-primary",
+     "kind": "database",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc_shared",
+     "name": "cioc_shared",
+     "kind": "database",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "name": "sp_GBL_SavedSearch_d",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "name": "sp_GBL_SavedSearch_u",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "name": "CIC_SecurityLevel_SavedSearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "name": "GBL_SavedSearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/naics_example",
+     "name": "NAICS_Example",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "name": "fn_SHR_STP_FormatError",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "name": "sp_STP_UnknownErrorCheck",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/tables/dbo/shr_stp_error",
+     "name": "SHR_STP_Error",
+     "kind": "table",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "name": "sp_gbl_savedsearch_l",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l_shared",
+     "name": "sp_gbl_savedsearch_l_shared",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "name": "sp_gbl_savedsearch_s",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/vol_securitylevel_savedsearch",
+     "name": "vol_securitylevel_savedsearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_stp_objectname",
+     "name": "fn_shr_stp_objectname",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/gbl_users",
+     "name": "gbl_users",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/cic_securitylevel",
+     "name": "cic_securitylevel",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/vol_securitylevel",
+     "name": "vol_securitylevel",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/fn_gbl_parseintidlist",
+     "name": "fn_gbl_parseintidlist",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_gbl_sprintf",
+     "name": "fn_shr_gbl_sprintf",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/naics_description",
+     "name": "naics_description",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l_shared",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc-primary/tables/dbo/vol_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_objectname",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/gbl_users",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/vol_securitylevel",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/vol_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/routines/dbo/fn_gbl_parseintidlist",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_objectname",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "to": "databases/cioc_shared/tables/dbo/shr_stp_error",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_gbl_sprintf",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/tables/dbo/naics_example",
+     "to": "databases/cioc-primary/tables/dbo/naics_description",
+     "label": "writes (trigger)",
+     "basis": "extracted"
+    }
+   ]
+  },
+  {
+   "nodes": [
+    {
+     "id": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "name": "online-resources-site",
+     "kind": "component",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc-primary",
+     "name": "cioc-primary",
+     "kind": "database",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc_shared",
+     "name": "cioc_shared",
+     "kind": "database",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "name": "sp_GBL_SavedSearch_d",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "name": "sp_GBL_SavedSearch_u",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "name": "CIC_SecurityLevel_SavedSearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "name": "GBL_SavedSearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/naics_example",
+     "name": "NAICS_Example",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "name": "fn_SHR_STP_FormatError",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "name": "sp_STP_UnknownErrorCheck",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/tables/dbo/shr_stp_error",
+     "name": "SHR_STP_Error",
+     "kind": "table",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "name": "sp_gbl_savedsearch_l",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l_shared",
+     "name": "sp_gbl_savedsearch_l_shared",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "name": "sp_gbl_savedsearch_s",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/vol_securitylevel_savedsearch",
+     "name": "vol_securitylevel_savedsearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_stp_objectname",
+     "name": "fn_shr_stp_objectname",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/gbl_users",
+     "name": "gbl_users",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/cic_securitylevel",
+     "name": "cic_securitylevel",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/vol_securitylevel",
+     "name": "vol_securitylevel",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_gbl_sprintf",
+     "name": "fn_shr_gbl_sprintf",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/naics_description",
+     "name": "naics_description",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "repositories/opencioc-onlineresources/components/online-resources-python",
+     "name": "online-resources-python",
+     "kind": "component",
+     "basis": "entry file",
+     "inv": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/gbl_savedsearch_history",
+     "name": "GBL_SavedSearch_History",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "inv": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l_shared",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc-primary/tables/dbo/vol_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/gbl_users",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/vol_securitylevel",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/vol_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_objectname",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "to": "databases/cioc_shared/tables/dbo/shr_stp_error",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_gbl_sprintf",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/tables/dbo/naics_example",
+     "to": "databases/cioc-primary/tables/dbo/naics_description",
+     "label": "writes (trigger)",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-python",
+     "to": "databases/cioc-primary",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-python",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "to": "databases/cioc-primary/tables/dbo/gbl_users",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch_history",
+     "label": "writes",
+     "basis": "extracted"
+    }
+   ]
+  },
+  {
+   "nodes": [
+    {
+     "id": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "name": "online-resources-site",
+     "kind": "component",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc-primary",
+     "name": "cioc-primary",
+     "kind": "database",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc_shared",
+     "name": "cioc_shared",
+     "kind": "database",
+     "basis": "entry file"
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "name": "sp_GBL_SavedSearch_d",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "name": "sp_GBL_SavedSearch_u",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "name": "CIC_SecurityLevel_SavedSearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "name": "GBL_SavedSearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/naics_example",
+     "name": "NAICS_Example",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "name": "fn_SHR_STP_FormatError",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "name": "sp_STP_UnknownErrorCheck",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc_shared/tables/dbo/shr_stp_error",
+     "name": "SHR_STP_Error",
+     "kind": "table",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "name": "sp_gbl_savedsearch_l",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l_shared",
+     "name": "sp_gbl_savedsearch_l_shared",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "name": "sp_gbl_savedsearch_s",
+     "kind": "routine",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "ns": false
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/vol_securitylevel_savedsearch",
+     "name": "vol_securitylevel_savedsearch",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_stp_objectname",
+     "name": "fn_shr_stp_objectname",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/gbl_users",
+     "name": "gbl_users",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/cic_securitylevel",
+     "name": "cic_securitylevel",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc_shared/routines/dbo/fn_shr_gbl_sprintf",
+     "name": "fn_shr_gbl_sprintf",
+     "kind": "routine",
+     "parent": "databases/cioc_shared",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/naics_description",
+     "name": "naics_description",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "link target only",
+     "ns": true
+    },
+    {
+     "id": "repositories/opencioc-onlineresources/components/online-resources-python",
+     "name": "online-resources-python",
+     "kind": "component",
+     "basis": "entry file",
+     "inv": true
+    },
+    {
+     "id": "databases/cioc-primary/tables/dbo/gbl_savedsearch_history",
+     "name": "GBL_SavedSearch_History",
+     "kind": "table",
+     "parent": "databases/cioc-primary",
+     "basis": "entry file",
+     "inv": true
+    },
+    {
+     "id": "databases/cioc_shared/tables/dbo/shr_gbl_language",
+     "name": "SHR_GBL_Language",
+     "kind": "table",
+     "parent": "databases/cioc_shared",
+     "basis": "entry file",
+     "inv": true
+    }
+   ],
+   "edges": [
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l_shared",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-site",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_d",
+     "to": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/gbl_users",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads, writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/cic_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/vol_securitylevel_savedsearch",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_objectname",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "to": "databases/cioc_shared/tables/dbo/shr_stp_error",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_gbl_sprintf",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/sp_stp_unknownerrorcheck",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/tables/dbo/naics_example",
+     "to": "databases/cioc-primary/tables/dbo/naics_description",
+     "label": "writes (trigger)",
+     "basis": "extracted"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-python",
+     "to": "databases/cioc-primary",
+     "label": "uses",
+     "basis": "inferred"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-python",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_l",
+     "to": "databases/cioc-primary/tables/dbo/gbl_users",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_u",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch_history",
+     "label": "writes",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "to": "databases/cioc-primary/tables/dbo/gbl_savedsearch",
+     "label": "reads",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "to": "databases/cioc_shared/routines/dbo/fn_shr_stp_formaterror",
+     "label": "calls",
+     "basis": "extracted"
+    },
+    {
+     "from": "databases/cioc_shared/routines/dbo/fn_shr_gbl_sprintf",
+     "to": "databases/cioc_shared/tables/dbo/shr_gbl_language",
+     "label": "reads",
+     "basis": "inferred"
+    },
+    {
+     "from": "repositories/opencioc-onlineresources/components/online-resources-python",
+     "to": "databases/cioc-primary/routines/dbo/sp_gbl_savedsearch_s",
+     "label": "calls",
+     "basis": "extracted"
+    }
+   ]
+  }
+ ]
+}
