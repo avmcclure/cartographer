@@ -1,0 +1,23 @@
+---
+// Change summaries from the atlas's changes/ folder, newest first.
+import Base from '../layouts/Base.astro';
+import { changes, entryHref, date, markdown } from '../lib/data.js';
+const shown = changes.slice(0, 50);
+---
+<Base title="Recent changes">
+  <article class="page">
+    <p class="kicker">From scans</p>
+    <h1>Recent changes</h1>
+    <p class="lede">What each scan changed in the atlas, newest first.{changes.length > shown.length && ` Showing the latest ${shown.length} of ${changes.length}.`}</p>
+    <ol class="list">
+      {shown.map((c) => (
+        <li>
+          <p class="kicker">{date(c.date)} · commit <code>{c.commit}</code></p>
+          <h2>{c.repository.kind === 'missing' ? c.title : <a href={entryHref(c.repository.id)}>{c.title}</a>}</h2>
+          <div class="prose" set:html={markdown(c.markdown.replace(/^## /gm, '### '))} />
+        </li>
+      ))}
+    </ol>
+    {changes.length === 0 && <p>No scan has written a change summary yet.</p>}
+  </article>
+</Base>

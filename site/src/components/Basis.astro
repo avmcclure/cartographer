@@ -1,0 +1,8 @@
+---
+// The sign for how a fact is known, as it is drawn on a plan: solid extracted, dashed inferred, a survey mark for stated.
+const { basis } = Astro.props;
+---
+<svg class={`basis b-${basis}`} width="36" height="12" viewBox="0 0 36 12" aria-hidden="true">
+  <line x1="0" y1="6" x2="36" y2="6" />
+  {basis === 'stated' && <path d="M18 1 l5.5 9.5 h-11 Z" />}
+</svg>

@@ -1,0 +1,35 @@
+# Written by the CLI. Do not edit by hand. Git history of this file is the scan log.
+repository: repositories/sales-storefront/repository
+cartographer: "0.1.0"
+locations:
+  - id: azdo:brackley/Sales/storefront
+    primary: true
+    gone: false
+    default-branch: main
+    tip: 9be0713c41d8e0a2f6b35d9a7c1e4f8a2b6d0e31
+    seen: "2026-11-09"
+  - id: github:brackley/sales-storefront
+    primary: false
+    gone: false
+    default-branch: main
+    tip: 9be0713c41d8e0a2f6b35d9a7c1e4f8a2b6d0e31
+    seen: "2026-11-09"
+branches:
+  main:
+    role: default
+    scanned-commit: 9be0713c41d8e0a2f6b35d9a7c1e4f8a2b6d0e31
+    scanned: "2026-11-09"
+entries:
+  - repositories/sales-storefront/components/backoffice
+  - repositories/sales-storefront/components/webshop
+  - repositories/sales-storefront/repository
+  - databases/sales/database
+  - databases/sales/routines/dbo/fn-ordertotal
+  - databases/sales/routines/dbo/usp-closeorder
+  - databases/sales/tables/dbo/customers
+  - databases/sales/tables/dbo/open-orders
+  - databases/sales/tables/dbo/order-lines
+  - databases/sales/tables/dbo/orders
+  - databases/sales/tables/dbo/orders-audit
+  - databases/sales/tables/dbo/payments
+  - databases/sales/triggers/dbo/trg-orders-audit

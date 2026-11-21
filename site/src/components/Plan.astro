@@ -1,0 +1,88 @@
+---
+// One sheet as an SVG drawing at full size. Reading needs no JavaScript; scripts/plan.js adds selection and panning.
+import { STEP, MARGIN, px, pathOf, arrowOf, columnLetter, fit } from '../lib/draw.js';
+import { sheetHref, entryHref } from '../lib/data.js';
+
+const { sheet, marks = null, label } = Astro.props;
+const W = px(sheet.width), H = px(sheet.height);
+const cols = Math.ceil(sheet.width / sheet.cell), rows = Math.ceil(sheet.height / sheet.cell);
+const cell = px(sheet.cell);
+const containers = sheet.plots.filter((p) => p.container);
+const leaves = sheet.plots.filter((p) => !p.container);
+const open = (p) => (p.opens ? sheetHref(p.opens) : p.entry ? entryHref(p.entry) : '#');
+const state = (p) => (marks?.origin.has(p.id) ? ' is-origin' : marks?.reached.has(p.id) ? ' is-reached' : '');
+const signs = (p) => [p.drift && '≠', p.unsurveyed > 0 && `?${p.unsurveyed}`].filter(Boolean);
+const describe = (p) =>
+  `Plot ${p.number}, ${p.name}, ${p.kind}${p.type ? ' ' + p.type : ''}, grid ${p.ref}` +
+  (p.retired ? ', retired' : '') + (p.drift ? ', drift between sources' : '') + (p.unsurveyed ? `, ${p.unsurveyed} unsurveyed` : '');
+---
+<svg class="plan" xmlns="http://www.w3.org/2000/svg" role="group" aria-label={label}
+  width={W + MARGIN.left + MARGIN.right} height={H + MARGIN.top + MARGIN.bottom}
+  viewBox={`${-MARGIN.left} ${-MARGIN.top} ${W + MARGIN.left + MARGIN.right} ${H + MARGIN.top + MARGIN.bottom}`}>
+  <defs>
+    <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#111" stroke-width=".8" /></pattern>
+  </defs>
+  <rect class="sheet-frame" x="0" y="0" width={W} height={H} />
+  <g class="grid" aria-hidden="true">
+    {Array.from({ length: cols - 1 }, (_, i) => <line x1={(i + 1) * cell} y1="0" x2={(i + 1) * cell} y2={H} />)}
+    {Array.from({ length: rows - 1 }, (_, i) => <line x1="0" y1={(i + 1) * cell} x2={W} y2={(i + 1) * cell} />)}
+    {Array.from({ length: cols }, (_, i) => <text x={Math.min(i * cell + cell / 2, (i * cell + W) / 2)} y="-9" text-anchor="middle">{columnLetter(i)}</text>)}
+    {Array.from({ length: rows }, (_, i) => <text x="-14" y={Math.min(i * cell + cell / 2, (i * cell + H) / 2) + 4} text-anchor="middle">{i + 1}</text>)}
+  </g>
+
+  {containers.map((p) => (
+    <a class={`plot container k-${p.kind}${p.neighbour ? ' neighbour' : ''}${state(p)}`} href={open(p)} data-plot={p.id} data-select={p.id} aria-label={describe(p)}>
+      <title>{p.summary}</title>
+      <rect class="outline" x={px(p.x)} y={px(p.y)} width={px(p.w)} height={px(p.h)} />
+      <text class="name" x={px(p.x) + 8} y={px(p.y) + 20}>{fit(`${p.number} ${p.name}`, px(p.w) - 18 - signs(p).length * 28)}</text>
+      {signs(p).map((s, i) => (
+        <g class="sign" transform={`translate(${px(p.x + p.w) - 26 - i * 28} ${px(p.y) + 7})`}><rect width="22" height="16" /><text x="11" y="12" text-anchor="middle">{s}</text></g>
+      ))}
+    </a>
+  ))}
+
+  <g class="lines" aria-hidden="true">
+    {sheet.lines.filter((l) => l.points.length > 1).map((l) => (
+      <g class={`line b-${l.basis}${marks?.lines.has(l.id) ? ' is-on' : ''}`} data-line={l.id}>
+        <path class="stroke" d={pathOf(l.points)} />
+        <path class="head" d={arrowOf(l.points)} />
+      </g>
+    ))}
+  </g>
+
+  {leaves.map((p) => {
+    const [x, y, w, h] = [px(p.x), px(p.y), px(p.w), px(p.h)];
+    const marksWidth = signs(p).length * 26;
+    return (
+      <a class={`plot leaf k-${p.kind}${p.neighbour ? ' neighbour' : ''}${p.retired ? ' retired' : ''}${p.parent ? ' lot' : ''}${state(p)}`} href={open(p)} data-plot={p.id} data-select={p.id} aria-label={describe(p)}>
+        <title>{p.summary}</title>
+        {p.kind === 'external' && <rect class="hatch" x={x} y={y} width={w} height={h} />}
+        <rect class="outline" x={p.kind === 'external' ? x + 5 : x} y={p.kind === 'external' ? y + 5 : y} width={p.kind === 'external' ? w - 10 : w} height={p.kind === 'external' ? h - 10 : h} />
+        {p.kind === 'external' && <rect class="outer" x={x} y={y} width={w} height={h} />}
+        {p.kind === 'channel' && <path class="rules" d={`M${x + 5} ${y} V${y + h} M${x + w - 5} ${y} V${y + h}`} />}
+        <text class="name" x={x + 11} y={y + 20}>{fit(`${p.number} ${p.name}`, w - 20 - marksWidth)}</text>
+        <text class="sub" x={x + 11} y={y + 37}>{fit(p.sub, w - 20, 6)}</text>
+        {signs(p).map((s, i) => (
+          <g class="sign" transform={`translate(${x + w - 27 - i * 26} ${y + 6})`}><rect width="22" height="16" /><text x="11" y="12" text-anchor="middle">{s}</text></g>
+        ))}
+      </a>
+    );
+  })}
+
+  <g class="labels">
+    {sheet.lines.filter((l) => l.label).map((l) => {
+      const [x, y, w, h] = l.label.map(px);
+      const body = (
+        <g class={`label b-${l.basis}${sheet.level === 'organisation' ? ' total' : ''}${marks?.lines.has(l.id) ? ' is-on' : ''}`} data-line={l.id}>
+          <rect x={x + 1} y={y + 2} width={w - 2} height={h - 4} />
+          {l.stated && <path class="mark" d={`M${x + 11} ${y + h / 2 - 5} l5.5 9.5 h-11 Z`} />}
+          <text text-anchor="middle">
+            {l.rows.map((row, i) => <tspan x={x + w / 2 + (l.stated ? 8 : 0)} y={y + h / 2 + 4 + (i - (l.rows.length - 1) / 2) * 13}>{row}</tspan>)}
+          </text>
+        </g>
+      );
+      return l.beyondSheet ? <a href={sheetHref(l.beyondSheet)} aria-label={`${l.text}; opens that sheet`}>{body}</a> : body;
+    })}
+  </g>
+  <g class="selection" aria-hidden="true"></g>
+</svg>

@@ -1,0 +1,19 @@
+# Written by the CLI. Do not edit by hand. Git history of this file is the scan log.
+repository: repositories/warehouse-stock/repository
+cartographer: "0.1.0"
+locations:
+  - id: github:brackley/warehouse-stock
+    primary: true
+    gone: false
+    default-branch: main
+    tip: a83f6d10c4e7b2f5a8d1c3960e7b4a2d5f8c1e63
+    seen: "2026-11-05"
+branches:
+  main:
+    role: default
+    scanned-commit: a83f6d10c4e7b2f5a8d1c3960e7b4a2d5f8c1e63
+    scanned: "2026-11-05"
+entries:
+  - repositories/warehouse-stock/components/stock-service
+  - repositories/warehouse-stock/components/stock-sync
+  - repositories/warehouse-stock/repository

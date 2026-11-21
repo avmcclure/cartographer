@@ -1,0 +1,129 @@
+---
+// One entry: a plain documentation column. Counts first, then each relationship with how it is known.
+import Base from '../../layouts/Base.astro';
+import Locator from '../../components/Locator.astro';
+import Basis from '../../components/Basis.astro';
+import Evidence from '../../components/Evidence.astro';
+import { gazetteer, entry as read, sheet as readSheet, entryHref, sheetHref, sheetNumber, kindLabel, date, markdown, href } from '../../lib/data.js';
+export function getStaticPaths() {
+  return gazetteer.map((e) => ({ params: { id: e.id } }));
+}
+const e = read(Astro.params.id);
+const home = e.home ? readSheet(e.home.sheet) : null;
+const usedBy = Object.entries(Object.groupBy(e.usedBy ?? [], (l) => l.heading));
+const uses = Object.entries(Object.groupBy(e.uses ?? [], (l) => l.verb));
+const open = (e.questions ?? []).filter((q) => q.state === 'open' || q.state === 'needs-person');
+const settled = (e.questions ?? []).filter((q) => q.state === 'answered');
+const counts = [
+  ...usedBy.map(([heading, list]) => `${list.length} ${heading.toLowerCase().replace(/ by$/, '').replace('members', 'member' + (list.length === 1 ? '' : 's')).replace('triggers', 'trigger' + (list.length === 1 ? '' : 's'))}${/ by$/.test(heading) ? ' by' : ''}`),
+  ...(e.uses?.length ? [`uses ${e.uses.length}`] : []),
+  `${open.length} unsurveyed`,
+];
+const affected = { table: 'table', view: 'view', routine: 'routine', component: 'component', database: 'database', channel: 'channel' }[e.kind];
+const where = [kindLabel(e), e.repository?.name, e.database?.name].filter(Boolean).join(' · ');
+const link = (r) => (r.kind === 'missing' ? r.id : r.name);
+---
+<Base title={e.name}>
+  <article class="page">
+    <div class="entry-head">
+      <div>
+        <p class="kicker">{where}{e.status === 'retired' && <span class="flag">retired</span>}</p>
+        <h1>{e.name}</h1>
+        <p>{e.summary}</p>
+      </div>
+      {home && (
+        <div class="inset">
+          <a href={`${sheetHref(e.home.sheet)}?sel=${encodeURIComponent(e.id)}`} data-keep aria-label={`Show ${e.name} on sheet ${sheetNumber(e.home.sheet)}, ${home.title}`}>
+            <Locator sheet={home} mark={e.home.plot} width={170} />
+          </a>
+          <span>Sheet {sheetNumber(e.home.sheet)} · plot {e.home.number} · {e.home.ref}</span>
+          <a href={`${sheetHref(e.home.sheet)}?sel=${encodeURIComponent(e.id)}`} data-keep>Show on the plan</a>
+          {e.opens && <a href={sheetHref(e.opens)}>Open its own sheet</a>}
+        </div>
+      )}
+    </div>
+    <p><span class="counts">{counts.map((c) => <span>{c}</span>)}</span></p>
+
+    {e.drift?.map((d) => (
+      <p class="drift"><strong>Drift.</strong> {d.what} <span class="small">Sources that disagree: {d.sources.map((s) => s?.label).filter(Boolean).join('; ')}.</span></p>
+    ))}
+
+    {usedBy.map(([heading, list]) => (
+      <section class="sec">
+        <h2 class="cap">{heading}{['Read by', 'Called by', 'Depended on by', 'Consumed by', 'Used by'].includes(heading) && affected && <> · <em>affected if this {affected} changes</em></>}</h2>
+        <ul class="rows">
+          {list.map((l) => (
+            <li><Basis basis={l.basis} /><span><a href={entryHref(l.from.id)}>{l.from.name}</a> <span class="small">{kindLabel(l.from)}</span><span class="what"><Evidence basis={l.basis} evidence={l.evidence} /></span></span></li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {uses.map(([verb, list]) => (
+      <section class="sec">
+        <h2 class="cap">{verb}</h2>
+        <ul class="rows">
+          {list.map((l) => (
+            <li>
+              <Basis basis={l.basis} />
+              <span>
+                {l.to ? <><a href={entryHref(l.to.id)}>{link(l.to)}</a> <span class="small">{kindLabel(l.to)}{l.to.retired ? ' · retired' : ''}</span></> : <><strong>{l.unresolved}</strong> <span class="flag">unresolved</span></>}
+                {[l.version && `version ${l.version}`, l.how && `over ${l.how}`, l.via && `through ${l.via.name}`, l.count && `${l.count} usage sites`, l.names?.length && `uses ${l.names.join(', ')}`, l.to && l.name && l.type !== 'depends-on' && l.name].filter(Boolean).map((t) => <span class="small"> · {t}</span>)}
+                <span class="what"><Evidence basis={l.basis} evidence={l.evidence} /></span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    {open.length > 0 && (
+      <section class="sec">
+        <h2 class="cap">Unsurveyed · {open.length} open question{open.length === 1 ? '' : 's'}</h2>
+        {open.map((q) => (
+          <div class="unsurveyed">
+            <p><strong>{q.missing}</strong></p>
+            <p class="small">{q.state === 'needs-person' ? 'Needs a person.' : `Waiting on ${q.waitingOn}.`} An answer looks like: {q.answerLooksLike} Raised by {q.raisedBy === 'cli' ? 'the scan' : `a${q.raisedBy === 'agent' ? 'n' : ''} ${q.raisedBy}`}, {q.attempts} attempt{q.attempts === 1 ? '' : 's'} so far.{e.editUrl && q.state === 'needs-person' && <> <a href={e.editUrl} rel="noreferrer">Answer this</a></>}</p>
+          </div>
+        ))}
+      </section>
+    )}
+
+    {(e.sections ?? []).map((s) => (
+      <section class="sec">
+        <h2 class="cap">{s.title}</h2>
+        <div class="prose" set:html={markdown(s.markdown)} />
+      </section>
+    ))}
+
+    <section class="sec">
+      <h2 class="cap">Facts</h2>
+      <dl class="facts">
+        <dt>ID</dt><dd class="id">{e.id}</dd>
+        {e.repository && <><dt>Repository</dt><dd><a href={entryHref(e.repository.id)}>{e.repository.name}</a></dd></>}
+        {e.database && <><dt>Database</dt><dd><a href={entryHref(e.database.id)}>{e.database.name}</a></dd></>}
+        {e.systems?.map((s) => <><dt>System</dt><dd><a href={entryHref(s.system.id)}>{s.system.name}</a> <span class="what"><Basis basis={s.basis} /><Evidence basis={s.basis} evidence={s.evidence} /></span></dd></>)}
+        {e.owner && <><dt>Owner</dt><dd>{e.owner.name} <span class="what"><Basis basis={e.owner.basis} /><Evidence basis={e.owner.basis} evidence={e.owner.evidence} /></span></dd></>}
+        {e.tags?.map((t) => <><dt>Data tag</dt><dd><a href={href(`/tags/${t.name}/`)}>{t.name}</a> <span class="what"><Basis basis={t.basis} /><Evidence basis={t.basis} evidence={t.evidence} /></span></dd></>)}
+        {e.provides?.map((p) => <><dt>Provides</dt><dd>{p.name} <span class="small">as {p.as}</span> <span class="what"><Basis basis={p.basis} /><Evidence basis={p.basis} evidence={p.evidence} /></span></dd></>)}
+        {e.engine && <><dt>Engine</dt><dd>{e.engine}</dd></>}
+        {e.aliases && <><dt>Also known as</dt><dd>{e.aliases.join(', ')}</dd></>}
+        {e.instances?.map((i) => <><dt>Instance</dt><dd>{i.name} <span class="small">{i.environment} · last read {date(i.read)} · permission: {i.permission}</span></dd></>)}
+        {e.stack && <><dt>Stack</dt><dd>{e.stack.join(', ')}</dd></>}
+        {e.locations?.map((l) => <><dt>Location</dt><dd>{l.url ? <a href={l.url} rel="noreferrer">{l.id}</a> : l.id}{l.primary && <span class="small"> · primary</span>}</dd></>)}
+        {e.packages && <><dt>Public packages</dt><dd>{e.packages.join(', ')}</dd></>}
+        <dt>Last verified</dt>
+        <dd>{e.verified ? <>{date(e.verified.date)}{e.verified.commit && <> at commit <code>{e.verified.commit}</code></>} <span class="small">by Cartographer {e.verified.cartographer}</span>{e.stale && <span class="flag">long unverified</span>}</> : 'never'}</dd>
+      </dl>
+    </section>
+
+    {(settled.length > 0 || e.dismissed) && (
+      <section class="sec">
+        <h2 class="cap">Questions settled</h2>
+        {settled.map((q) => <div class="unsurveyed settled"><p><strong>{q.missing}</strong></p><p>{q.answer}</p></div>)}
+        {e.dismissed && <ul class="prose">{e.dismissed.map((d) => <li>{d}</li>)}</ul>}
+      </section>
+    )}
+    {e.editUrl && <p class="small"><a href={e.editUrl} rel="noreferrer">Edit this entry's file in the atlas</a></p>}
+  </article>
+</Base>
