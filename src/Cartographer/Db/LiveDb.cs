@@ -85,7 +85,7 @@ public static class LiveDb
     /// <summary>A catalog type in DbText.TypeName form: "nvarchar(50)", "decimal(18,2)", "varchar(max)", "int".</summary>
     public static string TypeName(string type, int maxLength, int precision, int scale)
     {
-        var name = DbText.TypeName(type);
+        var name = type.Trim().ToLowerInvariant();
         return name switch
         {
             "char" or "varchar" or "binary" or "varbinary" => $"{name}({(maxLength < 0 ? "max" : maxLength)})",

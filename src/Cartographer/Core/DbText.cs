@@ -48,5 +48,17 @@ public static class DbText
     }
 
     /// <summary>A type name the same way from ScriptDom and from the catalog: lower-case, no spaces, no brackets.</summary>
-    public static string TypeName(string raw) => Regex.Replace(raw.Replace("[", "").Replace("]", ""), @"\s+", "").ToLowerInvariant();
+    /// <summary>Defaults are written out, so "DECIMAL" in a script and "decimal(18,0)" from the catalog are the same type.</summary>
+    public static string TypeName(string raw)
+    {
+        var t = Regex.Replace(raw.Replace("[", "").Replace("]", ""), @"\s+", "").ToLowerInvariant();
+        return t switch
+        {
+            "rowversion" => "timestamp",
+            "decimal" or "numeric" => t + "(18,0)",
+            "char" or "varchar" or "nchar" or "nvarchar" or "binary" or "varbinary" => t + "(1)",
+            "datetime2" or "time" or "datetimeoffset" => t + "(7)",
+            _ => Regex.Replace(t, @"^(decimal|numeric)\((\d+)\)$", "$1($2,0)"),
+        };
+    }
 }

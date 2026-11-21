@@ -158,6 +158,7 @@ public static class Resolver
 {
     const string ProviderPrefix = "Which component provides ";
     const string BrokenPrefix = "What replaces the link ";
+    const string DriftPrefix = "Which source is right: ";
 
     public static void Run(Atlas atlas)
     {
@@ -233,12 +234,16 @@ public static class Resolver
                     wanted.Add(($"{BrokenPrefix}'{l.Type} {l.To}'. Its target {(atlas.Find(l.To) is null ? "no longer has an entry" : "is retired")}.", $"entry {l.To}", "The entry this link should now point at, or confirmation that the link is gone."));
             }
 
+            // Sources that disagree are for a person to settle.
+            foreach (var d in e.Drift ?? [])
+                wanted.Add(($"{DriftPrefix}{d.What}.", "person", $"Which of {string.Join(" and ", d.Sources)} is correct, or that the difference is intended."));
+
             Merger.Tidy(e);
             if (e.Packages?.Count == 0) e.Packages = null;
             var existing = QuestionList.Parse(e.Body);
             // A dismissed note that names the thing means a person or agent has said not to ask again.
-            wanted.RemoveAll(w => existing.Dismissed.Any(d => d.Contains(w.WaitingOn[(w.WaitingOn.IndexOf(' ') + 1)..], StringComparison.OrdinalIgnoreCase)));
-            var stale = existing.Items.Where(q => q.RaisedBy == "cli" && q.State == "open" && (q.Missing.StartsWith(ProviderPrefix) || q.Missing.StartsWith(BrokenPrefix)) && wanted.All(w => !SameQuestion(w.Missing, q))).ToList();
+            wanted.RemoveAll(w => w.WaitingOn != "person" && existing.Dismissed.Any(d => d.Contains(w.WaitingOn[(w.WaitingOn.IndexOf(' ') + 1)..], StringComparison.OrdinalIgnoreCase)));
+            var stale = existing.Items.Where(q => q.RaisedBy == "cli" && q.Answer.Length == 0 && (q.State == "open" && (q.Missing.StartsWith(ProviderPrefix) || q.Missing.StartsWith(BrokenPrefix)) || q.Missing.StartsWith(DriftPrefix)) && wanted.All(w => !SameQuestion(w.Missing, q))).ToList();
             var missing = wanted.Where(w => existing.Items.All(q => !SameQuestion(w.Missing, q))).ToList();
             if (stale.Count == 0 && missing.Count == 0) continue;
             QuestionList.Update(e, list =>

@@ -212,7 +212,10 @@ public class LiveDbTests
             drift.What);
         Assert.Equal(["acme-shop-database", "acme-shop-migrations", "instance:sql-test-01"], drift.Sources);
         Assert.Equal(("sql-test-01", "full"), (db.Instances!.Single().Name, db.Instances!.Single().Permission));
-        Assert.Empty(QuestionList.Parse(db.Body).Items);
+        // Sources that disagree are put to a person; nothing else is asked, because the database has a repository source.
+        var asked = Assert.Single(QuestionList.Parse(db.Body).Items);
+        Assert.Equal(("needs-person", "cli"), (asked.State, asked.RaisedBy));
+        Assert.StartsWith("Which source is right: ", asked.Missing);
 
         // An object found only live is still an entry, with the instance as its only source.
         var purge = atlas.Entries["databases/shop/routines/dbo/purgeorders"];
