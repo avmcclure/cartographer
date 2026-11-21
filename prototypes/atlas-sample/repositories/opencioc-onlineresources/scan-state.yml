@@ -1,0 +1,24 @@
+# Written by the CLI. Do not edit by hand. Git history of this file is the scan log.
+repository: repositories/opencioc-onlineresources
+cartographer: 0.0.0-prototype
+locations:
+  - id: github:OpenCIOC/onlineresources
+    primary: true
+    gone: false
+    tip: 7c461be1158ca0137809902f5ed7dd7953980d9c
+    seen: 2026-11-20
+branches:
+  master:
+    role: default
+    scanned-commit: null          # no scan of this branch has completed yet
+    scanned: null
+in-progress:
+  branch: master
+  commit: 7c461be1158ca0137809902f5ed7dd7953980d9c
+  started: 2026-11-20
+  mode: full                      # full | changed-components
+  components:
+    online-resources-site: partial   # done | partial | pending
+  database-sources:
+    databases/cioc-primary: partial
+  note: "Only the saved-search slice has been read."
