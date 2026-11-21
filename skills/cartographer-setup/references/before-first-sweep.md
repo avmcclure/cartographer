@@ -21,12 +21,12 @@ The first sweep reads every repository and can run for days across many sessions
 ## Databases, if any are listed
 
 - Every instance has its `environment` and `production` set truthfully, and a production instance has `allowed: true` only because the person said so for that instance.
-- The person can reach each allowed instance from this machine. `cartographer db read <instance>` tries it; a failure is recorded with its reason and does not stop a scan.
+- The person can reach each allowed instance from this machine. `cartographer db read <instance>` tries it and writes what it reads into the atlas; follow it with `cartographer session commit --message "Read <instance>"`. A failure is recorded with its reason and does not stop a scan.
 - If a dedicated login is preferred, the DBA has seen `cartographer db role-script` and `cartographer db queries`.
 
 ## The atlas has somewhere to go
 
-- The atlas has a first commit on `main`.
+- The configuration is committed on the `first-sweep` branch (`git status` shows nothing to commit).
 - If the sweep is to end in a pull request, the atlas has a git remote the person can push to. Without one, sessions still work local-only.
 
 ## The person knows what will happen

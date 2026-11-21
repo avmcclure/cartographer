@@ -23,13 +23,14 @@ Two things you must not do:
    ```
    cartographer init <dir> --organisation <name> [--github <org>] [--azdo <org>]
    ```
-   This writes `cartographer.yml`, an `AGENTS.md` that tells any agent how to read the atlas, the folders, and runs `git init`. Run the remaining commands from inside `<dir>`.
-4. **Check the sign-ins** the listing will use: `gh auth status` for GitHub, `az account show` for Azure DevOps. The CLI also accepts `GITHUB_TOKEN` and `AZURE_DEVOPS_EXT_PAT` from the environment. If one is missing, ask the person to sign in themselves (`gh auth login`, `az login`) and wait.
-5. **List the repositories.** `cartographer repos list --refresh`. Show the person the totals, not the whole list: how many repositories, how many at each SCM, how many are linked across both, and any the CLI skipped as disabled or empty.
-6. **Fill in `cartographer.yml`** with the person, using what the listing showed. [references/config.md](references/config.md) has every key, what to ask for each, and an example. After each round of edits run `cartographer repos list` again so they can see the effect of an exclusion or a location mapping.
-7. **Go through the checklist** in [references/before-first-sweep.md](references/before-first-sweep.md). Fix what can be fixed now; tell the person plainly about anything left.
-8. **Commit the starting point** so the first sweep begins from a clean main branch: `git add -A`, then `git commit -m "Create the atlas"`. If the person has made an empty repository for the atlas on their SCM, add it as the git remote and push; a scan session can only open a pull request if there is one.
-9. **Say what comes next:** the first sweep, run with the `cartographer-scan` skill. Suggest a pilot project if they have not named one.
+   This writes `cartographer.yml`, an `AGENTS.md` that tells any agent how to read the atlas, and makes the first commit on `main`. Run the remaining commands from inside `<dir>`.
+4. **Start the branch the first sweep will use**, before changing anything: `cartographer session start --branch first-sweep`. Everything from here until the person publishes is kept on that branch. The command refuses an atlas with uncommitted changes, which is why it comes first.
+5. **Check the sign-ins** the listing will use: `gh auth status` for GitHub, `az account show` for Azure DevOps. The CLI also accepts `GITHUB_TOKEN` and `AZURE_DEVOPS_EXT_PAT` from the environment. If one is missing, ask the person to sign in themselves (`gh auth login`, `az login`) and wait.
+6. **List the repositories.** `cartographer repos list --refresh`. Show the person the totals, not the whole list: how many repositories, how many at each SCM, how many are linked across both, and any the CLI skipped as disabled or empty.
+7. **Fill in `cartographer.yml`** with the person, using what the listing showed. [references/config.md](references/config.md) has every key, what to ask for each, and an example. After each round of edits run `cartographer repos list` again so they can see the effect of an exclusion or a location mapping.
+8. **Go through the checklist** in [references/before-first-sweep.md](references/before-first-sweep.md). Fix what can be fixed now; tell the person plainly about anything left.
+9. **Commit the configuration:** `cartographer session commit --message "Configure the atlas"`, then `cartographer session end`. If the person has made an empty repository for the atlas on their SCM, ask them to add it as the git remote (`git remote add origin <url>`) and push `main`; a session can only open a pull request if there is one.
+10. **Say what comes next:** the first sweep, run with the `cartographer-scan` skill. Suggest a pilot project if they have not named one.
 
 ## References
 

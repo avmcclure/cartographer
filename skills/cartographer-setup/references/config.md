@@ -78,7 +78,7 @@ For each instance, ask:
 | `allowed` | May Cartographer read it? For a production instance this must be an explicit yes from the person for that instance; otherwise write `false`. |
 | `databases` | Which databases on it. An empty list means every database the connecting identity can see. |
 
-The CLI connects as the person running it, using integrated sign-in. Where that does not work, the person sets a connection string in an environment variable named `CARTOGRAPHER_SQL_<INSTANCE>` in their own shell. Do not ask to see it and do not write it anywhere.
+The CLI connects as the person running it, using integrated sign-in. Where that does not work, the person sets a connection string in an environment variable named `CARTOGRAPHER_SQL_<INSTANCE>` in their own shell: the instance name in upper case with every other character replaced by `_`, so `CARTOGRAPHER_SQL_SQL_TEST_01` for `sql-test-01`. Do not ask to see it and do not write it anywhere.
 
 Two commands help the person's DBA decide: `cartographer db queries` prints the exact catalog queries the CLI runs, and `cartographer db role-script` prints a script that creates a role with only the permissions those queries need.
 

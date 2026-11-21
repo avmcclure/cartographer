@@ -68,9 +68,9 @@ The setup skill asks you a few things and does the rest:
 - the name prefixes your internal packages share, such as `Acme.*`;
 - which SQL Server instances it may read schema from, if any. Production is read only if you say so for that instance. It never reads table data.
 
-It creates the atlas, lists your repositories and goes through a short checklist. The settings end up in `cartographer.yml` at the atlas root, which you can edit by hand at any time.
+It creates the atlas, lists your repositories and goes through a short checklist. The settings end up in `cartographer.yml` at the atlas root, which you can edit by hand at any time. It leaves the atlas on a branch called `first-sweep`, where the first sweep carries on. Reading live databases is described in `docs/live-databases.md`.
 
-Create an empty repository for the atlas on GitHub or Azure DevOps and add it as the atlas's git remote, so that scans can open pull requests.
+Create an empty repository for the atlas on GitHub or Azure DevOps, add it as the atlas's git remote (`git remote add origin <url>`) and push `main`, so that scans can open pull requests.
 
 ## 4. Run the first sweep
 
@@ -93,9 +93,9 @@ A scan never stops to ask you anything. Whatever it cannot work out, it records 
 
 Everything a sweep writes stays on a local branch of the atlas. Nothing reaches `main` except by a pull request you merge. Before publishing:
 
-- **Build the site** and look around: `cartographer site build --out site` (see section 7).
+- **Build the site** and look around: `cartographer site build --out site` (see section 8).
 - **Read a sample** of entries from each project, and the list of open questions in `_generated/open-questions.md`.
-- **Read what changed**: each repository's scan is one commit, with a summary in `changes/`.
+- **Read what changed**: each repository's scan is one commit, with a summary in `changes/`. Ending a session prints the `git log` command that lists them.
 - **Correct what is wrong** by editing the entry. Put text you want kept exactly between `<!-- person -->` and `<!-- /person -->`. If you change a link, set its `basis` to `stated` and its `source` to `person:<your name>@<today's date>`. Later scans leave both alone.
 
 When you are satisfied, say:
@@ -157,4 +157,4 @@ cartographer impact databases/billing/tables/dbo/invoice
 cartographer site build --out site
 ```
 
-This writes a static site with plans of your systems, schedules of what links to what, a gazetteer of every entry, the open questions that need a person, and recent changes. The site is built with Astro, so building it needs Node.js. Serve the `site` folder with any static web server inside your organisation. Build it from a scan branch to review a sweep, or from `main` for everyone else.
+This writes a static site with plans of your systems, schedules of what links to what, a gazetteer of every entry, the open questions that need a person, and recent changes. The site is built with Astro, so building it needs Node.js 22 or later. Add `--edit-url <url>` to give each entry an edit link to your atlas's repository, which is the quickest way for people to answer open questions. Serve the `site` folder with any static web server inside your organisation. Build it from a scan branch to review a sweep, or from `main` for everyone else.
