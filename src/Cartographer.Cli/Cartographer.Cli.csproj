@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Cartographer.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>cartographer</ToolCommandName>
+    <PackageId>Cartographer.Cli</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Cartographer/Cartographer.csproj" />
+  </ItemGroup>
+</Project>
