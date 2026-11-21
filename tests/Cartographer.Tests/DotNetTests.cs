@@ -159,8 +159,10 @@ public class DotNetTests
         Assert.Equal(["csharp", "net452"], desk.Stack);
         Assert.Equal(["Acme.Desk|namespace", "AcmeDesk|assembly"], desk.Provides!.Select(p => $"{p.Name}|{p.As}"));
         Assert.Contains("legacy style", desk.Body);
-        // The package and the COM library are public: the resolver moved them to packages. EntityFramework.SqlServer is covered by its package.
-        Assert.Equal(["EntityFramework 6.4.4", "{2A75196C-D9EB-4129-B803-931327F72D5C} 2.8"], desk.Packages);
+        // The package is public: the resolver moved it to packages. A type library is never a package: it stays an unresolved reference with a question.
+        Assert.Equal(["EntityFramework 6.4.4"], desk.Packages);
+        Assert.Null(Link(desk, "{2A75196C-D9EB-4129-B803-931327F72D5C}").To);
+        Assert.Contains("name {2A75196C-D9EB-4129-B803-931327F72D5C}", desk.Body);
         Assert.Equal("1.2.3.4", Link(desk, "Acme.Vendor").Version);
         Assert.NotNull(Link(desk, "Acme.Gac.Thing"));
         Assert.NotNull(Link(desk, "Acme.Outside"));

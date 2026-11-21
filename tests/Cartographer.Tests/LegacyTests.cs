@@ -93,8 +93,10 @@ public class LegacyTests
         Assert.Equal(["AcmeOrders.Order progid", "AcmeOrders.exe assembly"], orders.Provides!.Select(p => $"{p.Name} {p.As}"));
         Assert.All(orders.Provides!, p => Assert.Equal(Basis.Extracted, p.Basis));
         Assert.Equal("order-cls#L7", orders.Provides![0].Source);
-        // Nothing provides them and no internal prefix is set, so the resolver lists both in-house files as packages.
-        Assert.Equal(["AcmeGrid.ocx", "AcmeTax.dll"], orders.Packages);
+        // Nothing provides them. A file is never a public package, so both stay unresolved references with a question each.
+        Assert.Null(orders.Packages);
+        Assert.Equal(["AcmeGrid.ocx", "AcmeTax.dll"], orders.Links!.Where(l => l.To is null).Select(l => l.Name));
+        Assert.Contains("name AcmeTax.dll", orders.Body);
         Assert.Contains("ActiveX EXE (`Type=OleExe`), startup object `Sub Main`", orders.Body);
         Assert.Contains("- 1 form, 0 modules, 2 classes.", orders.Body);
         Assert.Contains("- Other classes: `Helper` (private).", orders.Body);

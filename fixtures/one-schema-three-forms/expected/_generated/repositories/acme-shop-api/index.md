@@ -1,5 +1,11 @@
 # repositories/acme-shop-api
 
+## Folders
+
+| Folder | Entries |
+|---|---|
+| [repositories/acme-shop-api/components/](components/index.md) | 1 |
+
 ## Entries
 
 | ID | Kind | Name | Summary |

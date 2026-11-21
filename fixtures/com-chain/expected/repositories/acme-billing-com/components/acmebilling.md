@@ -25,6 +25,7 @@ links:
     basis: extracted
     source: proj#L4
   - type: calls
+    to: databases/acme-billing-db/routines/dbo/usp_getinvoice
     name: dbo.usp_GetInvoice
     how: sql
     basis: extracted

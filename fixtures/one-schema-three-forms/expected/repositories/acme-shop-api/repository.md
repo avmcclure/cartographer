@@ -14,4 +14,5 @@ verified:
 
 <!-- extracted -->
 - Files: 4. Most common: `.cs` 3, `.csproj` 1.
+- .NET projects: 1. Test projects skipped: 0.
 <!-- /extracted -->

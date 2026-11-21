@@ -50,10 +50,17 @@ public static class Merger
             if (origin.StartsWith("instance:")) RecordDrift(e, p, origin);
             // Rename the incoming source keys that clash with keys kept from another origin.
             var rename = new Dictionary<string, string>();
+            var taken = new HashSet<string>();
+            e.Sources ??= new(StringComparer.Ordinal);
             foreach (var (key, pointer) in p.Sources ?? [])
             {
-                if (e.Sources?.TryGetValue(key, out var kept) == true && kept != pointer && Evidence.OriginOf(kept) != origin) rename[key] = e.Source(key, pointer);
-                else (e.Sources ??= new(StringComparer.Ordinal))[key] = pointer;
+                // Free means: unused, or held by this same origin (an older commit of the same file), and not claimed earlier in this pass.
+                bool Free(string k) => !taken.Contains(k) && (!e.Sources.TryGetValue(k, out var kept) || kept == pointer || Evidence.OriginOf(kept) == origin);
+                var final = key;
+                for (var n = 2; !Free(final); n++) final = $"{key}-{n}";
+                e.Sources[final] = pointer;
+                taken.Add(final);
+                if (final != key) rename[key] = final;
             }
             string? Rekey(string? source)
             {

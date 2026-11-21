@@ -80,7 +80,7 @@ public sealed class Link
     public string? Source { get; set; }
 
     /// <summary>What makes two links the same link, whatever their evidence.</summary>
-    [YamlIgnore] public string Identity => $"{Type}|{To}|{(To is null ? Name : null)}|{(To is null ? Database : null)}|{Via}".ToLowerInvariant();
+    [YamlIgnore] public string Identity => $"{Type}|{To}|{(To is null || Type == "references" ? Name : null)}|{(To is null ? Database : null)}|{Via}".ToLowerInvariant();
 }
 
 public static class Basis

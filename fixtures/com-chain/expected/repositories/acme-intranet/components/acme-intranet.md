@@ -12,17 +12,19 @@ sources:
   invoices-asp: acme-intranet:invoices.asp@40bfc99
 links:
   - type: calls
+    to: databases/acme-billing-db/routines/dbo/usp_getcustomerinvoices
+    name: dbo.usp_GetCustomerInvoices
+    how: sql
+    basis: extracted
+    source: invoices-asp#L16
+  - type: calls
     to: repositories/acme-billing-com/components/acmebilling
     name: AcmeBilling.Invoice
     how: com
     basis: extracted
     source: invoices-asp#L9
-  - type: calls
-    name: dbo.usp_GetCustomerInvoices
-    how: sql
-    basis: extracted
-    source: invoices-asp#L16
   - type: reads
+    to: databases/acme-billing-db/tables/dbo/invoices
     name: dbo.Invoices
     basis: extracted
     source: default-asp#L7
