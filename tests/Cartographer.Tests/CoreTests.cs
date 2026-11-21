@@ -161,4 +161,27 @@ public class CoreTests
         Assert.Contains("`requirements.txt`", e.Body);
         Assert.DoesNotContain(Validator.Check(atlas), i => i.Error);
     }
+
+    [Fact]
+    public void A_live_read_that_disagrees_with_the_repository_is_recorded_as_drift_and_clears_when_it_agrees()
+    {
+        var atlas = NewAtlas();
+        Entry Orders(string origin, string pointer, string amountType)
+        {
+            var t = new Entry { Id = Ids.DbObject("Shop", "tables", "dbo", "Orders"), Kind = Kinds.Table, Name = "dbo.Orders", Summary = "Orders.", Database = Ids.Database("Shop") };
+            t.Source(origin, pointer);
+            t.Extracted = DbText.Columns([new("Id", "int", false, "PK"), new("Amount", amountType, false)]);
+            return t;
+        }
+        Merger.Apply(atlas, "shop-db", [Orders("schema", "shop-db:Tables/Orders.sql@abc1234", "decimal(18,2)")]);
+        Merger.Apply(atlas, "instance:sql-test-01", [Orders("live-sql-test-01", "instance:sql-test-01@2026-01-01", "money")]);
+        var e = atlas.Entries.Values.Single();
+        var drift = Assert.Single(e.Drift!);
+        Assert.Equal("column Amount is decimal(18,2) not null in the repository and money not null on sql-test-01", drift.What);
+        Assert.Equal(["shop-db", "instance:sql-test-01"], drift.Sources);
+        Assert.Contains("decimal(18,2)", e.Body);
+
+        Merger.Apply(atlas, "instance:sql-test-01", [Orders("live-sql-test-01", "instance:sql-test-01@2026-01-02", "decimal(18,2)")]);
+        Assert.Empty(e.Drift!);
+    }
 }

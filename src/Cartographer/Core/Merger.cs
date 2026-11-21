@@ -47,6 +47,7 @@ public static class Merger
                 continue;
             }
             DropFacts(e, origin);
+            if (origin.StartsWith("instance:")) RecordDrift(e, p, origin);
             // Rename the incoming source keys that clash with keys kept from another origin.
             var rename = new Dictionary<string, string>();
             foreach (var (key, pointer) in p.Sources ?? [])
@@ -90,6 +91,32 @@ public static class Merger
                 e.Status = "retired";
             Tidy(e);
         }
+    }
+
+    /// <summary>
+    /// A live read that disagrees with what a repository says about the same table or view is drift (spec section 3).
+    /// ponytail: columns only, and only repository against live. Two repositories defining one table differently are
+    /// not compared (the later scan wins); compare per-origin column sets if that turns out to matter.
+    /// </summary>
+    static void RecordDrift(Entry e, Entry live, string origin)
+    {
+        var repositories = (e.Sources ?? []).Values.Select(Evidence.OriginOf).Where(o => o is not null && o != "person" && !o.StartsWith("instance:")).Distinct().Order(StringComparer.Ordinal).ToList();
+        var inRepo = DbText.ParseColumns(e.Body);
+        var onLive = DbText.ParseColumns(live.Extracted ?? "");
+        if (repositories.Count == 0 || inRepo.Count == 0 || onLive.Count == 0) return;
+        var instance = origin["instance:".Length..];
+        var differences = new List<string>();
+        foreach (var c in inRepo)
+        {
+            var other = onLive.FirstOrDefault(o => o.Name.Equals(c.Name, StringComparison.OrdinalIgnoreCase));
+            if (other is null) differences.Add($"column {c.Name} is in the repository but not on {instance}");
+            else if (other.Type != c.Type || other.Nullable != c.Nullable)
+                differences.Add($"column {c.Name} is {Describe(c)} in the repository and {Describe(other)} on {instance}");
+        }
+        foreach (var c in onLive.Where(o => !inRepo.Any(r => r.Name.Equals(o.Name, StringComparison.OrdinalIgnoreCase))))
+            differences.Add($"column {c.Name} is on {instance} but not in the repository");
+        if (differences.Count > 0) (e.Drift ??= []).Add(new Drift { What = string.Join("; ", differences), Sources = [.. repositories!, origin] });
+        static string Describe(Column c) => $"{c.Type}{(c.Nullable ? " null" : " not null")}";
     }
 
     /// <summary>Removes the extracted facts that came from one origin, and its sources that nothing else cites.</summary>
