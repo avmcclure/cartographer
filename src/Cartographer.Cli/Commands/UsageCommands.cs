@@ -18,6 +18,8 @@ public sealed class UsageCommands : ICommands
         var id = a.Required("library");
         var library = atlas.Find(id) is { Kind: Kinds.Component } found ? found : throw new UsageException($"no component '{id}'");
         var namespaces = (library.Provides ?? []).Where(p => p.As == "namespace").Select(p => p.Name).Distinct().ToList();
+        // A COM or other non-.NET library has no namespace: search for the names it is known by.
+        if (namespaces.Count == 0) namespaces = (library.Provides ?? []).Select(p => p.Name).Distinct().ToList();
 
         // With the library's own checkout, its public type names are searched for too, from the directory of its project file.
         var types = new List<string>();

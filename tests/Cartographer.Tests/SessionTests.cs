@@ -64,7 +64,7 @@ public class SessionTests
         return text;
     }
 
-    static (int Code, string Text) Finish(string atlas, string folder) => Scans.Finish(Atlas.Load(atlas), folder);
+    static (int Code, string Text) Finish(string atlas, string folder) => Scans.Finish(Atlas.Load(atlas), folder, force: true);
 
     static string Section(string summary, string title)
     {

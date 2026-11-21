@@ -26,9 +26,9 @@ public sealed class ScanCommands : ICommands
             Console.WriteLine($"{component}: done; {state.InProgress.Components.Count(c => c.Value != "done")} still pending");
             return 0;
         });
-        cli.Add("finish", "finish <repository>", "Mark the repository's scan complete, write its change summary and commit its files on the scan branch.", a =>
+        cli.Add("finish", "finish <repository> [--force]", "Mark the repository's scan complete, write its change summary and commit its files on the scan branch.", a =>
         {
-            var (code, text) = Scans.Finish(a.Atlas(), Repository(a));
+            var (code, text) = Scans.Finish(a.Atlas(), Repository(a), a.Flag("force"));
             Console.Write(text);
             return code;
         });

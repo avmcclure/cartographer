@@ -27,7 +27,7 @@ public static class QuestionRetry
         var items = new List<RetryItem>();
         foreach (var e in atlas.Entries.Values)
         {
-            foreach (var q in QuestionList.Parse(e.Body).Items.Where(q => q.State is "open" or "needs-person"))
+            foreach (var q in QuestionList.Parse(e.Body).Items.Where(q => q.State != "dismissed"))
             {
                 var wait = q.WaitingOn.Split(' ', 2, StringSplitOptions.TrimEntries);
                 var target = wait.Length == 2 ? wait[1] : "";

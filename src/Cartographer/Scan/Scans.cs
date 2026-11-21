@@ -128,12 +128,16 @@ public static class Scans
     /// Marks a repository's scan complete, writes its change summary and commits the scan's files on the scan branch.
     /// Code 1 with the errors listed when an entry of this repository is invalid; nothing is changed then.
     /// </summary>
-    public static (int Code, string Text) Finish(Atlas atlas, string folder)
+    public static (int Code, string Text) Finish(Atlas atlas, string folder, bool force = false)
     {
         var branch = Sessions.Branch(atlas.Root);
         if (branch is "main" or "master") throw new UsageException($"refusing to commit on {branch}. Start a scan branch first: cartographer session start");
         var state = ScanState.Load(atlas, folder);
         var ip = state.InProgress ?? throw new UsageException($"{folder} has no scan in progress. Run: cartographer scan {folder}");
+
+        var pending = ip.Components.Where(c => c.Value != "done").Select(c => c.Key).ToList();
+        if (pending.Count > 0 && !force)
+            return (1, $"{folder} is not finished: {pending.Count} component(s) still pending ({string.Join(", ", pending)}). Mark each with: cartographer done {folder} <component>. To keep partial work, run: cartographer session commit --message \"Partial scan of {folder}\"\n");
 
         var prefix = $"repositories/{folder}/";
         var errors = Validator.Check(atlas).Where(i => i.Error && (i.Id.StartsWith(prefix) || state.Entries.Contains(i.Id))).OrderBy(i => i.Id, StringComparer.Ordinal).ToList();
