@@ -195,7 +195,7 @@ public class ScmTests(ITestOutputHelper output)
         var http = new Recorded("acme");
         var listing = await Repos.Refresh(atlas, new Scm(http, Token, Token));
 
-        Assert.Equal(["azdo:acme/Finance/billing", "azdo:acme/Finance/Core-ledger", "azdo:acme/Ops/tools", "github:acme/Finance-billing", "github:acme/Finance-Core-ledger", "github:acme/website"],
+        Assert.Equal(["azdo:acme/Finance/Core-ledger", "azdo:acme/Finance/billing", "azdo:acme/Ops/tools", "github:acme/Finance-Core-ledger", "github:acme/Finance-billing", "github:acme/website"],
             listing.Repositories.SelectMany(r => r.Locations).Select(l => l.Id).Order(StringComparer.Ordinal));
         Assert.Contains(listing.Skipped, r => r.Id == "azdo:acme/Finance-Core/ledger" && r.Skipped == "not allowed");
         Assert.Contains(listing.Skipped, r => r.Id == "github:acme/old-mirror" && r.Skipped == "not allowed");
