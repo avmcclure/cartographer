@@ -3,7 +3,7 @@
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
     <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="180.154.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.2" />
-    <PackageReference Include="Groma" Version="0.1.0" />
+    <PackageReference Include="Groma" Version="0.1.1" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Cartographer.Tests" />

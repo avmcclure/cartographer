@@ -8,7 +8,7 @@ You need three things: the `cartographer` CLI, the skills installed in your agen
 
 The CLI is a .NET tool. You need the .NET 10 SDK and git.
 
-Until a package is published to a feed, build it from a clone of this repository. Restoring needs a GitHub token with `read:packages`, because one dependency is on GitHub Packages (see `nuget.config`).
+Until a package is published to a feed, build it from a clone of this repository.
 
 ```
 git clone https://github.com/avmcclure/cartographer
