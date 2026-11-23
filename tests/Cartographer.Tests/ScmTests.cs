@@ -283,6 +283,18 @@ public class ScmTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void A_cmd_helper_runs_through_cmd_exe_on_Windows_only()
+    {
+        var windows = Credentials.StartInfo("az.cmd", ["account", "show"], windows: true);
+        Assert.Equal("cmd.exe", windows.FileName);
+        Assert.Equal(["/d", "/c", "az.cmd", "account", "show"], windows.ArgumentList);
+        Assert.True(windows.RedirectStandardInput && windows.RedirectStandardOutput);
+
+        Assert.Equal("az", Credentials.StartInfo("az", ["account", "show"], windows: false).FileName);
+        Assert.Equal("gh", Credentials.StartInfo("gh", ["auth", "token"], windows: true).FileName);
+    }
+
+    [Fact]
     public async Task A_missing_credential_says_what_to_set_up()
     {
         var e = await Assert.ThrowsAsync<UsageException>(() => new Scm(new Recorded("signin"), null, null).AzureDevOpsRepos("acme", []));
