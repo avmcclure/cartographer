@@ -16,17 +16,23 @@ public static class Repos
     public static async Task<Listing> Refresh(Atlas atlas, Scm scm)
     {
         var config = atlas.Config;
-        if (config.Github is null && config.AzureDevops is null)
-            throw new UsageException($"{Atlas.ConfigFile} names no SCM. Add 'github: {{organisation: <name>}}' or 'azure-devops: {{organisation: <name>}}'.");
+        var githubOrgs = Orgs(config.Github, config.Allow.Github.Keys);
+        var azdoOrgs = Orgs(config.AzureDevops, config.Allow.AzureDevops.Keys);
+        if (githubOrgs.Count == 0 && azdoOrgs.Count == 0)
+            throw new UsageException($"{Atlas.ConfigFile} names no SCM. Add 'github: {{organisation: <name>}}' or 'azure-devops: {{organisation: <name>}}', or organisations under 'allow'.");
+        CheckPatterns(config);
+        bool Allowed(string id) => IsAllowed(config, id);
 
         var remotes = new List<RemoteRepo>();
-        if (config.AzureDevops is { } azdo)
+        foreach (var org in azdoOrgs)
         {
-            var prefix = $"azdo:{azdo.Organisation}/";
+            // Without a sign-in only named projects can be read: those in a locations mapping, and plain names under allow.
+            var prefix = $"azdo:{org}/";
             var mapped = config.Locations.Values.SelectMany(ids => ids).Where(id => id.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && id.Split('/').Length == 3).Select(id => id.Split('/')[1]);
-            remotes.AddRange(await scm.AzureDevOpsRepos(azdo.Organisation, mapped));
+            var named = config.Allow.AzureDevops.Where(o => Same(o.Key, org) && o.Value is not null).SelectMany(o => o.Value!.Keys).Where(k => !IsRegex(k) && k.IndexOfAny(['*', '?']) < 0);
+            remotes.AddRange(await scm.AzureDevOpsRepos(org, mapped.Concat(named), Allowed));
         }
-        if (config.Github is { } github) remotes.AddRange(await scm.GitHubRepos(github.Organisation));
+        foreach (var org in githubOrgs) remotes.AddRange(await scm.GitHubRepos(org, Allowed));
 
         var skipped = remotes.Where(r => r.Skipped is not null).ToList();
         var linked = await Link(atlas, remotes.Except(skipped).ToList(), scm);
@@ -44,8 +50,8 @@ public static class Repos
                         list.Add(repo.Question, "person", $"A locations mapping in {Atlas.ConfigFile} naming both, or a statement that they are separate repositories.", "cli");
                 });
         }
-        // A repository nothing lists any more: every location is gone. Excluded ones are left as they are.
-        foreach (var folder in ScanState.All(atlas).Where(f => !IsExcluded(config, f) && kept.All(k => k.Folder != f)).ToList())
+        // A repository nothing lists any more: every location is gone. Excluded and no longer allowed ones are left as they are.
+        foreach (var folder in ScanState.All(atlas).Where(f => !IsExcluded(config, f) && kept.All(k => k.Folder != f) && ScanState.Load(atlas, f).Locations.All(l => Allowed(l.Id))).ToList())
             Record(atlas, new(folder, []));
         atlas.Save();
         return new(kept, skipped, excluded.Select(e => e.Folder).ToList());
@@ -82,11 +88,15 @@ public static class Repos
 
         var azdo = left.Where(r => !r.IsGitHub).ToList();
         var github = left.Where(r => r.IsGitHub).ToList();
-        var migrations = github.Count > 0 && azdo.Count > 0 && config.Github is { } g ? await scm.GitHubMigrations(g.Organisation) : [];
+        // Migration records, keyed by the GitHub location ID they produced.
+        var migrations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (azdo.Count > 0)
+            foreach (var org in github.Select(r => r.Id["github:".Length..].Split('/')[0]).Distinct(StringComparer.OrdinalIgnoreCase))
+                foreach (var (name, url) in await scm.GitHubMigrations(org)) migrations[$"github:{org}/{name}"] = url;
         const string noCommit = "the names match but no commit is shared.";
         foreach (var repo in github)
         {
-            var twin = migrations.TryGetValue(repo.Name, out var source)
+            var twin = migrations.TryGetValue(repo.Id, out var source)
                 ? azdo.FirstOrDefault(a => new[] { source, Uri.UnescapeDataString(source) }.Any(s => Same(Scm.CloneUrl(a.Id), s.TrimEnd('/')) || Same(Uri.UnescapeDataString(Scm.CloneUrl(a.Id)), s.TrimEnd('/'))))
                 : null;
             // The naming rule. A GitHub name equal to <project>-<repo> is the same thing as equal folder names; when a
@@ -127,9 +137,47 @@ public static class Repos
         }).OrderBy(l => l.Folder, StringComparer.Ordinal).ToList();
     }
 
-    /// <summary>A config exclude pattern (a glob where * is any run of characters) matches the folder name.</summary>
-    public static bool IsExcluded(AtlasConfig config, string folder) =>
-        config.Exclude.Any(p => Regex.IsMatch(folder, "^" + Regex.Escape(p.ToLowerInvariant()).Replace("\\*", ".*") + "$"));
+    /// <summary>A config exclude pattern matches the folder name.</summary>
+    public static bool IsExcluded(AtlasConfig config, string folder) => config.Exclude.Any(p => Matches(p, folder));
+
+    /// <summary>
+    /// Whether the allow section lets a location in: its organisation is named, and its project (Azure DevOps) and
+    /// repository match. An SCM with nothing under allow lets everything in.
+    /// </summary>
+    public static bool IsAllowed(AtlasConfig config, string locationId)
+    {
+        var p = locationId[(locationId.IndexOf(':') + 1)..].Split('/');
+        static bool AnyMatch(ICollection<string>? patterns, string name) => patterns is null or { Count: 0 } || patterns.Any(x => Matches(x, name));
+        var allow = config.Allow;
+        return locationId.StartsWith("github:")
+            ? allow.Github.Count == 0 || allow.Github.Any(o => Same(o.Key, p[0]) && AnyMatch(o.Value, p[1]))
+            : allow.AzureDevops.Count == 0 || allow.AzureDevops.Any(o => Same(o.Key, p[0])
+                && (o.Value is null or { Count: 0 } || o.Value.Any(project => Matches(project.Key, p[1]) && AnyMatch(project.Value, p[2]))));
+    }
+
+    /// <summary>
+    /// A name pattern: <c>/regex/</c>, which matches anywhere unless anchored, or else a glob where * is any run of
+    /// characters and ? is one, matching the whole name. Case is ignored.
+    /// </summary>
+    public static bool Matches(string pattern, string name) => Regex.IsMatch(name, ToRegex(pattern), RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    static bool IsRegex(string pattern) => pattern.Length > 1 && pattern[0] == '/' && pattern[^1] == '/';
+    static string ToRegex(string pattern) => IsRegex(pattern) ? pattern[1..^1] : "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+
+    static void CheckPatterns(AtlasConfig config)
+    {
+        var none = Enumerable.Empty<string>();
+        var patterns = config.Exclude
+            .Concat(config.Allow.Github.Values.SelectMany(r => r ?? none))
+            .Concat(config.Allow.AzureDevops.Values.OfType<Dictionary<string, List<string>?>>().SelectMany(o => o).SelectMany(p => (p.Value ?? none).Append(p.Key)));
+        foreach (var p in patterns)
+            try { _ = new Regex(ToRegex(p)); }
+            catch (ArgumentException e) { throw new UsageException($"'{p}' in {Atlas.ConfigFile} is not a regular expression: {e.Message}"); }
+    }
+
+    /// <summary>The organisations to list at one SCM: the one it names, then those under allow.</summary>
+    public static List<string> Orgs(ScmConfig? scm, IEnumerable<string> allowed) =>
+        new[] { scm?.Organisation }.Concat(allowed).OfType<string>().Where(o => o.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
     /// <summary>Writes a repository's locations into its scan state. The first location is primary; stored ones not passed are marked gone.</summary>
     static void Record(Atlas atlas, LinkedRepo repo)

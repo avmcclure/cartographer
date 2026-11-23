@@ -178,6 +178,52 @@ public class ScmTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task The_allow_list_keeps_only_named_organisations_projects_and_repositories()
+    {
+        var atlas = NewAtlas("""
+            organisation: Acme
+            allow:
+              github:
+                acme: ["Finance-*", "/^web/"]
+              azure-devops:
+                acme:
+                  Finance: []
+                  "/^ops$/": ["tool?"]
+            """);
+        // Scanned before the allow list was written: left as it is, not marked gone.
+        new ScanState { Repository = Ids.Repository("legacy-apps-payroll"), Locations = [new LocationState { Id = "github:acme/Legacy-Apps-payroll", Primary = true, DefaultBranch = "main", Tip = Sha("e2") }] }.Save(atlas);
+        var http = new Recorded("acme");
+        var listing = await Repos.Refresh(atlas, new Scm(http, Token, Token));
+
+        Assert.Equal(["azdo:acme/Finance/billing", "azdo:acme/Finance/Core-ledger", "azdo:acme/Ops/tools", "github:acme/Finance-billing", "github:acme/Finance-Core-ledger", "github:acme/website"],
+            listing.Repositories.SelectMany(r => r.Locations).Select(l => l.Id).Order(StringComparer.Ordinal));
+        Assert.Contains(listing.Skipped, r => r.Id == "azdo:acme/Finance-Core/ledger" && r.Skipped == "not allowed");
+        Assert.Contains(listing.Skipped, r => r.Id == "github:acme/old-mirror" && r.Skipped == "not allowed");
+        // A repository that is not allowed costs no tip lookup.
+        Assert.DoesNotContain(http.Requests, u => u.Contains("/repos/acme/Ops-tools/"));
+        Assert.False(ScanState.Load(atlas, "legacy-apps-payroll").Locations.Single().Gone);
+    }
+
+    [Theory]
+    [InlineData("Finance-*", "finance-billing", true)]
+    [InlineData("Finance-*", "my-finance-billing", false)]
+    [InlineData("tool?", "tools", true)]
+    [InlineData("tool?", "toolkit", false)]
+    [InlineData("/^ops$/", "Ops", true)]
+    [InlineData("/core/", "Finance-Core-ledger", true)]
+    [InlineData("/^core/", "Finance-Core-ledger", false)]
+    public void Patterns_are_globs_or_slashed_regular_expressions(string pattern, string name, bool matches) =>
+        Assert.Equal(matches, Repos.Matches(pattern, name));
+
+    [Fact]
+    public async Task A_broken_regular_expression_is_reported()
+    {
+        var atlas = NewAtlas("organisation: Acme\nallow:\n  github:\n    acme: [\"/(unclosed/\"]\n");
+        var e = await Assert.ThrowsAsync<UsageException>(() => Repos.Refresh(atlas, new Scm(new Recorded("acme"), Token, Token)));
+        Assert.Contains("/(unclosed/", e.Message);
+    }
+
+    [Fact]
     public async Task A_location_that_is_no_longer_listed_is_marked_gone()
     {
         var (atlas, _, _) = await Acme();

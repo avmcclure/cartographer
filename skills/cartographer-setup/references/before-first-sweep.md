@@ -6,7 +6,7 @@ The first sweep reads every repository and can run for days across many sessions
 
 - `cartographer repos list` shows about as many repositories as the person expects. A much smaller number usually means their sign-in cannot see everything; a much larger one means exclusions are missing.
 - Repositories hosted at both SCMs show as one repository with two locations, not as two repositories. Unlinked pairs are fixed with `locations` in `cartographer.yml`.
-- The excluded names are the ones the person meant.
+- The excluded and not-allowed names are the ones the person meant.
 
 ## Code can be fetched
 

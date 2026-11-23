@@ -43,6 +43,7 @@ public sealed class CoreCommands : ICommands
         static string Scm(string key, string? org) => org is null ? $"# {key}: {{organisation: <name>}}\n" : $"{key}: {{organisation: {org}}}\n";
         File.WriteAllText(Path.Combine(dir, Atlas.ConfigFile),
             $"organisation: {organisation}\n" + Scm("github", a.Option("github")) + Scm("azure-devops", a.Option("azdo")) +
+            "allow: {}              # only these repositories, e.g. {github: {acme: [\"Finance-*\"]}, azure-devops: {acme: {Finance: []}}}\n" +
             "exclude: []            # repository name patterns to leave out, e.g. \"*-archive\"\n" +
             "internal-prefixes: []  # package name patterns that are always internal, e.g. \"Acme.*\"\n" +
             "locations: {}          # <repository id>: [location ids], when the naming rule cannot link them\n" +

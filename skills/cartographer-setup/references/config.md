@@ -8,6 +8,9 @@ One file at the atlas root. `cartographer init` writes a starting version; edit 
 organisation: Acme
 github: {organisation: acme}
 azure-devops: {organisation: acme}
+allow:
+  github: {acme: ["Finance-*"]}
+  azure-devops: {acme: {Finance: []}}
 exclude: ["*-archive", "sandbox-*"]
 internal-prefixes: ["Acme.*"]
 locations:
@@ -34,9 +37,30 @@ The organisation's name, as people write it. Set by `init`.
 
 The organisation name at each SCM. One or both. Set by `init --github` and `init --azdo`. Scans cover every repository the signed-in person can see there, so a person with narrow access produces a narrow atlas: ask whether their access covers what they want mapped.
 
+### `allow`
+
+Optional. Use it when only part of an estate should be mapped, or when it spans several GitHub organisations or Azure DevOps organisations. **Ask** when the person names teams, projects or organisations rather than "everything".
+
+```yaml
+allow:
+  github:
+    acme: ["Finance-*", "/^ops-(tools|scripts)$/"]   # organisation: repository patterns
+    acme-labs: []                                     # every repository
+  azure-devops:
+    acme:                                             # organisation
+      Finance: []                                     # project pattern: repository patterns
+      "Legacy*": ["payroll", "billing-*"]
+```
+
+- Organisations are plain names, and each one here is listed even when `github` or `azure-devops` does not name it.
+- Projects and repositories are patterns: a glob (`*`, `?`, whole name) or a regular expression between slashes (`/^ops-/`, matches anywhere unless anchored). Case is ignored. Quote patterns that start with `*` or `/`.
+- An empty list allows everything below it. An SCM with nothing under `allow` is not filtered.
+- Without an Azure DevOps sign-in, only projects named plainly here (or in `locations`) can be read.
+- `repos list --refresh` reports what was left out as `skipped (not allowed)`; show the person that list.
+
 ### `exclude`
 
-Repository name patterns to leave out, with `*` as a wildcard. **Always ask.** Show the person the listing's totals and a sample of names, and ask what should not be mapped: archives, sandboxes, forks of public code, personal experiments, generated mirrors. Suggest patterns from names you can see; do not add one they have not agreed to. Disabled and empty repositories are skipped without a pattern.
+Repository folder name patterns to leave out, as globs (`*`, `?`) or `/regular expressions/`. **Always ask.** Show the person the listing's totals and a sample of names, and ask what should not be mapped: archives, sandboxes, forks of public code, personal experiments, generated mirrors. Suggest patterns from names you can see; do not add one they have not agreed to. Disabled and empty repositories are skipped without a pattern.
 
 Leaving something out is cheap to undo later. Mapping several hundred repositories nobody wanted is not.
 
