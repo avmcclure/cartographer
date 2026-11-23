@@ -36,8 +36,7 @@ public static class Credentials
     /// <summary>A command's trimmed output, or null when it is not installed, fails or prints nothing. Its input is closed so it cannot ask.</summary>
     static string? Run(string command, params string[] args)
     {
-        var info = new ProcessStartInfo(command) { RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true };
-        foreach (var a in args) info.ArgumentList.Add(a);
+        var info = StartInfo(command, args, OperatingSystem.IsWindows());
         try
         {
             using var p = Process.Start(info)!;
@@ -49,6 +48,18 @@ public static class Credentials
             return p.ExitCode == 0 && output.Length > 0 ? output : null;
         }
         catch (System.ComponentModel.Win32Exception) { return null; }
+    }
+
+    /// <summary>
+    /// Windows will not start a .cmd file directly with redirected handles, so it runs through cmd.exe. The arguments
+    /// are passed as they are: cmd.exe's own quoting rules make this safe only for plain arguments like az's here.
+    /// </summary>
+    internal static ProcessStartInfo StartInfo(string command, string[] args, bool windows)
+    {
+        var viaCmd = windows && command.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase);
+        var info = new ProcessStartInfo(viaCmd ? "cmd.exe" : command) { RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true };
+        foreach (var a in viaCmd ? ["/d", "/c", command, .. args] : args) info.ArgumentList.Add(a);
+        return info;
     }
 }
 
