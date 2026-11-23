@@ -60,7 +60,8 @@ public sealed class Scm(HttpMessageHandler? handler, AuthenticationHeaderValue? 
 
     /// <summary>Credentials for the SCMs the config names, from the environment or gh / az.</summary>
     public static Scm FromEnvironment(AtlasConfig config) =>
-        new(null, config.Github is null ? null : Credentials.GitHub(), config.AzureDevops is null ? null : Credentials.AzureDevOps());
+        new(null, Repos.Orgs(config.Github, config.Allow.Github.Keys).Count == 0 ? null : Credentials.GitHub(),
+            Repos.Orgs(config.AzureDevops, config.Allow.AzureDevops.Keys).Count == 0 ? null : Credentials.AzureDevOps());
 
     /// <summary>https://github.com/&lt;org&gt;/&lt;repo&gt;.git or https://dev.azure.com/&lt;org&gt;/&lt;project&gt;/_git/&lt;repo&gt;.</summary>
     public static string CloneUrl(string locationId)
@@ -71,8 +72,11 @@ public sealed class Scm(HttpMessageHandler? handler, AuthenticationHeaderValue? 
             : throw new UsageException($"'{locationId}' is not a location: expected github:<org>/<repo> or azdo:<org>/<project>/<repo>");
     }
 
-    /// <summary>Every repository of a GitHub organisation, or of a user account when the name is not an organisation.</summary>
-    public async Task<List<RemoteRepo>> GitHubRepos(string org)
+    /// <summary>
+    /// Every repository of a GitHub organisation, or of a user account when the name is not an organisation. One that
+    /// <paramref name="allowed"/> refuses is returned skipped, without reading its tip.
+    /// </summary>
+    public async Task<List<RemoteRepo>> GitHubRepos(string org, Func<string, bool>? allowed = null)
     {
         var o = Uri.EscapeDataString(org);
         var page = await Get($"{GitHubApi}/orgs/{o}/repos?per_page=100");
@@ -86,7 +90,7 @@ public sealed class Scm(HttpMessageHandler? handler, AuthenticationHeaderValue? 
             {
                 var name = r.GetProperty("name").GetString()!;
                 var branch = Str(r, "default_branch");
-                string? tip = null, skipped = Flag(r, "disabled") ? "disabled" : null;
+                string? tip = null, skipped = allowed?.Invoke($"github:{org}/{name}") == false ? "not allowed" : Flag(r, "disabled") ? "disabled" : null;
                 if (skipped is null)
                 {
                     // ponytail: one request per repository for the tip. GraphQL returns tips with the listing but needs a token; switch when sweeps get slow.
@@ -103,9 +107,10 @@ public sealed class Scm(HttpMessageHandler? handler, AuthenticationHeaderValue? 
 
     /// <summary>
     /// Every repository across an Azure DevOps organisation's projects. Without a credential the organisation cannot be
-    /// listed, so only the public projects in <paramref name="knownProjects"/> are read.
+    /// listed, so only the public projects in <paramref name="knownProjects"/> are read. One that <paramref name="allowed"/>
+    /// refuses is returned skipped, without reading its tip.
     /// </summary>
-    public async Task<List<RemoteRepo>> AzureDevOpsRepos(string org, IEnumerable<string> knownProjects)
+    public async Task<List<RemoteRepo>> AzureDevOpsRepos(string org, IEnumerable<string> knownProjects, Func<string, bool>? allowed = null)
     {
         var o = Uri.EscapeDataString(org);
         var items = new List<JsonElement>();
@@ -122,7 +127,7 @@ public sealed class Scm(HttpMessageHandler? handler, AuthenticationHeaderValue? 
             var name = r.GetProperty("name").GetString()!;
             var project = r.GetProperty("project").GetProperty("name").GetString()!;
             var reference = Str(r, "defaultBranch");
-            string? tip = null, skipped = Flag(r, "isDisabled") ? "disabled" : reference is null ? "empty" : null;
+            string? tip = null, skipped = allowed?.Invoke($"azdo:{org}/{project}/{name}") == false ? "not allowed" : Flag(r, "isDisabled") ? "disabled" : reference is null ? "empty" : null;
             if (skipped is null)
             {
                 var refs = await Get($"{AzureDevOpsApi}/{o}/{Uri.EscapeDataString(project)}/_apis/git/repositories/{r.GetProperty("id").GetString()}/refs?filter={Segments(reference!["refs/".Length..])}&{ApiVersion}");

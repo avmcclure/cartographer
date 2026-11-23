@@ -8,6 +8,8 @@ public sealed class AtlasConfig
     public string Organisation { get; set; } = "";
     public ScmConfig? Github { get; set; }
     public ScmConfig? AzureDevops { get; set; }
+    // An empty 'allow:' in YAML sets null; read it as nothing allowed-listed.
+    public AllowConfig Allow { get; set => field = value ?? new(); } = new();
     public List<string> Exclude { get; set; } = [];
     public List<string> InternalPrefixes { get; set; } = [];
     public Dictionary<string, List<string>> Locations { get; set; } = [];
@@ -18,6 +20,15 @@ public sealed class AtlasConfig
         new DeserializerBuilder().WithNamingConvention(HyphenatedNamingConvention.Instance).Build().Deserialize<AtlasConfig>(yaml) ?? new();
 }
 public sealed class ScmConfig { public string Organisation { get; set; } = ""; }
+/// <summary>
+/// Which repositories are listed. GitHub: organisation to repository patterns. Azure DevOps: organisation to project
+/// pattern to repository patterns. An empty or missing list allows everything below it; an SCM with no entries is not filtered.
+/// </summary>
+public sealed class AllowConfig
+{
+    public Dictionary<string, List<string>?> Github { get; set => field = value ?? []; } = [];
+    public Dictionary<string, Dictionary<string, List<string>?>?> AzureDevops { get; set => field = value ?? []; } = [];
+}
 public sealed class InstanceConfig
 {
     public string Name { get; set; } = "";
