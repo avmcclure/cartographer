@@ -33,10 +33,4 @@ dotnet pack src/Cartographer.Cli -c Release -o out
 dotnet tool install Cartographer.Cli --global --add-source out
 ```
 
-Restoring needs a GitHub token with `read:packages`, because the plan layout library ([Groma](https://github.com/avmcclure/groma)) is on GitHub Packages:
-
-```
-dotnet nuget update source github-avmcclure --username <you> --password <token> --store-password-in-clear-text
-```
-
 Opt-in tests: `CARTOGRAPHER_LIVE_TESTS=1` lists and clones public repositories; `CARTOGRAPHER_TEST_SQL=<connection string>` reads a real SQL Server (see docs/live-databases.md for a throwaway container).

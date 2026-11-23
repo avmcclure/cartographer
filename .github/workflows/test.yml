@@ -14,6 +14,4 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      # Groma is a private package. This works once the Groma package's settings give this repository read access.
-      - run: dotnet nuget update source github-avmcclure --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
       - run: dotnet test -c Release
