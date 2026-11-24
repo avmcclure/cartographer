@@ -8,7 +8,7 @@ const answered = questions.filter((q) => q.state === 'answered');
 ---
 <Base title="Questions that need a person">
   <article class="page">
-    <p class="kicker">Unsurveyed</p>
+    <p class="kicker">Open questions</p>
     <h1>Questions that need a person</h1>
     <p class="lede">{need.length} question{need.length === 1 ? '' : 's'} the scans have given up on. Each is answered by editing the entry's file in the atlas: write the answer after <code>Answer:</code> under the question. The next scan folds it in as a stated fact.</p>
     {!site.editable && <p class="small">No address for the atlas repository was given when this site was built, so there are no edit links. Build with <code>--edit-url</code> to get them.</p>}

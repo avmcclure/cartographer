@@ -3,12 +3,12 @@ using Cartographer.Cli;
 
 namespace Cartographer.Tests;
 
-/// <summary>Site data and plan layouts, from the hand-written atlas in fixtures/sample-atlas.</summary>
+/// <summary>Site data, from the hand-written atlas in fixtures/sample-atlas.</summary>
 public class SiteTests
 {
     static string Sample => Path.Combine(Fixtures.Root(), "sample-atlas");
 
-    /// <summary>A copy of the sample atlas that a test may change, with the layouts it was committed with.</summary>
+    /// <summary>A copy of the sample atlas that a test may change.</summary>
     static Atlas Copy()
     {
         var root = Directory.CreateTempSubdirectory("sample-").FullName;
@@ -27,12 +27,6 @@ public class SiteTests
         .ToDictionary(f => Path.GetRelativePath(dir, f).Replace('\\', '/'), File.ReadAllText), StringComparer.Ordinal);
 
     static JsonElement Json(string dir, string file) => JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, file))).RootElement;
-
-    /// <summary>Plot ID to its corner, for every sheet.</summary>
-    static Dictionary<string, (int X, int Y)> Corners(string dir) => Files(dir).Where(f => f.Key.StartsWith("sheets/"))
-        .SelectMany(f => JsonDocument.Parse(f.Value).RootElement.GetProperty("plots").EnumerateArray()
-            .Select(p => (Key: $"{f.Key} {p.GetProperty("id").GetString()}", At: (p.GetProperty("x").GetInt32(), p.GetProperty("y").GetInt32()))))
-        .ToDictionary(p => p.Key, p => p.At);
 
     static Entry Component(string id, string name, params Link[] links)
     {
@@ -61,27 +55,19 @@ public class SiteTests
     }
 
     [Fact]
-    public void Prepare_is_deterministic_and_complete_and_leaves_committed_layouts_alone()
+    public void Prepare_is_deterministic_and_complete()
     {
         var atlas = Copy();
-        var layouts = Files(Path.Combine(atlas.Root, "layouts"));
         var (first, second) = (Out(), Out());
-        Assert.All(SitePrepare.Run(atlas, first), s => Assert.True(s.Reason is null && !s.Written, $"{s.Sheet} was laid out again"));
+        SitePrepare.Run(atlas, first);
         SitePrepare.Run(Atlas.Load(atlas.Root), second);
         Assert.Equal(Files(first), Files(second));
-        Assert.Equal(layouts, Files(Path.Combine(atlas.Root, "layouts")));
+        Assert.False(File.Exists(Path.Combine(atlas.Root, Clusters.FileName)));   // prepare never pins
 
         foreach (var id in atlas.Entries.Keys) Assert.True(File.Exists(Path.Combine(first, "entries", id + ".json")), $"no entry file for {id}");
-        Assert.Equal(atlas.Entries.Count, Json(first, "gazetteer.json").GetArrayLength());
+        Assert.Equal(atlas.Entries.Count, Json(first, "everything.json").GetArrayLength());
         Assert.Equal(2, Json(first, "changes.json").GetArrayLength());
         Assert.Contains(Json(first, "questions.json").EnumerateArray(), q => q.GetProperty("state").GetString() == "needs-person");
-
-        // Every link whose target has an entry is in the links schedule of at least one sheet.
-        var scheduled = Files(first).Where(f => f.Key.StartsWith("sheets/")).SelectMany(f => JsonDocument.Parse(f.Value).RootElement.GetProperty("links").EnumerateArray())
-            .Select(l => $"{l.GetProperty("from").GetString()} {l.GetProperty("verb").GetString()} {l.GetProperty("to").GetString()}").ToHashSet();
-        var links = atlas.Entries.Values.SelectMany(e => (e.Links ?? []).Where(l => l.To is not null).Select(l => $"{e.Id} {Sheets.Verb(l.Type)} {l.To}")).ToList();
-        Assert.True(links.Count > 50);
-        Assert.All(links, l => Assert.Contains(l, scheduled));
 
         // Evidence becomes a link to the file at the repository's primary location, on either host.
         var orders = File.ReadAllText(Path.Combine(first, "entries/databases/sales/tables/dbo/orders.json"));
@@ -90,100 +76,38 @@ public class SiteTests
     }
 
     [Fact]
-    public void Adding_an_entry_moves_no_plot_that_was_already_placed()
+    public void Every_part_is_in_one_cluster_and_every_link_between_parts_is_counted_once()
     {
-        var atlas = Copy();
-        var before = Out();
-        SitePrepare.Run(atlas, before);
-
-        var added = Component("repositories/sales-order-service/components/order-export", "Brackley.Orders.Export",
-            new Link { Type = "reads", To = "databases/sales/tables/dbo/orders", Basis = Basis.Inferred, Source = "person:test@2026-11-20" });
-        atlas.Entries[added.Id] = added;
-        atlas.Save();
-        var after = Out();
-        Assert.All(SitePrepare.Run(Atlas.Load(atlas.Root), after), s => Assert.Null(s.Reason));
-
-        var (was, now) = (Corners(before), Corners(after));
-        Assert.All(was, p => Assert.Equal(p.Value, now[p.Key]));
-        Assert.Contains($"sheets/system/ordering.json {added.Id}", now.Keys);
-        Assert.Contains($"sheets/area/repositories/sales-order-service.json {added.Id}", now.Keys);
-        Assert.Contains($"sheets/area/databases/sales.json repositories/sales-order-service/repository", now.Keys);
-    }
-
-    [Fact]
-    public void A_sheet_that_needs_a_resurvey_is_reported_and_its_layout_left_as_it_was()
-    {
-        var atlas = Copy();
-        var layout = Surveyor.PathOf(atlas, "system/ordering");
-        var stored = File.ReadAllText(layout);
-
-        // A plot that grows into its neighbour cannot be kept where it is without moving something.
-        atlas.Entries["repositories/sales-storefront/components/webshop"].Name = "WebShop with a name far too long for its plot";
-        atlas.Save();
+        var atlas = Atlas.Load(Sample);
         var dir = Out();
-        var results = SitePrepare.Run(Atlas.Load(atlas.Root), dir);
+        SitePrepare.Run(atlas, dir);
+        var map = Json(dir, "clusters.json");
+        var members = map.GetProperty("clusters").EnumerateArray().SelectMany(c => c.GetProperty("members").EnumerateArray().Select(m => (Part: m.GetProperty("id").GetString()!, Key: c.GetProperty("key").GetString()!))).ToList();
+        var (parts, links) = Clusters.Graph(atlas);
+        Assert.Equal(parts.Order(StringComparer.Ordinal), members.Select(m => m.Part).Order(StringComparer.Ordinal));
 
-        var ordering = results.Single(s => s.Sheet == "system/ordering");
-        Assert.NotNull(ordering.Reason);
-        Assert.False(ordering.Written);
-        Assert.Equal(stored, File.ReadAllText(layout));
-        Assert.True(Json(dir, "sheets/system/ordering.json").TryGetProperty("unplaced", out _));
-        Assert.True(Json(dir, "sheets/system/ordering.json").GetProperty("plots").GetArrayLength() > 0);
-        Assert.Contains(results, s => s.Sheet == "system/billing" && s.Reason is null);
-        Assert.True(File.Exists(Path.Combine(dir, "sheets/system/billing.json")));
-        Assert.Equal(1, SiteCommands.Prepare(Atlas.Load(atlas.Root), dir, null));
-
-        // The deliberate re-survey lays the sheet out afresh, and prepare is then content again.
-        var fresh = SitePrepare.Resurvey(Atlas.Load(atlas.Root), "system/ordering");
-        Assert.True(fresh.Written && fresh.Reason is null);
-        Assert.NotEqual(stored, File.ReadAllText(layout));
-        Assert.Equal(0, SiteCommands.Prepare(Atlas.Load(atlas.Root), dir, null));
+        // A table's link counts towards its database, and the entry says which part and cluster it belongs to.
+        Assert.Equal(links.Count, map.GetProperty("parts").EnumerateArray().Sum(l => l.GetProperty("count").GetInt32()));
+        var table = Json(dir, "entries/databases/sales/tables/dbo/orders.json");
+        Assert.Equal("databases/sales/database", table.GetProperty("part").GetProperty("id").GetString());
+        Assert.Equal(members.Single(m => m.Part == "databases/sales/database").Key, table.GetProperty("cluster").GetString());
+        var reads = map.GetProperty("parts").EnumerateArray().Single(l => l.GetProperty("from").GetString() == "repositories/sales-storefront/components/webshop" && l.GetProperty("to").GetString() == "databases/sales/database");
+        var verbs = reads.GetProperty("verbs").EnumerateArray().Select(v => (Verb: v.GetProperty("verb").GetString(), Count: v.GetProperty("count").GetInt32())).ToList();
+        Assert.Contains(verbs, v => v.Verb == "reads" && v.Count > 0);
+        Assert.Equal(verbs.OrderByDescending(v => v.Count).Select(v => v.Count), verbs.Select(v => v.Count));   // most common first
     }
 
     [Fact]
-    public void Summarised_lines_carry_exact_totals()
-    {
-        var w = new World(Atlas.Load(Sample));
-        var sheets = Sheets.All(w).ToDictionary(s => s.Id);
-        foreach (var sheet in sheets.Values)
-            foreach (var line in sheet.Lines)
-            {
-                Assert.Equal(line.Total, line.Verbs.Sum(v => v.Count));
-                if (sheet.Level != "organisation") Assert.Equal(line.Total, sheet.Links.Count(l => l.Line == line.Id));
-            }
-
-        // Counted by hand from the entries: what the storefront's two programs do to the Sales database, and what Billing takes from Ordering.
-        var storefront = sheets["system/ordering"].Lines.Single(l => l.Id == "repositories/sales-storefront/repository>databases/sales/database");
-        Assert.Equal("reads 5, writes 3, uses 2, calls 1, defines 1", storefront.Text);
-        Assert.Equal(Basis.Inferred, storefront.Basis);
-        var billing = sheets["organisation"].Lines.Single(l => l.Id == "systems/billing>systems/ordering");
-        Assert.Equal((4, "4"), (billing.Total, billing.Text));
-        Assert.Equal(Basis.Extracted, billing.Basis);
-
-        // Every link between two different plots of the organisation sheet is counted on exactly one line.
-        string Home(string id) => w.Entry(id).Kind is Kinds.Channel or Kinds.External ? id : w.GroupsOf(id).Single();
-        Assert.Equal(w.Edges.Count(e => Home(e.From) != Home(e.To)), sheets["organisation"].Lines.Sum(l => l.Total));
-
-        var stated = sheets["system/warehouse"].Lines.Single(l => l.Beyond == "Ordering" && l.Text.Contains("calls"));
-        Assert.True(stated.Stated);
-    }
-
-    [Fact]
-    public void Until_a_system_exists_repositories_are_grouped_by_folder_prefix()
+    public void Pinned_names_and_a_regroup_suggestion_reach_the_site()
     {
         var atlas = Copy();
-        foreach (var system in atlas.OfKind(Kinds.System).ToList()) atlas.Entries.Remove(system.Id);
-        var w = new World(atlas);
-        Assert.Equal(["provisional/finance", "provisional/platform", "provisional/sales", "provisional/warehouse", World.Unassigned], w.Groups.Select(g => g.Key));
-        Assert.Equal(["databases/ledger/database", "databases/sales/database"], w.GroupByKey(World.Unassigned).Members);
-        Assert.Contains(Sheets.All(w), s => s.Id == "system/sales" && s.Plots.Any(p => p.Id == "repositories/sales-storefront/components/webshop"));
-    }
-
-    [Fact]
-    public void Grid_references_come_from_position()
-    {
-        Assert.Equal("A1", Surveyor.Reference(0, 0));
-        Assert.Equal("B3", Surveyor.Reference(Sheets.Cell, 2 * Sheets.Cell + 5));
-        Assert.Equal("AA1", Surveyor.Reference(26 * Sheets.Cell, 0));
+        var first = Clusters.Current(atlas).Clusters;
+        Clusters.WritePinned(atlas, first.Select((c, i) => c with { Name = $"Pinned {i}", Pinned = true }));
+        var dir = Out();
+        Assert.Equal(0, SiteCommands.Prepare(Atlas.Load(atlas.Root), dir, null));
+        var map = Json(dir, "clusters.json");
+        Assert.All(map.GetProperty("clusters").EnumerateArray(), c => Assert.True(c.GetProperty("pinned").GetBoolean()));
+        Assert.Contains(map.GetProperty("clusters").EnumerateArray(), c => c.GetProperty("key").GetString() == "pinned-0");
+        Assert.Equal(JsonValueKind.Null, map.TryGetProperty("suggestion", out var none) ? none.ValueKind : JsonValueKind.Null);
     }
 }

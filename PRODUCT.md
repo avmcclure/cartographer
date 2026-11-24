@@ -43,7 +43,7 @@ Every link states its basis (extracted mechanically, inferred by an agent, or st
 - Product views required: impact of a change, where data lives and flows (from business-data tags on tables), system overview.
 - Engineering views required: entries with typed links, basis markers, last-verified date, click-through to evidence, reverse "used by" lists, drift between database sources, long-unverified entries flagged.
 - Scale: thousands of entries; a single database may hold thousands of tables and routines.
-- No generator draws diagrams from frontmatter. Plans (boxes joined by right-angled, labelled lines) must be laid out automatically from the entries, with positions stable between scans. The CLI does this with Groma, our own layout library (`avmcclure/groma`), and commits one layout file per sheet.
+- No generator draws diagrams from frontmatter. The map groups parts by how they interact, not by who owns them (ADR 1): clusters come from the links, people can pin and rename them, and a regroup is suggested when the links drift. The drawing is laid out in the browser; nothing about positions is stored.
 - Terminology is fixed in `GLOSSARY.md`.
 - Undecided: hosting and access control; search implementation; whether the site is rebuilt on every atlas merge.
 

@@ -1,0 +1,51 @@
+---
+// Every entry, A to Z, with the cluster its part is in.
+import Base from '../layouts/Base.astro';
+import { everything, map, entryHref, clusterHref, kindLabel, date } from '../lib/data.js';
+const rows = [...everything].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }) || a.id.localeCompare(b.id));
+const clusters = new Map(map.clusters.map((c, i) => [c.key, { ...c, color: i }]));
+---
+<Base title="Everything" wide>
+  <div class="table-page">
+    <div><h1 style="font-size:22px;font-weight:600">Everything: {rows.length} entries, A to Z</h1></div>
+    <div class="filter">
+      <label for="q">Filter</label>
+      <input id="q" type="search" placeholder="Name, kind, cluster or ID" autocomplete="off" />
+      <span id="shown" class="small" aria-live="polite"></span>
+    </div>
+    <div class="scroll">
+      <table id="everything">
+        <thead><tr><th>Name</th><th>Kind</th><th>Cluster</th><th>Summary</th><th class="n">Open questions</th><th>Last verified</th></tr></thead>
+        <tbody>
+          {rows.map((e) => {
+            const c = e.cluster ? clusters.get(e.cluster) : null;
+            return (
+              <tr data-text={`${e.name} ${kindLabel(e)} ${c?.name ?? ''} ${e.id}`.toLowerCase()}>
+                <td><a href={entryHref(e.id)}>{e.name}</a>{e.status === 'retired' && <span class="flag">retired</span>}<br /><span class="id">{e.id}</span></td>
+                <td>{kindLabel(e)}</td>
+                <td>{c && <a href={clusterHref(c.key)} style="white-space:nowrap"><span class="dot" style={`background:var(--c${c.color % 8})`}></span>{c.name}</a>}</td>
+                <td class="summary">{e.summary}</td>
+                <td class="n">{e.unsurveyed || ''}</td>
+                <td>{date(e.verified)}{e.stale && <span class="flag">long unverified</span>}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const input = document.getElementById('q');
+    const rows = [...document.querySelectorAll('#everything tbody tr')];
+    const shown = document.getElementById('shown');
+    input.addEventListener('input', () => {
+      const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+      let n = 0;
+      for (const row of rows) {
+        row.hidden = !words.every((w) => row.dataset.text.includes(w));
+        if (!row.hidden) n++;
+      }
+      shown.textContent = words.length ? `${n} of ${rows.length}` : '';
+    });
+  </script>
+</Base>

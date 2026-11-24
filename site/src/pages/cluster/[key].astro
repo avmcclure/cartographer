@@ -1,0 +1,117 @@
+---
+// One cluster: its parts, the parts elsewhere they link to, and what it talks to most.
+import Base from '../../layouts/Base.astro';
+import { map, clusterOf, insideCount, clusterHref, entryHref, href, plural, json } from '../../lib/data.js';
+export function getStaticPaths() {
+  return map.clusters.map((c) => ({ params: { key: c.key } }));
+}
+const colour = new Map(map.clusters.map((c, i) => [c, i]));
+const c = map.clusters.find((x) => x.key === Astro.params.key);
+const kind = (m) => (m.type && m.type !== m.kind ? `${m.kind} · ${m.type}` : m.kind === 'external' ? 'external system' : m.kind);
+const part = new Map(map.clusters.flatMap((x) => x.members.map((m) => [m.id, m])));
+const touching = map.parts.filter((l) => clusterOf.get(l.from) === c || clusterOf.get(l.to) === c);
+const away = [...new Set(touching.flatMap((l) => [l.from, l.to]).filter((id) => clusterOf.get(id) !== c))];
+const nodes = [...c.members.map((m) => m.id), ...away].map((id) => {
+  const m = part.get(id), home = clusterOf.get(id);
+  return { id, name: m.name, sub: home === c ? kind(m) : `in ${home.name}`, away: home !== c, color: colour.get(home), href: entryHref(id), cluster: home.name, clusterHref: clusterHref(home.key), found: m.found };
+});
+const ties = Object.entries(Object.groupBy(touching.filter((l) => clusterOf.get(l.from) !== clusterOf.get(l.to)), (l) => (clusterOf.get(l.from) === c ? clusterOf.get(l.to) : clusterOf.get(l.from)).key))
+  .map(([key, ls]) => ({ other: map.clusters.find((x) => x.key === key), count: ls.reduce((n, l) => n + l.count, 0) }))
+  .sort((a, b) => b.count - a.count);
+const found = Object.entries(Object.groupBy(c.members, (m) => m.found ?? 'Not in a repository')).map(([name, ms]) => ({ name, count: ms.length })).sort((a, b) => b.count - a.count);
+// Shades of one neutral: the cluster hues mean clusters, and only clusters.
+const shades = [100, 75, 55, 40, 28, 18].map((p) => `color-mix(in srgb, var(--muted) ${p}%, transparent)`);
+const data = { nodes, links: touching.map(({ from, to, count, basis, verbs }) => ({ from, to, count, basis, verbs })) };
+---
+<Base title={c.name} wide>
+  <div class="workspace">
+    <section class="stage" aria-label={`Map of ${c.name}`}>
+      <div class="crumbs"><a href={href('/')}>All clusters</a><span aria-hidden="true">›</span><strong>{c.name}</strong></div>
+      <svg class="map" id="map" role="group" aria-label={`The parts of ${c.name} and the parts in other clusters they link to. The list beside it has the same parts.`}></svg>
+      <noscript><p>The drawing needs JavaScript. The parts are listed beside it.</p></noscript>
+      <p class="hint">Dashed boxes belong to other clusters · select a part to trace it</p>
+    </section>
+    <aside class="panel" id="panel">
+      <div id="cluster-panel">
+        <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
+          <h2>{c.name}</h2>{c.pinned && <span class="pinned">pinned</span>}
+        </div>
+        <p style="margin-top:6px">{plural(c.members.length, 'part')} with {plural(insideCount(c), 'link')} between them. {c.pinned ? 'Pinned: scans keep this grouping.' : 'Not pinned: it follows the links on every scan.'}</p>
+      </div>
+      <div>
+        <p class="cap">Talks most with</p>
+        {ties.length ? (
+          <ul class="rows plain">{ties.map((t) => <li><a href={clusterHref(t.other.key)}><span class="dot" style={`background:var(--c${colour.get(t.other) % 8})`}></span>{t.other.name}</a><span class="n">{t.count}</span></li>)}</ul>
+        ) : <p>Nothing outside this cluster.</p>}
+      </div>
+      <div>
+        <p class="cap">Found in</p>
+        <div class="bar" aria-hidden="true">{found.map((f, i) => <i style={`width:${(f.count / c.members.length) * 100}%;background:${shades[Math.min(i, 5)]}`}></i>)}</div>
+        <div class="chips" style="margin-top:8px">{found.map((f, i) => <span class="chip"><span class="dot" style={`background:${shades[Math.min(i, 5)]}`}></span>{f.name} · {f.count}</span>)}</div>
+      </div>
+      <div>
+        <p class="cap">Parts</p>
+        <ul class="rows plain">{c.members.map((m) => <li><a href={entryHref(m.id)} data-part={m.id}>{m.name}</a><span class="n">{kind(m)}</span></li>)}</ul>
+        <p class="small" style="margin-top:6px">Select a part to trace it on the map; open its page from there.</p>
+      </div>
+    </aside>
+  </div>
+  <template id="part-panel">
+    <div><p class="cap" data-kind></p><h2 data-name aria-live="polite"></h2></div>
+    <p><a class="button" data-open>Open its page</a> <a href="#" data-clear style="margin-left:10px">Back to the cluster</a></p>
+    <dl class="facts"><dt>Cluster</dt><dd><a data-cluster></a></dd><dt>Found in</dt><dd data-found></dd></dl>
+    <div><p class="cap" data-uses-cap></p><ul class="rows plain" data-uses></ul></div>
+    <div><p class="cap" data-used-cap></p><ul class="rows plain" data-used></ul></div>
+  </template>
+  <script type="application/json" id="cluster-data" set:html={json(data)} />
+  <script>
+    import { drawCluster } from '../../scripts/map.js';
+    const svg = document.getElementById('map');
+    const panel = document.getElementById('panel');
+    const resting = [...panel.children];
+    const data = JSON.parse(document.getElementById('cluster-data').textContent);
+    const byId = new Map(data.nodes.map((n) => [n.id, n]));
+    let picked = null, mark = () => {};
+
+    function row(n, l) {
+      const li = document.createElement('li');
+      const a = Object.assign(document.createElement('a'), { href: '#', textContent: n.name });
+      a.addEventListener('click', (e) => { e.preventDefault(); pick(n.id); });
+      const what = Object.assign(document.createElement('span'), { className: 'what', textContent: l.verbs.map((v) => `${v.verb} ${v.count}`).join(', ') + (n.away ? ` · in ${n.cluster}` : '') + (l.basis === 'inferred' ? ' · inferred' : '') });
+      const span = document.createElement('span');
+      span.append(a, what);
+      li.append(span, Object.assign(document.createElement('span'), { className: 'n', textContent: String(l.count) }));
+      return li;
+    }
+
+    function pick(id) {
+      picked = picked === id || !byId.has(id) ? null : id;
+      mark(picked);
+      // The traced part lives in the address, so Back and a shared link keep it.
+      history.replaceState(null, '', picked ? '#' + encodeURIComponent(picked) : location.pathname);
+      if (!picked) { panel.replaceChildren(...resting); return; }
+      const n = byId.get(picked);
+      const view = document.getElementById('part-panel').content.cloneNode(true);
+      view.querySelector('[data-kind]').textContent = n.sub;
+      view.querySelector('[data-name]').textContent = n.name;
+      Object.assign(view.querySelector('[data-cluster]'), { href: n.clusterHref, textContent: n.cluster });
+      view.querySelector('[data-found]').textContent = n.found ?? 'Not in a repository';
+      view.querySelector('[data-open]').href = n.href;
+      view.querySelector('[data-clear]').addEventListener('click', (e) => { e.preventDefault(); pick(picked); });
+      const uses = data.links.filter((l) => l.from === n.id), used = data.links.filter((l) => l.to === n.id);
+      view.querySelector('[data-uses-cap]').textContent = `Uses · ${uses.length}`;
+      view.querySelector('[data-used-cap]').textContent = `Used by · ${used.length}`;
+      view.querySelector('[data-uses]').append(...uses.map((l) => row(byId.get(l.to), l)));
+      view.querySelector('[data-used]').append(...used.map((l) => row(byId.get(l.from), l)));
+      panel.replaceChildren(view);
+    }
+
+    const draw = () => { mark = drawCluster(svg, data, pick); mark(picked); };
+    draw();
+    for (const a of panel.querySelectorAll('[data-part]')) a.addEventListener('click', (e) => { e.preventDefault(); pick(a.dataset.part); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && picked) pick(picked); });
+    if (location.hash) pick(decodeURIComponent(location.hash.slice(1)));
+    let last = svg.clientWidth;
+    new ResizeObserver(() => { if (Math.abs(svg.clientWidth - last) > 40) { last = svg.clientWidth; draw(); } }).observe(svg);
+  </script>
+</Base>

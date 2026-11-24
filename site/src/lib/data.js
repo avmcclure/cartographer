@@ -14,20 +14,44 @@ export function read(name) {
 }
 
 export const site = read('site.json');
-export const gazetteer = read('gazetteer.json');
-export const graph = read('graph.json');
+export const everything = read('everything.json');
+export const map = read('clusters.json');
 export const questions = read('questions.json');
 export const changes = read('changes.json');
 export const tags = read('tags.json');
-export const sheet = (id) => read(`sheets/${id}.json`);
 export const entry = (id) => read(`entries/${id}.json`);
+export const cluster = (key) => map.clusters.find((c) => c.key === key);
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 export const href = (p) => `${base}${p}`;
-export const sheetHref = (id) => (id === 'organisation' ? href('/') : href(`/sheet/${id}/`));
 export const entryHref = (id) => href(`/entry/${id}/`);
+export const clusterHref = (key) => href(`/cluster/${key}/`);
 
-export const sheetNumber = (id) => site.sheets.findIndex((s) => s.id === id) + 1;
+/** The cluster a part is in. */
+export const clusterOf = new Map(map.clusters.flatMap((c) => c.members.map((m) => [m.id, c])));
+
+/** How many links run between each pair of clusters, either way. */
+export function between() {
+  const pairs = new Map();
+  for (const l of map.parts) {
+    const a = clusterOf.get(l.from), b = clusterOf.get(l.to);
+    if (!a || !b || a === b) continue;
+    const [x, y] = a.key < b.key ? [a, b] : [b, a];
+    const k = `${x.key}|${y.key}`;
+    if (!pairs.has(k)) pairs.set(k, { a: x.key, b: y.key, count: 0 });
+    pairs.get(k).count += l.count;
+  }
+  return [...pairs.values()];
+}
+
+/** Links with both ends in the cluster. */
+export const insideCount = (c) => map.parts.filter((l) => clusterOf.get(l.from) === c && clusterOf.get(l.to) === c).reduce((n, l) => n + l.count, 0);
+
+// Data for a page script. Atlas text is data: a name holding </script> must not end the script element.
+export const json = (value) => JSON.stringify(value).replace(/</g, '\\u003c');
+
+export const percent = (x) => `${Math.round(x * 100)}%`;
+export const plural = (n, noun) => `${n} ${noun}${n === 1 ? '' : 's'}`;
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export function date(iso) {

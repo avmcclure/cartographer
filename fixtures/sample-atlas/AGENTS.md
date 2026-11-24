@@ -20,5 +20,5 @@ With the `cartographer` CLI installed: `cartographer find <text>`, `show <id>`, 
 - Never change or remove a `stated` fact, or text between `<!-- person -->` markers.
 - Never write a secret value into an entry.
 - What you cannot determine goes in the entry's Open questions section, not in prose.
-- Do not edit `_generated/`, `scan-state.yml`, `changes/` or `layouts/`; the CLI writes them.
+- Do not edit `_generated/`, `scan-state.yml` or `changes/`; the CLI writes them. Change `clusters.yaml` with `cartographer clusters`.
 - Run `cartographer check` before committing.
