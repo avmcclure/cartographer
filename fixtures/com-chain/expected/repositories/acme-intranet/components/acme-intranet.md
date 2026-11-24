@@ -31,7 +31,6 @@ links:
     source: default-asp#L7
   - type: uses
     name: AcmeBilling
-    how: sql
     basis: extracted
     source: db-inc#L10
 verified:

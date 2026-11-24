@@ -201,6 +201,7 @@ export function createMap(svg, data, { onSelect }) {
     return `M${x1},${a.y + H} C${x1},${a.y + H + 34} ${x2},${b.y + H + 34} ${x2},${b.y + H}`;
   }
 
+  // A trace runs through a pass-through both ways: what one part writes through it, another reads back through it.
   const reached = () => {
     const shownLinks = links.filter(live);
     return picked ? [reach(shownLinks, picked, 1, steps), reach(shownLinks, picked, -1, steps)] : [null, null];

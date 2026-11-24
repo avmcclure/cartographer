@@ -160,7 +160,7 @@ const goneTo = (name) => {
         note.hidden = false;
       } else if (p.role === 'lookup') {
         const n = p.readers ?? looks.length;
-        note.textContent = `Lookup: read by ${n} part${n === 1 ? '' : 's'}${p.roleBasis ? '' : ', with its own data coming only from databases'}, so it sits beside the flow.${said(p)}`;
+        note.textContent = `Lookup: ${n ? `read by ${n} part${n === 1 ? '' : 's'}` : 'nothing reads it yet'}${p.roleBasis ? '' : ', with its own data coming only from databases'}, so it sits beside the flow.${said(p)}`;
         note.hidden = false;
       }
       if (calls.length) view.querySelector('[data-calls]').append(...calls.map((l) => row(l.from === id ? l.to : l.from, l.from === id ? `called by this part · ${verbs(l)}` : `calls this part · ${verbs(l)}`)));

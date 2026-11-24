@@ -399,7 +399,7 @@ for key in ["pricing", "identity", "catalog", "customer"]:
                 if l.get("to") == lid and l["type"] not in ("depends-on", "forwards-to"):
                     if read:
                         continue
-                    l["type"], l["uses"], read = "reads", [l.get("uses", [f"GET /{key}"])[0].replace("POST", "GET").replace("PUT", "GET")], True
+                    l["type"], l["uses"], read = "reads", [(l.get("uses") or [f"GET /{key}"])[0].replace("POST", "GET").replace("PUT", "GET")], True
                 kept.append(l)
             entries[cid]["links"] = kept
     pool = [c for cs in components.values() for c in cs if entries[c]["type"] != "library" and c not in chosen and not c.endswith("-gateway")]

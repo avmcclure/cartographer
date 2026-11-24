@@ -139,6 +139,7 @@ public static class Merger
         e.Provides?.RemoveAll(p => Ours(p.Basis, p.Source));
         e.Links?.RemoveAll(l => Ours(l.Basis, l.Source));
         e.Drift?.RemoveAll(d => d.Sources.Contains(origin));
+        if (e.Role is { } role && Ours(role.Basis, role.Source)) e.Role = null;
         if (e.Sources is null) return;
         var cited = new[] { e.Owner?.Source, e.Role?.Source }.Concat((e.Provides ?? []).Select(p => p.Source)).Concat((e.Links ?? []).Select(l => l.Source))
             .Concat((e.Systems ?? []).Select(s => s.Source)).Concat((e.Tags ?? []).Select(t => t.Source))

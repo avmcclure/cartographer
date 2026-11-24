@@ -7,8 +7,10 @@
 /** Lanes top to bottom: the biggest first, then whichever has the most links to the lanes already placed. */
 export function laneOrder(map) {
   const laneOf = new Map(map.clusters.flatMap((c) => c.members.map((m) => [m.id, c.key])));
+  // Lookups sit beside the flow: being read from everywhere should not pull lanes towards theirs.
   const weight = new Map(), twin = loopsBack(map);
-  for (const l of map.parts.filter((l) => !twin(l))) {
+  const lookup = new Set(map.clusters.flatMap((c) => c.members.filter((m) => m.role === 'lookup').map((m) => m.id)));
+  for (const l of map.parts.filter((l) => !twin(l) && !lookup.has(l.from) && !lookup.has(l.to))) {
     const [a, b] = [laneOf.get(l.from), laneOf.get(l.to)];
     if (a === b) continue;
     for (const [x, y] of [[a, b], [b, a]]) weight.set(`${x}|${y}`, (weight.get(`${x}|${y}`) ?? 0) + l.count);
