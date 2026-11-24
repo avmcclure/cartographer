@@ -26,10 +26,12 @@ links:
   - type: reads
     to: databases/acme-billing-db/tables/dbo/invoices
     name: dbo.Invoices
+    how: sql
     basis: extracted
     source: default-asp#L7
   - type: uses
     name: AcmeBilling
+    how: sql
     basis: extracted
     source: db-inc#L10
 verified:

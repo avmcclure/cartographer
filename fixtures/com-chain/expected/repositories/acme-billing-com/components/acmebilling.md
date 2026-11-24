@@ -32,6 +32,7 @@ links:
     source: invoice-cls#L37
   - type: uses
     name: AcmeBilling
+    how: sql
     basis: extracted
     source: moddata-bas#L6
 verified:

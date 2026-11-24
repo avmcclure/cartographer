@@ -94,7 +94,7 @@ public sealed class DbCallExtractor : IExtractor
                         found.Add((literal.Line, "uses", name));
                     }
                 }
-                foreach (var (line, type, name) in found.OrderBy(f => f.Line)) LegacyText.Link(x, c, type, name, type == "calls" ? "sql" : null, file, line);
+                foreach (var (line, type, name) in found.OrderBy(f => f.Line)) LegacyText.Link(x, c, type, name, "sql", file, line);
             }
 
             var block = new StringBuilder();

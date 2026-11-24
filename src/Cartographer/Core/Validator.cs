@@ -75,6 +75,12 @@ public static class Validator
         }
         foreach (var t in e.Tags ?? []) Fact($"tag {t.Name}", t.Basis, t.Source);
         if (e.Owner is not null) Fact("owner", e.Owner.Basis, e.Owner.Source);
+        if (e.Role is not null)
+        {
+            Fact("role", e.Role.Basis, e.Role.Source);
+            if (!LinkTypes.Roles.Contains(e.Role.Name)) Error($"role '{e.Role.Name}' is not one of {string.Join(", ", LinkTypes.Roles)}");
+            if (e.Kind is not (Kinds.Component or Kinds.External)) Error("role belongs on components and external systems only");
+        }
         if (e.Systems is not null && e.Kind is not (Kinds.Component or Kinds.Database)) Error("systems belong on components and databases only");
         if (e.Tags is not null && e.Kind is not (Kinds.Table or Kinds.View)) Error("tags belong on tables and views only");
 
@@ -92,6 +98,7 @@ public static class Validator
                 if (target is null) Warn($"{what}: the target has no entry");
                 else if (!rule.To.Contains(target.Kind)) Error($"{what}: cannot point at a {target.Kind}");
             }
+            if (l.How is not null && !LinkTypes.Transports.Contains(l.How)) Error($"{what}: how '{l.How}' is not one of {string.Join(", ", LinkTypes.Transports)}");
             if (l.Via is not null && atlas.Find(l.Via) is null) Warn($"{what}: via '{l.Via}' has no entry");
             if (!seen.Add(l.Identity)) Error($"{what}: the same link appears twice");
         }

@@ -6,9 +6,14 @@ import { columns } from '../lib/flow.js';
 const col = columns(map);
 const byKey = new Map(map.clusters.map((c) => [c.key, c]));
 const lanes = order.map((key, i) => ({ key, name: byKey.get(key).name, pinned: byKey.get(key).pinned, color: i, count: byKey.get(key).members.length }));
-const parts = order.flatMap((key) => byKey.get(key).members.map((m) => ({ id: m.id, name: m.name, kind: m.kind === 'external' ? 'external system' : m.kind, type: m.type, lane: key, col: col.get(m.id), found: m.found, href: entryHref(m.id) })))
+const parts = order.flatMap((key) => byKey.get(key).members.map((m) => ({ id: m.id, name: m.name, kind: m.kind === 'external' ? 'external system' : m.kind, type: m.type, role: m.role, roleStated: m.roleStated, lane: key, col: col.get(m.id), found: m.found, href: entryHref(m.id) })))
   .sort((a, b) => order.indexOf(a.lane) - order.indexOf(b.lane) || a.col - b.col || a.name.localeCompare(b.name));
-const data = { lanes, parts, links: map.parts.map(({ from, to, call, count, basis, verbs }) => ({ from, to, call, count, basis, verbs })) };
+const data = { lanes, parts, links: map.parts.map(({ from, to, call, count, basis, verbs, over, ops }) => ({ from, to, call, count, basis, verbs, over, ops })) };
+// Links by transport, most first; links with none recorded last.
+const transports = Object.entries(Object.groupBy(map.parts.flatMap((l) => (l.over?.length ? l.over : [{ how: '', count: l.count }])), (o) => o.how))
+  .map(([how, list]) => ({ how, count: list.reduce((s, o) => s + o.count, 0) }))
+  .sort((a, b) => (a.how === '') - (b.how === '') || b.count - a.count || a.how.localeCompare(b.how));
+const hasRole = (r) => parts.some((p) => p.role === r);
 const s = map.suggestion;
 const goneTo = (name) => {
   const to = Object.entries(Object.groupBy(s.moved.filter((m) => m.from === name), (m) => m.to)).sort((a, b) => b[1].length - a[1].length).map(([t]) => t);
@@ -29,11 +34,20 @@ const goneTo = (name) => {
     <span><svg width="30" height="10" aria-hidden="true"><path d="M0 5 H24" stroke="currentColor" stroke-width="1.6" /><path d="M22 1 L30 5 L22 9 z" fill="currentColor" /></svg>data flows this way</span>
     <span><svg width="30" height="10" aria-hidden="true"><path d="M0 5 H30" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 4" /></svg>calls</span>
     <span><svg width="30" height="10" aria-hidden="true"><path d="M0 5 H30" stroke="currentColor" stroke-width="1.6" opacity="0.35" /></svg>inferred, not read from code</span>
+    {hasRole('pass-through') && <span><svg width="24" height="14" aria-hidden="true"><polygon points="5,1 19,1 23,7 19,13 5,13 1,7" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>pass-through</span>}
+    {hasRole('lookup') && <span><svg width="24" height="14" aria-hidden="true"><rect x="1" y="1" width="22" height="12" rx="6" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>lookup, read from but never fed</span>}
     <span><span class="swatch" style="background:var(--up)"></span>feeds the selected part</span>
     <span><span class="swatch" style="background:var(--accent)"></span>fed by it</span>
     <label class="toggle"><input type="checkbox" id="cross" checked={parts.length <= 80} /> Links between clusters</label>
     <label class="toggle" style="margin-left:0"><input type="checkbox" id="calls" checked /> Calls</label>
+    {hasRole('pass-through') && <label class="toggle" style="margin-left:0"><input type="checkbox" id="through" checked /> Pass-throughs</label>}
   </div>
+  {transports.length > 1 && (
+    <div class="transports small" role="group" aria-label="Show links by what they travel over">
+      <span>Over</span>
+      {transports.map((t) => <button type="button" class="chip" data-how={t.how} aria-pressed="true">{t.how || 'not recorded'}<span class="n">{t.count}</span></button>)}
+    </div>
+  )}
   <div class="workspace">
     <section class="stage" aria-label="Data flow map">
       <svg class="map" id="map" role="group" aria-label="Every part, in lanes by cluster, with data flowing left to right. The list beside it has the same clusters and parts."></svg>
@@ -46,7 +60,9 @@ const goneTo = (name) => {
           <p class="cap">Data flow</p>
           <h2>{plural(lanes.length, 'cluster')}, {plural(parts.length, 'part')}</h2>
         </div>
-        <p style="margin-top:8px">Each lane is a cluster of parts that work together. Arrows follow the data, from where it is written or published to where it is read or consumed. {map.links ? `${percent(map.inside)} of ${plural(map.links, 'link')} stay inside a cluster.` : 'No links between parts yet.'} Code dependencies and owners play no part.</p>
+        <p style="margin-top:8px">Each lane is a cluster of parts that work together. Arrows follow the data, from where it is written or published to where it is read or consumed: upstream is to the left, downstream to the right. {map.links ? `${percent(map.inside)} of ${plural(map.links, 'link')} stay inside a cluster.` : 'No links between parts yet.'} Code dependencies and owners play no part.</p>
+        {hasRole('lookup') && <p>Lookups, such as a pricing or identity service, are only ever read from. They sit in a band at the top of their lane, and each part that reads one shows a dot.</p>}
+        {hasRole('pass-through') && <p>Pass-throughs, such as a gateway in front of an old and a new API, relay requests unchanged. They sit in the flow between their callers and what they forward to.</p>}
         <p class="cap" style="margin-top:16px">Clusters, top to bottom</p>
         {lanes.map((l) => (
           <details class="lane-list" id={`lane-${l.key}`}>
@@ -62,15 +78,17 @@ const goneTo = (name) => {
   <template id="part-panel">
     <div><p class="cap" data-kind></p><h2 data-name aria-live="polite"></h2></div>
     <p><a class="button" data-open>Open its page</a> <a href="#" data-clear style="margin-left:10px">Clear</a></p>
+    <p class="role-note" data-role hidden></p>
     <p data-summary></p>
     <div class="steps" role="group" aria-label="How far to follow the data"><span class="small">Follow</span></div>
-    <div><p class="cap">Data comes from</p><ul class="rows plain" data-from></ul></div>
-    <div><p class="cap">Data goes to</p><ul class="rows plain" data-to></ul></div>
+    <div><p class="cap">Upstream: data comes from</p><ul class="rows plain" data-from></ul></div>
+    <div><p class="cap">Downstream: data goes to</p><ul class="rows plain" data-to></ul></div>
+    <div data-looks-block><p class="cap" data-looks-title>Looks up</p><ul class="rows plain" data-looks></ul></div>
     <div data-calls-block><p class="cap">Calls</p><ul class="rows plain" data-calls></ul></div>
   </template>
   <script type="application/json" id="map-data" set:html={json(data)} />
   <script>
-    import { createMap } from '../scripts/map.js';
+    import { createMap, readFromLookup } from '../scripts/map.js';
     const svg = document.getElementById('map');
     const panel = document.getElementById('panel');
     const resting = document.getElementById('resting');
@@ -90,7 +108,14 @@ const goneTo = (name) => {
       li.append(span, dot);
       return li;
     }
-    const verbs = (l) => l.verbs.map((v) => `${v.verb} ${v.count}`).join(', ') + (l.basis === 'inferred' ? ' · inferred' : '');
+    // "writes 2 over http · POST /orders, GET /orders/{id} · via Orders gateway · inferred"
+    const verbs = (l) => [
+      l.verbs.map((v) => `${v.verb} ${v.count}`).join(', ') + (l.over?.length ? ` over ${l.over.map((o) => o.how).join(', ')}` : ''),
+      l.ops?.length ? l.ops.slice(0, 3).join(', ') + (l.ops.length > 3 ? ` and ${l.ops.length - 3} more` : '') : null,
+      l.via?.length ? `via ${l.via.map((v) => part.get(v)?.name ?? v).join(', ')}` : null,
+      l.basis === 'inferred' ? 'inferred' : null,
+    ].filter(Boolean).join(' · ');
+
 
     function show(id, down, up) {
       if (!id) { panel.replaceChildren(resting); return; }
@@ -108,10 +133,29 @@ const goneTo = (name) => {
         b.addEventListener('click', () => { map.steps(n); panel.querySelector(`.steps button:nth-of-type(${[1, 2, 3, Infinity].indexOf(n) + 1})`)?.focus(); });
         steps.append(b);
       }
-      const from = data.links.filter((l) => !l.call && l.to === id), to = data.links.filter((l) => !l.call && l.from === id), calls = data.links.filter((l) => l.call && (l.from === id || l.to === id));
+      const links = map.links;
+      // A lookup's readers, and the lookups a part reads, are listed on their own: they sit beside the flow.
+      const looks = links.filter((l) => readFromLookup(l, part) && (p.role === 'lookup' ? l.from === id : l.to === id));
+      const from = links.filter((l) => !l.call && l.to === id && !looks.includes(l)), to = links.filter((l) => !l.call && l.from === id && !looks.includes(l)), calls = links.filter((l) => l.call && (l.from === id || l.to === id));
       const empty = (t) => Object.assign(document.createElement('li'), { className: 'small', textContent: t });
       view.querySelector('[data-from]').append(...(from.length ? from.map((l) => row(l.from, verbs(l))) : [empty('Nothing: its data starts here.')]));
-      view.querySelector('[data-to]').append(...(to.length ? to.map((l) => row(l.to, verbs(l))) : [empty('Nothing: its data ends here.')]));
+      view.querySelector('[data-to]').append(...(to.length ? to.map((l) => row(l.to, verbs(l))) : [empty(p.role === 'lookup' ? 'Nothing besides the parts that read it.' : 'Nothing: its data ends here.')]));
+      if (looks.length) {
+        view.querySelector('[data-looks-title]').textContent = p.role === 'lookup' ? 'Read by' : 'Looks up';
+        view.querySelector('[data-looks]').append(...looks.map((l) => row(p.role === 'lookup' ? l.to : l.from, verbs(l))));
+      } else view.querySelector('[data-looks-block]').remove();
+      const note = view.querySelector('[data-role]');
+      if (p.role === 'pass-through') {
+        const forwards = (l) => l.verbs.some((v) => v.verb === 'forwards to');
+        const mine = links.filter((l) => !l.call && (l.from === id || l.to === id)), other = (l) => part.get(l.from === id ? l.to : l.from).name;
+        const onto = [...new Set(mine.filter(forwards).map(other))], callers = [...new Set(mine.filter((l) => !forwards(l)).map(other))];
+        const list = (names) => (names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', '));
+        note.textContent = `Pass-through: relays requests from ${list(callers) || 'its callers'} to ${list(onto)} unchanged.${p.roleStated ? ' A person stated this role.' : ''}`;
+        note.hidden = false;
+      } else if (p.role === 'lookup') {
+        note.textContent = `Lookup: read by ${looks.length} part${looks.length === 1 ? '' : 's'}${p.roleStated ? '. A person stated this role' : ', with its own data coming only from databases'}, so it sits beside the flow.`;
+        note.hidden = false;
+      }
       if (calls.length) view.querySelector('[data-calls]').append(...calls.map((l) => row(l.from === id ? l.to : l.from, l.from === id ? `called by this part · ${verbs(l)}` : `calls this part · ${verbs(l)}`)));
       else view.querySelector('[data-calls-block]').remove();
       panel.replaceChildren(view);
@@ -125,6 +169,12 @@ const goneTo = (name) => {
     svg.classList.toggle('no-cross', !cross.checked);
     cross.addEventListener('change', () => svg.classList.toggle('no-cross', !cross.checked));
     document.getElementById('calls').addEventListener('change', (e) => svg.classList.toggle('no-calls', !e.target.checked));
+    document.getElementById('through')?.addEventListener('change', (e) => map.passThroughs(e.target.checked));
+    const chips = [...document.querySelectorAll('.transports .chip')];
+    for (const c of chips) c.addEventListener('click', () => {
+      c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true'));
+      map.transports(chips.filter((x) => x.getAttribute('aria-pressed') === 'false').map((x) => x.dataset.how));
+    });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !e.target.closest('input, textarea, select')) map.clear(); });
 
     // #p=<part>[&d=<steps>|all] traces a part; #c=<cluster> brings its lane into view.

@@ -46,8 +46,8 @@ public static class Merger
                 atlas.Entries[p.Id] = p;
                 continue;
             }
-            // What an agent added to an extracted link (the library types used and how often) survives the link being re-extracted.
-            var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null).GroupBy(l => l.Identity).ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count));
+            // What an agent added to an extracted link (the names or operations used, how often, and the transport) survives the link being re-extracted.
+            var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null || l.How is not null).GroupBy(l => l.Identity).ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count, g.First().How));
             DropFacts(e, origin);
             if (origin.StartsWith("instance:")) RecordDrift(e, p, origin);
             // Rename the incoming source keys that clash with keys kept from another origin.
@@ -77,7 +77,7 @@ public static class Merger
                 e.Links ??= [];
                 // An extracted link replaces the same link an agent inferred; a stated one stays.
                 e.Links.RemoveAll(o => o.Identity == l.Identity && o.Basis == Basis.Inferred);
-                if (usage.TryGetValue(l.Identity, out var kept)) { l.Uses ??= kept.Uses; l.Count ??= kept.Count; }
+                if (usage.TryGetValue(l.Identity, out var kept)) { l.Uses ??= kept.Uses; l.Count ??= kept.Count; l.How ??= kept.How; }
                 if (!e.Links.Any(o => o.Identity == l.Identity)) e.Links.Add(l);
             }
             foreach (var d in p.Drift ?? []) (e.Drift ??= []).Add(d);
@@ -137,7 +137,7 @@ public static class Merger
         e.Links?.RemoveAll(l => Ours(l.Basis, l.Source));
         e.Drift?.RemoveAll(d => d.Sources.Contains(origin));
         if (e.Sources is null) return;
-        var cited = new[] { e.Owner?.Source }.Concat((e.Provides ?? []).Select(p => p.Source)).Concat((e.Links ?? []).Select(l => l.Source))
+        var cited = new[] { e.Owner?.Source, e.Role?.Source }.Concat((e.Provides ?? []).Select(p => p.Source)).Concat((e.Links ?? []).Select(l => l.Source))
             .Concat((e.Systems ?? []).Select(s => s.Source)).Concat((e.Tags ?? []).Select(t => t.Source))
             .Where(s => s is not null).Select(s => Evidence.Bare(s!)).ToHashSet();
         foreach (var key in e.Sources.Where(s => Evidence.OriginOf(s.Value) == origin && !cited.Contains(s.Key)).Select(s => s.Key).ToList()) e.Sources.Remove(key);

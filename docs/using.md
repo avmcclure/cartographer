@@ -157,7 +157,7 @@ cartographer impact databases/billing/tables/dbo/invoice
 cartographer site build --out site
 ```
 
-This writes a static site with a map of clusters (parts grouped by how they talk to each other), a page per cluster, a searchable list of every entry, the open questions that need a person, and recent changes. The site is built with Astro, so building it needs Node.js 22 or later. Add `--edit-url <url>` to give each entry an edit link to your atlas's repository, which is the quickest way for people to answer open questions. Serve the `site` folder with any static web server inside your organisation. Build it from a scan branch to review a sweep, or from `main` for everyone else.
+This writes a static site with a map of every part in lanes by cluster (parts grouped by how they talk to each other), with data flowing left to right, a page per part, a searchable list of every entry, the open questions that need a person, and recent changes. The site is built with Astro, so building it needs Node.js 22 or later. Add `--edit-url <url>` to give each entry an edit link to your atlas's repository, which is the quickest way for people to answer open questions. Serve the `site` folder with any static web server inside your organisation. Build it from a scan branch to review a sweep, or from `main` for everyone else.
 
 Clusters come from the links alone, so they appear without any setup. To keep one as it is, name it and pin it:
 
@@ -166,6 +166,8 @@ cartographer clusters --parts
 cartographer clusters rename "order-api" "Ordering"
 cartographer clusters pin --all
 ```
+
+On the map, gateways and other pass-throughs are drawn as hexagons in the flow, and services that are only ever read from, such as pricing or identity, sit in a band at the top of their lane. The row of transports above the map (http, sql, kafka, com and so on) filters links by what they travel over. If a part is placed wrongly, give its entry a `role` (`stage`, `pass-through` or `lookup`) with basis `stated`.
 
 Renaming pins a cluster. Pins are kept in `clusters.yaml` in the atlas; commit it. When later scans change the links enough that regrouping would keep at least 3 percentage points more of them inside clusters, `cartographer clusters` and the map say so, and `cartographer clusters regroup` applies it.
 

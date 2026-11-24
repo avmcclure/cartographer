@@ -274,6 +274,20 @@ def link(cid, l):
         links.append(l)
 
 
+def over_channel(ch, legacy):
+    kind = entries[ch]["type"]
+    return "kafka" if kind == "topic" else ("msmq" if legacy else "amqp") if kind == "queue" else random.choice(["sftp", "smb"])
+
+
+def api_link(to, legacy, b):
+    """A call to another service: what it does decides the direction, the stack decides the transport."""
+    kind = random.choices(["reads", "writes", "calls"], [0.5, 0.35, 0.15])[0]
+    how = random.choice(["soap", "com", "remoting"]) if legacy else random.choices(["http", "grpc", "soap"], [0.75, 0.15, 0.1])[0]
+    noun = entries[to]["name"].split(".")[-1].lower()
+    op = {"reads": f"GET /{noun}", "writes": random.choice([f"POST /{noun}", f"PUT /{noun}/{{id}}"]), "calls": f"{noun}.Invoke"}[kind]
+    return {"type": kind, "to": to, "how": how, "uses": [op], "basis": b, "source": src()}
+
+
 def src():
     return f"code#L{random.randint(10, 400)}"
 
@@ -294,33 +308,35 @@ for key in DOMAIN_KEYS:
         # own databases: reads and writes
         for db in DBS_OF[key]:
             for t in random.sample(db_tables[db], min(len(db_tables[db]), random.randint(1, 6 if not legacy else 12))):
-                link(cid, {"type": random.choices(["reads", "writes"], [0.6, 0.4])[0], "to": t, "basis": basis(), "source": src()})
+                link(cid, {"type": random.choices(["reads", "writes"], [0.6, 0.4])[0], "to": t, "how": "sql", "basis": basis(), "source": src()})
             if db_routines[db] and random.random() < (0.7 if legacy else 0.2):
                 link(cid, {"type": "calls", "to": random.choice(db_routines[db]), "how": "sql", "basis": "extracted", "source": src()})
         # events: services publish their domain's channels, and consume neighbours'
         if ctype in ("service", "job", "etl", "site") and channels[key] and random.random() < 0.7:
-            link(cid, {"type": "publishes-to", "to": random.choice(channels[key]), "basis": basis(), "source": src()})
+            ch = random.choice(channels[key])
+            link(cid, {"type": "publishes-to", "to": ch, "how": over_channel(ch, legacy), "basis": basis(), "source": src()})
         for other in random.sample(NEIGHBOURS[key], min(len(NEIGHBOURS[key]), random.randint(0, 2))):
             if channels.get(other) and random.random() < 0.6:
-                link(cid, {"type": "consumes-from", "to": random.choice(channels[other]), "basis": basis(), "source": src()})
+                ch = random.choice(channels[other])
+                link(cid, {"type": "consumes-from", "to": ch, "how": over_channel(ch, legacy), "basis": basis(), "source": src()})
         # calls inside the domain, and now and then to a neighbour's service
         peers = [c for c in components[key] if c != cid and entries[c]["type"] == "service"]
         if peers and random.random() < 0.5:
-            link(cid, {"type": "calls", "to": random.choice(peers), "how": "http", "basis": basis(), "source": src()})
+            link(cid, api_link(random.choice(peers), legacy, basis()))
         if NEIGHBOURS[key] and random.random() < 0.25:
             other = random.choice(NEIGHBOURS[key])
             svc = [c for c in components.get(other, []) if entries[c]["type"] == "service"]
             if svc:
-                link(cid, {"type": "calls", "to": random.choice(svc), "how": "http", "basis": basis(), "source": src()})
+                link(cid, api_link(random.choice(svc), legacy, basis()))
         # legacy reaches straight into other domains' tables
         if legacy and NEIGHBOURS[key] and random.random() < 0.5:
             other = random.choice(NEIGHBOURS[key])
             for db in DBS_OF.get(other, [])[:1]:
-                link(cid, {"type": "reads", "to": random.choice(db_tables[db]), "basis": "extracted", "source": src()})
+                link(cid, {"type": "reads", "to": random.choice(db_tables[db]), "how": "sql", "basis": "extracted", "source": src()})
         # outside companies
         for ext in EXT_OF.get(key, []):
             if random.random() < 0.15:
-                link(cid, {"type": random.choice(["sends-to", "receives-from"]), "to": f"external/{ext}", "basis": basis(), "source": src()})
+                link(cid, {"type": random.choice(["sends-to", "receives-from"]), "to": f"external/{ext}", "how": random.choices(["http", "sftp", "soap"], [0.7, 0.2, 0.1])[0], "basis": basis(), "source": src()})
 
 # the data platform reads every database and loads its own
 loaders = [c for c in components["data"] if entries[c]["type"] in ("etl", "job")]
@@ -328,11 +344,54 @@ for db, tables in db_tables.items():
     if db_domain[db] == "data":
         continue
     for t in random.sample(tables, min(len(tables), 8)):
-        link(random.choice(loaders), {"type": "reads", "to": t, "basis": "extracted", "source": src()})
+        link(random.choice(loaders), {"type": "reads", "to": t, "how": "sql", "basis": "extracted", "source": src()})
 for c in loaders:
     for db in DBS_OF["data"]:
         for t in random.sample(db_tables[db], 5):
-            link(c, {"type": "writes", "to": t, "basis": "extracted", "source": src()})
+            link(c, {"type": "writes", "to": t, "how": "sql", "basis": "extracted", "source": src()})
+
+# gateways: a pass-through in front of an old and a new service, so callers never change address while work moves
+for key in ["ecom", "orders", "credit", "pricing"]:
+    svcs = [c for c in components[key] if entries[c]["type"] == "service"]
+    if len(svcs) < 2:
+        continue
+    old, new = random.sample(svcs, 2)
+    project = next(d[2] for d in DOMAINS if d[0] == key)
+    folder, c = slug(f"{project}-gateway"), commit()
+    gid = f"repositories/{folder}/components/{folder}"
+    put(f"repositories/{folder}/repository", {"kind": "repository", "name": folder, "summary": f"The gateway in front of {entries[old]['name']} and {entries[new]['name']}.",
+                                               "stack": STACKS["modern"], "locations": [{"id": f"github:{ORG}/{folder}", "primary": True}],
+                                               "verified": {"commit": c, "date": TODAY, "cartographer": "0.1.0"}}, "## Overview\n\nA reverse proxy.")
+    put(gid, {"kind": "component", "type": "service", "name": f"Kestrel.{key.capitalize()}.Gateway", "summary": f"Passes requests to {entries[old]['name']} and {entries[new]['name']} unchanged.",
+              "repository": f"repositories/{folder}/repository", "stack": STACKS["modern"], "sources": {"routes": f"{folder}:src/appsettings.json@{c}"},
+              "systems": [{"id": f"systems/{key}", "basis": "stated", "source": "person:architecture@2026-09-30"}],
+              "links": [{"type": "forwards-to", "to": t, "how": h, "uses": [f"/{key}/*"], "basis": "extracted", "source": "routes#L12"} for t, h in [(old, "soap"), (new, "http")]],
+              "verified": {"commit": c, "date": TODAY, "cartographer": "0.1.0"}}, "## Overview\n\nA YARP reverse proxy.")
+    components[key].append(gid)
+    # callers from outside the domain now go through the gateway
+    for cs in components.values():
+        for cid in cs:
+            if cid.split("/")[1].startswith(slug(project)) or cid == gid:
+                continue
+            for l in entries[cid]["links"]:
+                if l.get("to") in (old, new) and l["type"] in ("reads", "writes") and (l["type"], gid) not in {(x["type"], x.get("to")) for x in entries[cid]["links"]}:
+                    l["to"] = gid
+
+# lookups: services many parts read from and nothing feeds but their own database
+for key in ["pricing", "identity", "catalog", "customer"]:
+    svcs = [c for c in components[key] if entries[c]["type"] == "service" and not c.endswith("-gateway")]
+    if not svcs:
+        continue
+    lid = random.choice(svcs)
+    entries[lid]["links"] = [l for l in entries[lid]["links"] if l["type"] not in ("consumes-from", "receives-from") and not (l["type"] in ("reads", "calls") and l.get("to", "").startswith("repositories/"))]
+    for cs in components.values():
+        for cid in cs:
+            for l in entries[cid]["links"]:
+                if l.get("to") == lid and l["type"] != "depends-on":
+                    l["type"], l["uses"] = "reads", [l.get("uses", [f"GET /{key}"])[0].replace("POST", "GET").replace("PUT", "GET")]
+    readers = random.sample([c for cs in components.values() for c in cs if entries[c]["type"] != "library" and c != lid], 25)
+    for r in readers:
+        link(r, {"type": "reads", "to": lid, "how": "http", "uses": [f"GET /{key}/{{id}}"], "basis": random.choice(["extracted", "inferred"]), "source": src()})
 
 # a few things nobody has worked out yet
 for cid in random.sample([c for cs in components.values() for c in cs], 60):

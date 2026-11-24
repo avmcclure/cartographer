@@ -1,7 +1,8 @@
 // Where each part sits on the map, worked out at build time so every reader sees the same picture.
 // Lanes are clusters; columns follow the data: each part one column right of the furthest part in its own lane that
 // feeds it. Counting within a lane keeps a long chain across many lanes from stretching the whole map; links between
-// lanes still show which way the data goes.
+// lanes still show which way the data goes. Lookups sit in a band beside the flow, so they take no column and their
+// links do not push other parts along.
 
 /** Lanes top to bottom: the biggest first, then whichever has the most links to the lanes already placed. */
 export function laneOrder(map) {
@@ -27,9 +28,11 @@ export function laneOrder(map) {
 
 /** Part ID to column. Loops are broken where they close, walking parts in ID order. */
 export function columns(map) {
-  const ids = map.clusters.flatMap((c) => c.members.map((m) => m.id)).sort();
+  const lookup = new Set(map.clusters.flatMap((c) => c.members.filter((m) => m.role === 'lookup').map((m) => m.id)));
+  const ids = map.clusters.flatMap((c) => c.members.map((m) => m.id)).filter((i) => !lookup.has(i)).sort();
   const laneOf = new Map(map.clusters.flatMap((c) => c.members.map((m) => [m.id, c.key])));
-  const data = map.parts.filter((l) => !l.call && laneOf.get(l.from) === laneOf.get(l.to));
+  const inFlow = (l) => !lookup.has(l.from) && !lookup.has(l.to);
+  const data = map.parts.filter((l) => !l.call && inFlow(l) && laneOf.get(l.from) === laneOf.get(l.to));
   const out = new Map(ids.map((i) => [i, []]));
   for (const l of data) out.get(l.from)?.push(l.to);
   for (const list of out.values()) list.sort();
@@ -71,7 +74,7 @@ export function columns(map) {
   const fed = new Set(keep.flat());
   const callsOf = new Map();
   for (const l of map.parts)
-    if (l.call && laneOf.get(l.from) === laneOf.get(l.to)) for (const v of [l.from, l.to]) (callsOf.get(v) ?? callsOf.set(v, []).get(v)).push(l);
+    if (l.call && inFlow(l) && laneOf.get(l.from) === laneOf.get(l.to)) for (const v of [l.from, l.to]) (callsOf.get(v) ?? callsOf.set(v, []).get(v)).push(l);
   for (const v of ids) {
     if (fed.has(v)) continue;
     const calls = callsOf.get(v) ?? [];
@@ -82,5 +85,6 @@ export function columns(map) {
   const start = new Map();
   for (const v of ids) start.set(laneOf.get(v), Math.min(start.get(laneOf.get(v)) ?? Infinity, col.get(v)));
   for (const v of ids) col.set(v, col.get(v) - start.get(laneOf.get(v)));
+  for (const v of lookup) col.set(v, 0);
   return col;
 }

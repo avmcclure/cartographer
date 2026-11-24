@@ -28,6 +28,7 @@ public sealed class Entry
     public List<Membership>? Systems { get; set; }
     public List<Tag>? Tags { get; set; }
     public Owner? Owner { get; set; }
+    public Role? Role { get; set; }
     public List<string>? Packages { get; set; }
     public List<Link>? Links { get; set; }
     public List<Drift>? Drift { get; set; }
@@ -57,6 +58,8 @@ public sealed class Provided { public string Name { get; set; } = ""; public str
 public sealed class Membership { public string Id { get; set; } = ""; public string Basis { get; set; } = ""; public string? Source { get; set; } }
 public sealed class Tag { public string Name { get; set; } = ""; public string Basis { get; set; } = ""; public string? Source { get; set; } }
 public sealed class Owner { public string Name { get; set; } = ""; public string Basis { get; set; } = ""; public string? Source { get; set; } }
+/// <summary>Where a part sits on the map when its links alone would place it wrongly (spec section 3).</summary>
+public sealed class Role { public string Name { get; set; } = ""; public string Basis { get; set; } = ""; public string? Source { get; set; } }
 public sealed class Drift { public string What { get; set; } = ""; public List<string> Sources { get; set; } = []; }
 public sealed class Verified
 {
@@ -125,8 +128,9 @@ public static class LinkTypes
     {
         ["depends-on"] = ([Kinds.Component], [Kinds.Component]),
         ["calls"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger, Kinds.View], [Kinds.Component, Kinds.Routine]),
-        ["reads"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger, Kinds.View], [Kinds.Table, Kinds.View]),
-        ["writes"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger, Kinds.View], [Kinds.Table, Kinds.View]),
+        ["reads"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger, Kinds.View], [Kinds.Table, Kinds.View, Kinds.Component]),
+        ["writes"] = ([Kinds.Component, Kinds.Routine, Kinds.Trigger, Kinds.View], [Kinds.Table, Kinds.View, Kinds.Component]),
+        ["forwards-to"] = ([Kinds.Component], [Kinds.Component]),
         ["uses"] = ([Kinds.Component], [Kinds.Database]),
         ["publishes-to"] = ([Kinds.Component], [Kinds.Channel]),
         ["consumes-from"] = ([Kinds.Component], [Kinds.Channel]),
@@ -137,6 +141,12 @@ public static class LinkTypes
         ["fires-on"] = ([Kinds.Trigger], [Kinds.Table, Kinds.View]),
         ["defines"] = ([Kinds.Repository], [Kinds.Database]),
     };
+
+    /// <summary>What a link's data or request travels over: its <c>how</c>.</summary>
+    public static readonly string[] Transports = ["http", "grpc", "soap", "wcf", "graphql", "websocket", "sql", "amqp", "kafka", "msmq", "sftp", "smb", "com", "remoting", "in-process"];
+
+    /// <summary>Roles a part can be given when its links alone would place it wrongly.</summary>
+    public static readonly string[] Roles = ["stage", "pass-through", "lookup"];
 }
 
 public static class Ids

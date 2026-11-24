@@ -118,6 +118,24 @@ public class CoreTests
     }
 
     [Fact]
+    public void Transports_come_from_a_fixed_list_and_roles_belong_on_components()
+    {
+        var atlas = NewAtlas();
+        var api = Component("acme-api", "Acme.Api");
+        var gateway = Component("acme-edge", "Acme.Edge",
+            new Link { Type = "forwards-to", To = api.Id, How = "http", Uses = ["POST /orders"], Basis = Basis.Extracted, Source = "proj#L1" },
+            new Link { Type = "reads", To = api.Id, How = "REST", Basis = Basis.Extracted, Source = "proj#L2" });
+        gateway.Role = new Role { Name = "proxy", Basis = Basis.Stated, Source = "person:a@2026-11-24" };
+        var db = new Entry { Id = Ids.Database("Sales"), Kind = Kinds.Database, Name = "Sales", Summary = "Sales.", Role = new Role { Name = "lookup", Basis = Basis.Stated, Source = "person:a@2026-11-24" } };
+        foreach (var e in new[] { api, gateway, db }) atlas.Entries[e.Id] = e;
+        var errors = Validator.Check(atlas).Where(i => i.Error).Select(i => i.Message).ToList();
+        Assert.Contains(errors, m => m.Contains("how 'REST' is not one of"));
+        Assert.Contains(errors, m => m.Contains("role 'proxy' is not one of"));
+        Assert.Contains(errors, m => m.Contains("role belongs on components and external systems only"));
+        Assert.DoesNotContain(errors, m => m.Contains("forwards-to") || m.Contains("cannot point at a component"));
+    }
+
+    [Fact]
     public void Indexes_reverse_lists_queries_and_rename_agree()
     {
         var atlas = NewAtlas("organisation: Test\nlimits: {index-rows: 2}\n");
