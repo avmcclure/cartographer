@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { marked } from 'marked';
+import { laneOrder } from './flow.js';
 
 const root = path.resolve(process.env.CARTOGRAPHER_DATA ?? 'data');
 if (!fs.existsSync(path.join(root, 'site.json')))
@@ -22,30 +23,18 @@ export const tags = read('tags.json');
 export const entry = (id) => read(`entries/${id}.json`);
 export const cluster = (key) => map.clusters.find((c) => c.key === key);
 
+/** Clusters top to bottom on the map; a cluster's colour is its place here, on every page. */
+export const lanes = laneOrder(map);
+export const colourOf = (key) => lanes.indexOf(key) % 8;
+
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 export const href = (p) => `${base}${p}`;
 export const entryHref = (id) => href(`/entry/${id}/`);
-export const clusterHref = (key) => href(`/cluster/${key}/`);
+export const clusterHref = (key) => href(`/#c=${encodeURIComponent(key)}`);
+export const mapHref = (part) => href(`/#p=${encodeURIComponent(part)}`);
 
 /** The cluster a part is in. */
 export const clusterOf = new Map(map.clusters.flatMap((c) => c.members.map((m) => [m.id, c])));
-
-/** How many links run between each pair of clusters, either way. */
-export function between() {
-  const pairs = new Map();
-  for (const l of map.parts) {
-    const a = clusterOf.get(l.from), b = clusterOf.get(l.to);
-    if (!a || !b || a === b) continue;
-    const [x, y] = a.key < b.key ? [a, b] : [b, a];
-    const k = `${x.key}|${y.key}`;
-    if (!pairs.has(k)) pairs.set(k, { a: x.key, b: y.key, count: 0 });
-    pairs.get(k).count += l.count;
-  }
-  return [...pairs.values()];
-}
-
-/** Links with both ends in the cluster. */
-export const insideCount = (c) => map.parts.filter((l) => clusterOf.get(l.from) === c && clusterOf.get(l.to) === c).reduce((n, l) => n + l.count, 0);
 
 // Data for a page script. Atlas text is data: a name holding </script> must not end the script element.
 export const json = (value) => JSON.stringify(value).replace(/</g, '\\u003c');

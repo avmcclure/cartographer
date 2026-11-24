@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "astro": "7.4.13",
-    "d3-force": "3.0.0",
     "d3-selection": "3.0.0",
     "d3-zoom": "3.0.0",
     "marked": "18.2.1"

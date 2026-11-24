@@ -93,12 +93,16 @@ public static class SitePrepare
             unsurveyed = Unsurveyed(e), verified = e.Verified?.Date, stale = Stale(e) ? true : (bool?)null,
         }));
 
-        // The map: clusters, and the links between parts with what they do, counted.
-        var partLinks = edges.Select(e => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis)).Where(e => e.From is not null && e.To is not null && e.From != e.To)
-            .GroupBy(e => (e.From!, e.To!)).OrderBy(g => g.Key.Item1, StringComparer.Ordinal).ThenBy(g => g.Key.Item2, StringComparer.Ordinal)
+        // The map: clusters, and the links between parts in the direction the data goes, with what they do, counted.
+        // Calls carry requests rather than data and keep their own direction; code dependencies are left out.
+        var partLinks = edges.Where(e => e.Type != "depends-on")
+            .Select(e => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis, Flow: Flow(e.Type)))
+            .Where(e => e.From is not null && e.To is not null && e.From != e.To)
+            .Select(e => e.Flow < 0 ? e with { From = e.To, To = e.From } : e)
+            .GroupBy(e => (e.From!, e.To!, Call: e.Flow == 0)).OrderBy(g => g.Key.Item1, StringComparer.Ordinal).ThenBy(g => g.Key.Item2, StringComparer.Ordinal).ThenBy(g => g.Key.Call)
             .Select(g => new
             {
-                from = g.Key.Item1, to = g.Key.Item2, count = g.Count(), basis = Weakest(g.Select(x => x.Basis)),
+                from = g.Key.Item1, to = g.Key.Item2, call = g.Key.Call ? true : (bool?)null, count = g.Count(), basis = Weakest(g.Select(x => x.Basis)),
                 verbs = g.GroupBy(x => Verb(x.Type)).Select(v => new { verb = v.Key, count = v.Count() }).OrderByDescending(v => v.count).ThenBy(v => v.verb, StringComparer.Ordinal),
             }).ToList();
         var questionsOf = atlas.Entries.Values.Where(e => PartOf(e.Id) is not null).GroupBy(e => PartOf(e.Id)!).ToDictionary(g => g.Key, g => g.Sum(Unsurveyed), StringComparer.Ordinal);
@@ -107,7 +111,7 @@ public static class SitePrepare
             links = grouping.Links, inside = grouping.Inside,
             clusters = grouping.Clusters.Select(c => new
             {
-                key = keys[c], c.Name, c.Pinned,
+                key = keys[c], c.Name, c.Pinned, unlinked = c.Name == Clusters.Unlinked ? true : (bool?)null,
                 members = c.Members.Select(m => new { id = m, atlas.Entries[m].Name, atlas.Entries[m].Kind, atlas.Entries[m].Type, found = Found(atlas, atlas.Entries[m]), unsurveyed = questionsOf.GetValueOrDefault(m) }),
             }),
             parts = partLinks,
@@ -159,6 +163,19 @@ public static class SitePrepare
     }
 
     public static string Verb(string type) => type.Replace('-', ' ');
+
+    /// <summary>
+    /// Which way data goes along a link (spec section 8): 1 from the linking entry to its target, -1 the other way, 0
+    /// for a link that relates two parts without moving data one way: calls, uses, links between databases, foreign
+    /// keys and triggers. Code dependencies never reach here, and defines starts at a repository, which is not a part.
+    /// </summary>
+    public static int Flow(string type) => type switch
+    {
+        "writes" or "publishes-to" or "sends-to" => 1,
+        "reads" or "consumes-from" or "receives-from" => -1,
+        "calls" or "uses" or "links-to" or "references" or "fires-on" => 0,
+        _ => 0,   // ponytail: a link type added later is drawn as a call until it is placed here
+    };
 
     static string Weakest(IEnumerable<string> bases)
     {

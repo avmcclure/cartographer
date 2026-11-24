@@ -3,12 +3,12 @@
 import Base from '../../layouts/Base.astro';
 import Basis from '../../components/Basis.astro';
 import Evidence from '../../components/Evidence.astro';
-import { tags, map, entry as readEntry, entryHref, clusterHref, kindLabel, plural } from '../../lib/data.js';
+import { tags, map, colourOf, entry as readEntry, entryHref, clusterHref, kindLabel, plural } from '../../lib/data.js';
 export function getStaticPaths() {
   return tags.map((t) => ({ params: { tag: t.name } }));
 }
 const tag = tags.find((t) => t.name === Astro.params.tag);
-const clusters = tag.clusters.map((key) => ({ c: map.clusters.find((c) => c.key === key), color: map.clusters.findIndex((c) => c.key === key) % 8 }));
+const clusters = tag.clusters.map((key) => ({ c: map.clusters.find((c) => c.key === key), color: colourOf(key) }));
 const touching = tag.tables.map((t) => ({ ...t, usedBy: (readEntry(t.entry.id).usedBy ?? []).filter((l) => l.type === 'reads' || l.type === 'writes') }));
 const users = new Set(touching.flatMap((t) => t.usedBy.map((l) => l.from.id)));
 ---

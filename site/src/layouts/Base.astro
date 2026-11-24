@@ -11,7 +11,7 @@ const nav = [
   ['/changes/', 'Recent changes'],
 ];
 const here = Astro.url.pathname;
-const current = (p) => (p === '/' ? here === href('/') || here.startsWith(href('/cluster/')) : here.startsWith(href(p)));
+const current = (p) => (p === '/' ? here === href('/') : here.startsWith(href(p)));
 ---
 <!doctype html>
 <html lang="en">

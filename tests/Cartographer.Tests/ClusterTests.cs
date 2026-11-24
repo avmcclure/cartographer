@@ -221,4 +221,38 @@ public class ClusterTests
         File.WriteAllText(Path.Combine(atlas.Root, Clusters.FileName), "clusters:\n  - name: A\n    members: [databases/stock/tables/dbo/items]\n");
         Assert.Contains("is not a part; use databases/stock/database", Assert.Throws<UsageException>(() => Clusters.Current(atlas)).Message);
     }
+
+    [Fact]
+    public void Code_dependencies_do_not_cluster_and_unlinked_parts_share_one_group()
+    {
+        var atlas = TwoGroups();
+        Add(atlas, "lib");
+        Add(atlas, "lonely");
+        foreach (var n in "ae") (atlas.Entries[Id($"svc-{n}")].Links ??= []).Add(new Link { Type = "depends-on", To = Id("lib"), Basis = Basis.Extracted });
+        var (_, links) = Clusters.Graph(atlas);
+        Assert.DoesNotContain(links, l => l.B == Id("lib"));
+        var g = Clusters.Current(atlas);
+        Assert.Equal(3, g.Clusters.Count);
+        Assert.Equal([Id("lib"), Id("lonely")], g.Clusters.Single(c => c.Name == Clusters.Unlinked).Members);
+
+        // Pinning everything leaves the unlinked group out, so it keeps gathering new unlinked parts.
+        Clusters.WritePinned(atlas, g.Clusters.Select(c => c with { Pinned = true }));
+        Assert.DoesNotContain(Clusters.ReadPinned(atlas), c => c.Name == Clusters.Unlinked);
+        Add(atlas, "orphan");
+        Assert.Contains(Id("orphan"), Clusters.Current(atlas).Clusters.Single(c => c.Name == Clusters.Unlinked).Members);
+    }
+
+    [Fact]
+    public void Parts_linked_only_to_pinned_parts_are_not_called_unlinked()
+    {
+        var atlas = TwoGroups();
+        Clusters.WritePinned(atlas, Clusters.Current(atlas).Clusters.Select(c => c with { Pinned = true }));
+        Add(atlas, "x");
+        Add(atlas, "y");
+        Link(atlas, "x", "svc-a");
+        Link(atlas, "y", "svc-e");
+        var g = Clusters.Current(atlas);
+        Assert.DoesNotContain(g.Clusters, c => c.Name == Clusters.Unlinked);
+        Assert.NotEqual(g.Clusters.Single(c => c.Members.Contains(Id("x"))), g.Clusters.Single(c => c.Members.Contains(Id("y"))));
+    }
 }

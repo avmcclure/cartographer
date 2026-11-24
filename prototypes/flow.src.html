@@ -1,0 +1,301 @@
+<title>Atlas Clusters</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one map. Clusters are horizontal lanes; data flows left to right across them. Details on the right. */
+:root {
+  --bg: #f3f5f7; --surface: #ffffff; --fg: #17202b; --muted: #56636f; --rule: #d6dde4; --accent: #0b6e8a; --accent-soft: #dcecf1;
+  --up: #8a4fb0; --up-soft: #efe4f6; --line: #8796a6;
+  --c0: #2f6fb3; --c1: #b5543a; --c2: #3c8a4e; --c3: #8a4fb0; --c4: #a07a12; --c5: #2a8c8c; --c6: #b0446e; --c7: #5b6b2a;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161c; --surface: #19212a; --fg: #e4e9ee; --muted: #9aa7b4; --rule: #2c3743; --accent: #5cc0dc; --accent-soft: #173341;
+  --up: #c99be6; --up-soft: #2c2138; --line: #6c7b8a;
+  --c0: #6aa6e6; --c1: #e98a6e; --c2: #73c486; --c3: #bf8ae0; --c4: #e0bd55; --c5: #5fc4c4; --c6: #e57aa3; --c7: #a7b86a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161c; --surface: #19212a; --fg: #e4e9ee; --muted: #9aa7b4; --rule: #2c3743; --accent: #5cc0dc; --accent-soft: #173341;
+  --up: #c99be6; --up-soft: #2c2138; --line: #6c7b8a;
+  --c0: #6aa6e6; --c1: #e98a6e; --c2: #73c486; --c3: #bf8ae0; --c4: #e0bd55; --c5: #5fc4c4; --c6: #e57aa3; --c7: #a7b86a; color-scheme: dark }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.5 var(--sans); display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;
+  padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+header { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+.brand { font-weight: 600; font-size: 17px; }
+.brand span { color: var(--muted); font-weight: 400; }
+.toggles { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+.toggles label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.legend { margin-left: auto; display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); align-items: center; }
+.legend svg { vertical-align: middle; margin-right: 4px; }
+
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 12px; }
+@media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(460px, 65vh) auto; } }
+.stage { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; min-height: 460px; }
+.hint { position: absolute; left: 12px; bottom: 10px; background: var(--surface); padding: 5px 9px; border-radius: 6px; font-size: 12px; color: var(--muted); }
+svg.map { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+svg.map:active { cursor: grabbing; }
+
+.lane rect { fill: var(--bg); }
+.lane .band { opacity: 0.9; }
+.lane text { font: 600 13px var(--sans); fill: var(--fg); }
+.lane .sub { font: 12px var(--sans); fill: var(--muted); font-weight: 400; }
+.edge { fill: none; stroke: var(--line); stroke-opacity: 0.55; stroke-width: 1.4; }
+.edge.call { stroke-dasharray: 2 4; stroke-opacity: 0.7; }
+.edge.cross { stroke-opacity: 0.8; }
+.edge.down { stroke: var(--accent); stroke-opacity: 1; stroke-width: 2.2; }
+.edge.up { stroke: var(--up); stroke-opacity: 1; stroke-width: 2.2; }
+.edge.dim, .node.dim { opacity: 0.13; }
+.node { cursor: pointer; }
+.node rect { fill: var(--surface); stroke-width: 1.4; }
+.node text { fill: var(--fg); font: 12px var(--sans); }
+.node .kind { fill: var(--muted); font: 10px var(--mono); }
+.node.sel rect { stroke: var(--fg); stroke-width: 2.6; }
+.node.down rect { fill: var(--accent-soft); stroke: var(--accent); }
+.node.up rect { fill: var(--up-soft); stroke: var(--up); }
+.node:focus-visible { outline: none; }
+.node:focus-visible rect { stroke: var(--accent); stroke-width: 2.6; }
+
+aside { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; overflow: auto; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+aside h2 { margin: 0; font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
+aside h3 { margin: 0 0 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+aside p { margin: 0; color: var(--muted); line-height: 1.5; }
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows li { border-top: 1px solid var(--rule); }
+.rows li:first-child { border-top: 0; }
+.rows button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; text-align: left; background: none; border: 0; padding: 7px 0; }
+.rows button:hover .name { color: var(--accent); }
+.rows .name { overflow-wrap: anywhere; }
+.rows .verb { display: block; color: var(--muted); font-size: 12px; }
+.rows .n { font: 500 12px var(--mono); color: var(--muted); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 0.05em; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -0.05em; margin-right: 6px; }
+.example { font-size: 12px; color: var(--muted); margin: 0; }
+</style>
+
+<header>
+  <div class="brand">Example <span>atlas</span></div>
+  <div class="toggles">
+    <label><input type="checkbox" id="calls" checked> Show calls</label>
+  </div>
+  <div class="legend" aria-label="Key">
+    <span><svg width="30" height="10" aria-hidden="true"><path d="M0 5 H24" stroke="currentColor" stroke-width="1.6"/><path d="M22 1 L30 5 L22 9 z" fill="currentColor"/></svg>data flows this way</span>
+    <span><svg width="30" height="10" aria-hidden="true"><path d="M0 5 H30" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 4"/></svg>calls</span>
+    <span><span class="swatch" style="background:var(--up)"></span>feeds it</span>
+    <span><span class="swatch" style="background:var(--accent)"></span>fed by it</span>
+  </div>
+</header>
+
+<main>
+  <section class="stage" aria-label="Data flow map">
+    <svg class="map" id="svg" role="group" aria-label="Every part, in lanes by cluster, with data flowing left to right"></svg>
+    <p class="hint">Select a part to follow its data upstream and downstream · drag to pan · scroll to zoom</p>
+  </section>
+  <aside id="panel" aria-live="polite"></aside>
+</main>
+<p class="example">Example data shaped like a real scan. Lanes are clusters found from the links; within them, columns follow the data from where it starts to where it ends up.</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+/*LOGIC*/
+</script>
+<script>
+const byId = new Map(PARTS.map((p) => [p.id, p]));
+const ids = PARTS.map((p) => p.id);
+const RAW = [...LINKS_PINNED, ...LINKS_NEW];
+
+// Which way the data goes. Reading pulls data from the target; publishing pushes it. Calls are requests, not data.
+const FLOW = { publishes: 1, writes: 1, 'prints to': 1, 'sends logs to': 1, subscribes: -1, reads: -1, 'reads flags from': -1, calls: 0, runs: 0, 'signs in with': 0 };
+const LINKS = RAW.map(([from, to, verb]) => {
+  const dir = FLOW[verb] ?? 0;
+  return dir < 0 ? { from: to, to: from, verb, call: false } : { from, to, verb, call: dir === 0 };
+});
+
+// Clusters from all links, named by a person (as if pinned).
+const group = louvain(ids, RAW.map(([a, b]) => [a, b]));
+const NAMES = [['site-api', 'Site operations'], ['order-api', 'Ordering and kitchen'], ['device-bridge', 'Site devices'], ['delivery', 'Delivery'], ['reporting-etl', 'Reporting']];
+const lanesByKey = new Map();
+for (const id of ids) {
+  const k = group.get(id);
+  if (!lanesByKey.has(k)) lanesByKey.set(k, { key: k, members: [] });
+  lanesByKey.get(k).members.push(id);
+}
+const lanes = [...lanesByKey.values()];
+for (const l of lanes) l.name = (NAMES.find(([p]) => l.members.includes(p)) ?? [null, byId.get(l.members[0]).name])[1];
+const laneOf = new Map(lanes.flatMap((l) => l.members.map((m) => [m, l])));
+
+// Columns: each part one step right of the furthest part that feeds it (loops broken where they close).
+const flows = LINKS.filter((l) => !l.call);
+function columns() {
+  const out = new Map(ids.map((i) => [i, []]));
+  for (const l of flows) out.get(l.from).push(l.to);
+  const state = new Map(), keep = [];
+  const walk = (v) => { state.set(v, 1); for (const w of out.get(v)) { if (state.get(w) === 1) continue; keep.push([v, w]); if (!state.has(w)) walk(w); } state.set(v, 2); };
+  for (const v of ids) if (!state.has(v)) walk(v);
+  const col = new Map(ids.map((i) => [i, 0]));
+  for (let changed = true, n = 0; changed && n < ids.length; n++) {
+    changed = false;
+    for (const [a, b] of keep) if (col.get(b) < col.get(a) + 1) { col.set(b, col.get(a) + 1); changed = true; }
+  }
+  // A part that only feeds others sits just before the earliest part it feeds, not far out on the left.
+  for (const v of ids) {
+    const outs = keep.filter(([a]) => a === v).map(([, b]) => col.get(b));
+    const ins = keep.filter(([, b]) => b === v);
+    if (ins.length === 0 && outs.length) col.set(v, Math.min(...outs) - 1);
+  }
+  // A part with no data links (only calls) sits beside what it calls or is called by.
+  const fed = new Set(keep.flat());
+  for (const v of ids) {
+    if (fed.has(v)) continue;
+    const peers = LINKS.filter((l) => l.call && (l.from === v || l.to === v)).map((l) => (l.from === v ? l.to : l.from)).filter((p) => fed.has(p));
+    if (peers.length) col.set(v, Math.max(...peers.map((p) => col.get(p))) + (LINKS.some((l) => l.call && l.to === v) ? 1 : -1));
+  }
+  const min = Math.min(...col.values());
+  for (const v of ids) col.set(v, col.get(v) - min);
+  return col;
+}
+const col = columns();
+
+// Lane order: start with the busiest lane, then keep adding the lane with most links to the ones already placed.
+function order() {
+  const weight = (a, b) => LINKS.filter((l) => (laneOf.get(l.from) === a && laneOf.get(l.to) === b) || (laneOf.get(l.from) === b && laneOf.get(l.to) === a)).length;
+  const left = [...lanes].sort((a, b) => b.members.length - a.members.length);
+  const placed = [left.shift()];
+  while (left.length) {
+    left.sort((a, b) => placed.reduce((s, p, i) => s + weight(b, p) * (i + 1), 0) - placed.reduce((s, p, i) => s + weight(a, p) * (i + 1), 0));
+    placed.push(left.shift());
+  }
+  return placed;
+}
+const ordered = order();
+ordered.forEach((l, i) => (l.color = i));
+
+// Positions: a column every COL px; within a lane, parts in the same column stack.
+const COL = 210, BOX_W = 176, BOX_H = 40, GAP = 14, LANE_PAD = 34, LABEL_W = 0;
+const pos = new Map();
+let y = 0;
+for (const lane of ordered) {
+  const stacks = new Map();
+  const members = [...lane.members].sort((a, b) => col.get(a) - col.get(b) || byId.get(a).name.localeCompare(byId.get(b).name));
+  for (const m of members) {
+    const c = col.get(m), k = stacks.get(c) ?? 0;
+    stacks.set(c, k + 1);
+    pos.set(m, { x: LABEL_W + c * COL, y: y + LANE_PAD + k * (BOX_H + GAP) });
+  }
+  const tallest = Math.max(...stacks.values());
+  lane.y = y; lane.h = LANE_PAD + tallest * (BOX_H + GAP) + 10;
+  y += lane.h + 12;
+}
+const width = Math.max(...ids.map((i) => pos.get(i).x)) + BOX_W;
+
+// ---------- drawing ----------
+const svg = d3.select('#svg');
+const layer = svg.append('g');
+svg.append('defs').html(['line', 'accent', 'up'].map((c) => `<marker id="a-${c}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--${c})"/></marker>`).join(''));
+const zoom = d3.zoom().scaleExtent([0.3, 2.5]).on('zoom', (e) => layer.attr('transform', e.transform));
+svg.call(zoom).on('dblclick.zoom', null);
+
+const laneG = layer.append('g');
+for (const l of ordered) {
+  const g = laneG.append('g').attr('class', 'lane');
+  g.append('rect').attr('x', -16).attr('y', l.y).attr('width', width + 32).attr('height', l.h).attr('rx', 10);
+  g.append('rect').attr('class', 'band').attr('x', -16).attr('y', l.y).attr('width', 5).attr('height', l.h).attr('rx', 2).attr('fill', `var(--c${l.color % 8})`);
+  g.append('text').attr('x', 0).attr('y', l.y + 21).text(l.name)
+    .append('tspan').attr('class', 'sub').attr('dx', 8).text(`${l.members.length} parts`);
+}
+
+const edgeG = layer.append('g');
+const edges = edgeG.selectAll('path').data(LINKS).join('path')
+  .attr('class', (l) => 'edge' + (l.call ? ' call' : '') + (laneOf.get(l.from) !== laneOf.get(l.to) ? ' cross' : ''))
+  .attr('marker-end', (l) => (l.call ? null : 'url(#a-line)'))
+  .attr('d', (l) => {
+    const a = pos.get(l.from), b = pos.get(l.to);
+    const forward = b.x > a.x;
+    const x1 = forward ? a.x + BOX_W : a.x + BOX_W / 2, y1 = forward ? a.y + BOX_H / 2 : a.y + BOX_H;
+    const x2 = forward ? b.x : b.x + BOX_W / 2, y2 = forward ? b.y + BOX_H / 2 : b.y;
+    const dx = Math.max(40, (x2 - x1) / 2);
+    return forward ? `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}` : `M${x1},${y1} C${x1},${y1 + 60} ${x2},${y2 - 60} ${x2},${y2}`;
+  });
+
+const kindOf = (p) => p.kind;
+const nodes = layer.append('g').selectAll('g').data(ids).join('g')
+  .attr('class', 'node').attr('transform', (id) => `translate(${pos.get(id).x},${pos.get(id).y})`)
+  .attr('tabindex', 0).attr('role', 'button').attr('aria-label', (id) => `${byId.get(id).name}, ${byId.get(id).kind}`)
+  .on('click', (e, id) => select(id)).on('keydown', (e, id) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(id); } });
+nodes.append('rect').attr('width', BOX_W).attr('height', BOX_H).attr('rx', 6).attr('stroke', (id) => `var(--c${laneOf.get(id).color % 8})`);
+nodes.append('text').attr('x', 10).attr('y', 17).text((id) => clip(byId.get(id).name, BOX_W - 18, 12)).append('title').text((id) => byId.get(id).name);
+nodes.append('text').attr('class', 'kind').attr('x', 10).attr('y', 31).text((id) => kindOf(byId.get(id)));
+function clip(s, max, px) { if (s.length * px * 0.56 <= max) return s; while (s.length > 3 && (s.length + 1) * px * 0.56 > max) s = s.slice(0, -1); return s + '…'; }
+
+function fit() {
+  const el = document.getElementById('svg'), w = el.clientWidth, h = el.clientHeight, pad = 30;
+  // Readable first: fit the lanes' height, never below 80%, and pan along the flow for the rest.
+  const k = Math.max(0.8, Math.min(1, (w - 2 * pad) / (width + 32), (h - 2 * pad - 30) / y));
+  svg.call(zoom.transform, d3.zoomIdentity.translate(pad + 16 * k, pad).scale(k));
+}
+
+// ---------- tracing ----------
+function reach(id, dir) {
+  const seen = new Set([id]), hops = [];
+  let frontier = [id];
+  while (frontier.length) {
+    const next = [];
+    for (const l of flows) {
+      const [from, to] = dir > 0 ? [l.from, l.to] : [l.to, l.from];
+      if (frontier.includes(from)) { hops.push(l); if (!seen.has(to)) { seen.add(to); next.push(to); } }
+    }
+    frontier = next;
+  }
+  seen.delete(id);
+  return { parts: seen, links: new Set(hops) };
+}
+
+let sel = null;
+function select(id) {
+  sel = sel === id ? null : id;
+  const down = sel ? reach(sel, 1) : { parts: new Set(), links: new Set() };
+  const up = sel ? reach(sel, -1) : { parts: new Set(), links: new Set() };
+  const callsOf = sel ? LINKS.filter((l) => l.call && (l.from === sel || l.to === sel)) : [];
+  nodes.classed('sel', (n) => n === sel).classed('down', (n) => down.parts.has(n)).classed('up', (n) => up.parts.has(n) && !down.parts.has(n))
+    .classed('dim', (n) => sel && n !== sel && !down.parts.has(n) && !up.parts.has(n) && !callsOf.some((l) => l.from === n || l.to === n));
+  edges.classed('down', (l) => down.links.has(l)).classed('up', (l) => up.links.has(l) && !down.links.has(l))
+    .classed('dim', (l) => sel && !down.links.has(l) && !up.links.has(l) && !callsOf.includes(l))
+    .attr('marker-end', (l) => (l.call ? null : down.links.has(l) ? 'url(#a-accent)' : up.links.has(l) ? 'url(#a-up)' : 'url(#a-line)'));
+  panel(down, up);
+}
+
+function panel(down, up) {
+  const el = document.getElementById('panel');
+  if (!sel) {
+    el.innerHTML = `<div><h3>Data flow</h3><h2>${ordered.length} clusters, ${ids.length} parts</h2></div>
+      <p>Each lane is a cluster of parts that work together. Arrows follow the data: from where it is written or published to where it is read or consumed. Select a part to see everything its data reaches, and everything that feeds it.</p>
+      <div><h3>Clusters, top to bottom</h3><ul class="rows">${ordered.map((l) => `<li><button data-lane="${l.key}"><span class="name"><span class="dot" style="background:var(--c${l.color % 8})"></span>${esc(l.name)}</span><span class="n">${l.members.length}</span></button></li>`).join('')}</ul></div>`;
+    el.querySelectorAll('[data-lane]').forEach((b) => b.addEventListener('click', () => {
+      const l = ordered.find((x) => String(x.key) === b.dataset.lane);
+      const t = d3.zoomTransform(svg.node()), el = svg.node();
+      svg.transition().duration(300).call(zoom.translateTo, (el.clientWidth / 2 - t.x) / t.k, l.y + l.h / 2);
+    }));
+    return;
+  }
+  const p = byId.get(sel);
+  const row = (id, note) => `<li><button data-go="${id}"><span class="name">${esc(byId.get(id).name)}<span class="verb">${esc(note)}</span></span><span class="dot" style="background:var(--c${laneOf.get(id).color % 8});margin:0"></span></button></li>`;
+  const direct = (dir) => flows.filter((l) => (dir > 0 ? l.from : l.to) === sel).map((l) => row(dir > 0 ? l.to : l.from, `${l.verb} · ${laneOf.get(dir > 0 ? l.to : l.from).name}`));
+  const calls = LINKS.filter((l) => l.call && (l.from === sel || l.to === sel)).map((l) => row(l.from === sel ? l.to : l.from, l.from === sel ? l.verb : `${l.verb} it`));
+  el.innerHTML = `<div><h3>${esc(p.kind)} · ${esc(laneOf.get(sel).name)}</h3><h2>${esc(p.name)}</h2></div>
+    <p><span class="swatch" style="background:var(--up)"></span>${up.parts.size} part${up.parts.size === 1 ? '' : 's'} feed it · <span class="swatch" style="background:var(--accent)"></span>its data reaches ${down.parts.size}</p>
+    <div><h3>Data comes from</h3>${direct(-1).length ? `<ul class="rows">${direct(-1).join('')}</ul>` : '<p>Nothing: its data starts here.</p>'}</div>
+    <div><h3>Data goes to</h3>${direct(1).length ? `<ul class="rows">${direct(1).join('')}</ul>` : '<p>Nothing: its data ends here.</p>'}</div>
+    ${calls.length ? `<div><h3>Calls</h3><ul class="rows">${calls.join('')}</ul></div>` : ''}`;
+  el.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => { sel = null; select(b.dataset.go); }));
+}
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+document.getElementById('calls').addEventListener('change', (e) => edges.filter((l) => l.call).style('display', e.target.checked ? null : 'none'));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sel) select(sel); });
+fit();
+panel();
+let last = document.getElementById('svg').clientWidth;
+new ResizeObserver(() => { const w = document.getElementById('svg').clientWidth; if (Math.abs(w - last) > 40) { last = w; fit(); } }).observe(document.getElementById('svg'));
+</script>

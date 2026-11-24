@@ -8,14 +8,14 @@ The site drew the atlas as cartographic plans: an organisation sheet, a sheet pe
 
 On a real atlas this did not work. One organisation sheet with 42 plots and 120 links on 41 lines came out about three times taller than wide, and its busiest system grew a wall of parallel tracks. Grouping by system, which mostly means by owner, does not match how parts talk to each other: one monorepo had parts in nearly every group of parts that work together. The cartography vocabulary also has to be learned before the map can be used.
 
-A prototype of the replacement was reviewed: `prototypes/clusters.html` (published as the "Atlas Clusters" artifact).
+Prototypes of the replacement were reviewed: `prototypes/clusters.src.html` (clusters as cards) and then `prototypes/flow.src.html` (lanes with data flowing through them), published as the "Atlas Clusters" artifact.
 
 ## Decision
 
-- **Clusters come from links, not owners.** Cartographer groups parts with Louvain community detection over the link graph, with one weight per link. Topics, databases and external systems belong to the cluster that uses them most. Owners and system entries are shown as facts about a part ("Found in"), never as the grouping.
+- **Clusters come from links, not owners.** Cartographer groups parts with Louvain community detection over the link graph, with one weight per link. Code dependencies (`depends-on`) are left out of clustering and off the map: a shared library would pull together parts that never exchange anything. Parts with no other links share one group, "Not linked yet". Topics, databases and external systems belong to the cluster that uses them most. Owners and system entries are shown as facts about a part ("Found in"), never as the grouping.
 - **People can pin clusters.** A pinned cluster keeps its members and name across scans. Every scan also clusters the current links afresh. When the fresh grouping keeps at least 3 percentage points more links inside clusters than the pinned one, and some part would move, Cartographer suggests a regroup. It says what would merge or move. Pinned clusters live in the atlas as `clusters.yaml`, written by the CLI. The site is static, so a regroup is applied through the CLI, not from the page.
-- **One map you open.** The site has three views: a map of clusters with link counts between them; a cluster, showing its parts and the outside parts they link to; and an "Everything" table with search. A part's page lists what it uses and what uses it. There are no sheets, plot numbers, grid references or gazetteer.
-- **Layout is drawn in the browser.** The map is laid out with a seeded force simulation (d3-force) from the cluster data. Nothing about positions is stored, and `layouts/` goes away.
+- **One map, with the data flowing through it.** Clustering keeps like things close; it does not isolate them. The map shows every part at once, one horizontal lane per cluster, and arrows follow the data rather than the code dependency: writing and publishing point into the table or topic, reading and consuming point out of it. Calls carry requests, not data, and are drawn dotted. Within a lane each part sits one column right of the furthest part in that lane that feeds it. Selecting a part lights up everything that feeds it and everything its data reaches, across lanes. There are no cluster pages, sheets, plot numbers, grid references or gazetteer; an "Everything" table and search sit beside the map, and each part keeps its own page.
+- **Layout is worked out when the site is built.** Lanes and columns follow from the clusters and links, so the same atlas draws the same map. Nothing about positions is stored, and `layouts/` goes away.
 - **Groma is retired.** Cartographer drops the package, `Surveyor`, the sheet model and `plan resurvey`.
 
 ## Consequences
@@ -23,4 +23,4 @@ A prototype of the replacement was reviewed: `prototypes/clusters.html` (publish
 - Positions are no longer guaranteed stable between scans. Stability comes from pinned clusters, not from coordinates.
 - Stored `layouts/*.layout.json` files in existing atlases become dead and can be deleted.
 - Spec section 8, `docs/using.md`, `PRODUCT.md`, the site README and the setup skill need rewriting.
-- The force layout is fine for tens of clusters and for a cluster of up to a few hundred parts. Beyond that, a cluster would be split into sub-clusters by running Louvain again inside it.
+- Atlases grow to hundreds of repositories and thousands of parts. Above 80 parts, lanes of more than 6 parts start closed, showing one box per column for the parts in it, and open when a reader selects the lane or a part in it. Columns are counted within a lane, so the map's width follows the deepest lane, not the longest chain across the whole estate.
