@@ -118,6 +118,19 @@ public class CoreTests
     }
 
     [Fact]
+    public void A_read_over_wcf_resolves_to_the_component_providing_the_contract()
+    {
+        var atlas = NewAtlas();
+        var service = Component("acme-orders", "Acme.Orders");
+        service.Provides!.Add(new Provided { Name = "Acme.IOrderService", As = "contract", Basis = Basis.Extracted, Source = "proj" });
+        var client = Component("acme-web", "Acme.Web", new Link { Type = "reads", Name = "OrderRef.IOrderService", How = "wcf", Basis = Basis.Inferred, Source = "proj#L9" });
+        atlas.Entries[service.Id] = service;
+        atlas.Entries[client.Id] = client;
+        Resolver.Run(atlas);
+        Assert.Equal(service.Id, client.Links!.Single().To);
+    }
+
+    [Fact]
     public void Transports_come_from_a_fixed_list_and_roles_belong_on_components()
     {
         var atlas = NewAtlas();

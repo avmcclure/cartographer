@@ -61,8 +61,11 @@ export function reach(links, id, dir, steps = Infinity) {
   return { parts, links: used };
 }
 
-/** Data read from a lookup by another part, as opposed to what the lookup itself writes or publishes. */
-export const readFromLookup = (l, part) => !l.call && part.get(l.from)?.role === 'lookup' && l.verbs.every((v) => v.verb === 'reads' || v.verb === 'receives from');
+const readVerb = (v) => v.verb === 'reads' || v.verb === 'receives from';
+/** Data another part reads from a lookup, as opposed to what the lookup itself writes or publishes. */
+export const readFromLookup = (l, part) => !l.call && part.get(l.from)?.role === 'lookup' && l.verbs.some(readVerb);
+/** A link that is only reads from a lookup, drawn just while the lookup is selected. */
+const onlyReadFromLookup = (l, part) => readFromLookup(l, part) && l.verbs.every(readVerb);
 
 /** A link's transports, or [''] when none is recorded. */
 export const transportsOf = (l) => (l.over?.length ? l.over.map((o) => o.how) : ['']);
@@ -124,7 +127,7 @@ export function createMap(svg, data, { onSelect }) {
       edges.get(key).links.push(l);
     }
     // Data read from a lookup: drawn only while the lookup is selected; its readers show a dot each instead.
-    for (const e of edges.values()) e.look = e.links.every((l) => readFromLookup(l, part));
+    for (const e of edges.values()) e.look = e.links.every((l) => onlyReadFromLookup(l, part));
     return { nodes, edges: [...edges.values()], at, width: right, height: y };
   }
 

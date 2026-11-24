@@ -167,7 +167,7 @@ public static class Resolver
         // Which components provide a name, counting only the kinds of name this link can mean.
         List<string> Providers(Entry from, Link l)
         {
-            string[] kinds = l.Type == "calls" ? [l.How == "com" ? "progid" : "contract"] : ["nuget", "assembly", "typelib"];
+            string[] kinds = l.Type != "depends-on" ? [l.How == "com" ? "progid" : "contract"] : ["nuget", "assembly", "typelib"];
             static string Bare(string n) => Regex.Replace(n, @"\.(dll|exe|ocx|tlb)$", "", RegexOptions.IgnoreCase);
             var candidates = provided.Where(p => kinds.Contains(p.As) && p.Id != from.Id).ToList();
             var hits = candidates.Where(p => Bare(p.Name).Equals(Bare(l.Name!), StringComparison.OrdinalIgnoreCase)).ToList();
@@ -195,8 +195,8 @@ public static class Resolver
 
             foreach (var l in (e.Links ?? []).ToList())
             {
-                // A COM or WCF call names a provided name just as a depends-on does, but it is never a public package.
-                if ((l.Type == "depends-on" || l is { Type: "calls", How: "com" or "wcf" }) && l.To is null && l.Name is not null)
+                // A COM or WCF call, read, write or forward names a provided name just as a depends-on does, but it is never a public package.
+                if ((l.Type == "depends-on" || l is { Type: "calls" or "reads" or "writes" or "forwards-to", How: "com" or "wcf" }) && l.To is null && l.Name is not null)
                 {
                     var ids = Providers(e, l);
                     if (ids.Count == 1)
@@ -207,7 +207,7 @@ public static class Resolver
                         wanted.Add(($"{ProviderPrefix}'{l.Name}' for this component; {ids.Count} components provide that name: {string.Join(", ", ids)}.", $"name {l.Name}", "One of the listed components, set as the link's 'to'."));
                     else if (prefixes.Any(p => p.IsMatch(l.Name)))
                         wanted.Add(($"{ProviderPrefix}'{l.Name}'. It matches an internal name prefix but no scanned repository provides it.", $"name {l.Name}", $"A component whose provides list contains {l.Name}, or a person stating it is public."));
-                    else if (l.Type == "calls" || Regex.IsMatch(l.Name, @"^\{|\.(dll|exe|ocx|tlb)$", RegexOptions.IgnoreCase))
+                    else if (l.Type != "depends-on" || Regex.IsMatch(l.Name, @"^\{|\.(dll|exe|ocx|tlb)$", RegexOptions.IgnoreCase))
                         // A file, type library or run-time contract is never a public package: it stays an unresolved reference.
                         wanted.Add(($"{ProviderPrefix}'{l.Name}'. No scanned repository provides it.", $"name {l.Name}", $"A component whose provides list contains {l.Name}, or a person stating it comes from outside the organisation."));
                     else if (l.Basis == Basis.Extracted && l.Type == "depends-on")

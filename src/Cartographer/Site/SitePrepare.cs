@@ -112,10 +112,11 @@ public static class SitePrepare
         IEnumerable<int> Ways(string from, string type) => type != "forwards-to" ? [Flow(type)]
             : WaysThrough(from, new(StringComparer.Ordinal)) is { Count: > 0 } w ? w.OrderDescending() : [1];
         var partLinks = edges.Where(e => e.Type != "depends-on")
-            .SelectMany(e => Ways(e.From, e.Type).Select(flow => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis, e.How, e.Ops, Flow: flow)))
+            .SelectMany(e => Ways(e.From, e.Type).Select(flow => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis, e.How, e.Ops, Flow: flow, Back: e.Type == "forwards-to" && flow < 0)))
             .Where(e => e.From is not null && e.To is not null && e.From != e.To)
             .Select(e => e.Flow < 0 ? e with { From = e.To, To = e.From } : e)
-            .GroupBy(e => (e.From!, e.To!, Call: e.Flow == 0)).OrderBy(g => g.Key.Item1, StringComparer.Ordinal).ThenBy(g => g.Key.Item2, StringComparer.Ordinal).ThenBy(g => g.Key.Call)
+            // Data read back through a pass-through is kept apart from ordinary links between the same two parts.
+            .GroupBy(e => (e.From!, e.To!, Call: e.Flow == 0, e.Back)).OrderBy(g => g.Key.Item1, StringComparer.Ordinal).ThenBy(g => g.Key.Item2, StringComparer.Ordinal).ThenBy(g => g.Key.Call).ThenBy(g => g.Key.Back)
             .Select(g => new
             {
                 from = g.Key.Item1, to = g.Key.Item2, call = g.Key.Call ? true : (bool?)null, count = g.Count(), basis = Weakest(g.Select(x => x.Basis)),
@@ -124,7 +125,7 @@ public static class SitePrepare
                 over = g.Any(x => x.How is not null) ? g.GroupBy(x => x.How?.ToLowerInvariant() ?? "").Select(h => new { how = h.Key, count = h.Count() }).OrderBy(h => h.how == "").ThenByDescending(h => h.count).ThenBy(h => h.how, StringComparer.Ordinal) : null,
                 ops = g.Any(x => x.Ops is not null) ? g.SelectMany(x => x.Ops ?? []).Distinct().Order(StringComparer.Ordinal) : null,
                 forwards = g.Any(x => x.Type == "forwards-to") ? true : (bool?)null,
-                back = g.Any(x => x.Type == "forwards-to" && x.Flow < 0) ? true : (bool?)null,
+                back = g.Key.Back ? true : (bool?)null,
             }).ToList();
         var forwarders = edges.Where(e => e.Type == "forwards-to").Select(e => PartOf(e.From)).OfType<string>().ToHashSet(StringComparer.Ordinal);
         var roles = Roles(atlas, grouping, forwarders, partLinks.Select(l => (l.from, l.to, Call: l.call == true, Back: l.back == true, Verbs: l.verbs.Select(v => v.verb))).ToList());
@@ -138,7 +139,7 @@ public static class SitePrepare
                 members = c.Members.Select(m => new
                 {
                     id = m, atlas.Entries[m].Name, atlas.Entries[m].Kind, atlas.Entries[m].Type, found = Found(atlas, atlas.Entries[m]), unsurveyed = questionsOf.GetValueOrDefault(m),
-                    role = roles.TryGetValue(m, out var r) && r.Name != "stage" ? r.Name : null, roleStated = r.Stated ? true : (bool?)null,
+                    role = roles.TryGetValue(m, out var r) && r.Name != "stage" ? r.Name : null, roleStated = r.Stated && r.Name != "stage" ? true : (bool?)null,
                 }),
             }),
             parts = partLinks,
@@ -219,13 +220,14 @@ public static class SitePrepare
             if (!seen.Add(id)) return found;
             foreach (var l in links.Where(l => l.From == id && !l.Call))
                 if (l.Back) found.UnionWith(Readers(l.To, seen));
-                else if (l.Verbs.All(v => v is "reads" or "receives from")) found.Add(l.To);
+                else if (l.Verbs.Any(v => v is "reads" or "receives from")) found.Add(l.To);
             return found;
         }
         foreach (var id in grouping.Clusters.SelectMany(c => c.Members))
         {
             var e = atlas.Entries[id];
-            if (e.Role is { } stated) { roles[id] = (stated.Name, true); continue; }
+            // A stated role counts only where check would accept it.
+            if (e.Role is { } stated && LinkTypes.Roles.Contains(stated.Name) && e.Kind is Kinds.Component or Kinds.External) { roles[id] = (stated.Name, true); continue; }
             if (forwarders.Contains(id)) { roles[id] = ("pass-through", false); continue; }
             var into = links.Where(l => l.To == id && !l.Call).ToList();
             var readers = Readers(id, new(StringComparer.Ordinal)).Count;

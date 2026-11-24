@@ -26,13 +26,22 @@ export function laneOrder(map) {
   return [...placed, ...last].map((c) => c.key);
 }
 
+/**
+ * Data read back through a pass-through runs from its target to it. When the same forward also carries writes onward,
+ * placing by both would loop the two, so the back link is left out of placement and of counts.
+ */
+export function loopsBack(map) {
+  const onward = new Set(map.parts.filter((l) => l.forwards && !l.back).map((l) => `${l.from}>${l.to}`));
+  return (l) => !!l.back && onward.has(`${l.to}>${l.from}`);
+}
+
 /** Part ID to column. Loops are broken where they close, walking parts in ID order. */
 export function columns(map) {
   const lookup = new Set(map.clusters.flatMap((c) => c.members.filter((m) => m.role === 'lookup').map((m) => m.id)));
   const ids = map.clusters.flatMap((c) => c.members.map((m) => m.id)).filter((i) => !lookup.has(i)).sort();
   const laneOf = new Map(map.clusters.flatMap((c) => c.members.map((m) => [m.id, c.key])));
-  // Data read back through a pass-through runs from its target to it; placing by that too would loop the two.
-  const inFlow = (l) => !lookup.has(l.from) && !lookup.has(l.to) && !l.back;
+  const back = loopsBack(map);
+  const inFlow = (l) => !lookup.has(l.from) && !lookup.has(l.to) && !back(l);
   const data = map.parts.filter((l) => !l.call && inFlow(l) && laneOf.get(l.from) === laneOf.get(l.to));
   const out = new Map(ids.map((i) => [i, []]));
   for (const l of data) out.get(l.from)?.push(l.to);

@@ -2,7 +2,7 @@
 // The map: every part, in lanes by cluster (ADR 1), with data flowing left to right.
 import Base from '../layouts/Base.astro';
 import { map, lanes as order, entryHref, percent, plural, json } from '../lib/data.js';
-import { columns } from '../lib/flow.js';
+import { columns, loopsBack } from '../lib/flow.js';
 const col = columns(map);
 const byKey = new Map(map.clusters.map((c) => [c.key, c]));
 const lanes = order.map((key, i) => ({ key, name: byKey.get(key).name, pinned: byKey.get(key).pinned, color: i, count: byKey.get(key).members.length }));
@@ -11,7 +11,8 @@ const parts = order.flatMap((key) => byKey.get(key).members.map((m) => ({ id: m.
 const data = { lanes, parts, links: map.parts.map(({ from, to, call, count, basis, verbs, over, ops }) => ({ from, to, call, count, basis, verbs, over, ops })) };
 // Links by transport, most first; links with none recorded last.
 // A forward drawn both ways (written through and read back) is one link: count it once.
-const transports = Object.entries(Object.groupBy(map.parts.filter((l) => !l.back).flatMap((l) => (l.over?.length ? l.over : [{ how: '', count: l.count }])), (o) => o.how))
+const twin = loopsBack(map);
+const transports = Object.entries(Object.groupBy(map.parts.filter((l) => !twin(l)).flatMap((l) => (l.over?.length ? l.over : [{ how: '', count: l.count }])), (o) => o.how))
   .map(([how, list]) => ({ how, count: list.reduce((s, o) => s + o.count, 0) }))
   .sort((a, b) => (a.how === '') - (b.how === '') || b.count - a.count || a.how.localeCompare(b.how));
 const hasRole = (r) => parts.some((p) => p.role === r);
@@ -149,7 +150,7 @@ const goneTo = (name) => {
         const mine = links.filter((l) => !l.call && (l.from === id || l.to === id)), other = (l) => part.get(l.from === id ? l.to : l.from).name;
         const onto = [...new Set(mine.filter(forwards).map(other))], callers = [...new Set(mine.filter((l) => !forwards(l)).map(other))];
         const list = (names) => (names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', '));
-        note.textContent = `Pass-through: relays requests from ${list(callers) || 'its callers'} to ${list(onto)} unchanged.${p.roleStated ? ' A person stated this role.' : ''}`;
+        note.textContent = `Pass-through: relays requests from ${list(callers) || 'its callers'} to ${list(onto) || 'what it forwards to'} unchanged.${p.roleStated ? ' A person stated this role.' : ''}`;
         note.hidden = false;
       } else if (p.role === 'lookup') {
         note.textContent = `Lookup: read by ${looks.length} part${looks.length === 1 ? '' : 's'}${p.roleStated ? '. A person stated this role' : ', with its own data coming only from databases'}, so it sits beside the flow.`;
