@@ -98,7 +98,8 @@ public static class Validator
                 if (target is null) Warn($"{what}: the target has no entry");
                 else if (!rule.To.Contains(target.Kind)) Error($"{what}: cannot point at a {target.Kind}");
             }
-            if (l.How is not null && !LinkTypes.Transports.Contains(l.How)) Error($"{what}: how '{l.How}' is not one of {string.Join(", ", LinkTypes.Transports)}");
+            // A warning, not an error: atlases written before the list existed may use other words.
+            if (l.How is not null && !LinkTypes.Transports.Contains(l.How, StringComparer.OrdinalIgnoreCase)) Warn($"{what}: how '{l.How}' is not one of {string.Join(", ", LinkTypes.Transports)}");
             if (l.Via is not null && atlas.Find(l.Via) is null) Warn($"{what}: via '{l.Via}' has no entry");
             if (!seen.Add(l.Identity)) Error($"{what}: the same link appears twice");
         }

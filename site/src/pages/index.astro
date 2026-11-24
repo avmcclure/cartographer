@@ -110,7 +110,7 @@ const goneTo = (name) => {
     }
     // "writes 2 over http · POST /orders, GET /orders/{id} · via Orders gateway · inferred"
     const verbs = (l) => [
-      l.verbs.map((v) => `${v.verb} ${v.count}`).join(', ') + (l.over?.length ? ` over ${l.over.map((o) => o.how).join(', ')}` : ''),
+      l.verbs.map((v) => `${v.verb} ${v.count}`).join(', ') + (l.over?.some((o) => o.how) ? ` over ${l.over.map((o) => o.how).filter(Boolean).join(', ')}` : ''),
       l.ops?.length ? l.ops.slice(0, 3).join(', ') + (l.ops.length > 3 ? ` and ${l.ops.length - 3} more` : '') : null,
       l.via?.length ? `via ${l.via.map((v) => part.get(v)?.name ?? v).join(', ')}` : null,
       l.basis === 'inferred' ? 'inferred' : null,

@@ -132,6 +132,17 @@ public class SiteTests
         Assert.True(Between(map, api, gateway) && Between(map, gateway, reader.Id) && Between(map, gateway, api));   // the shop still writes through it
         atlas.Entries.Remove(reader.Id);
 
+        // Through a chain of pass-throughs too: a read at the outer one comes back along every hop.
+        var outer = Component("repositories/sales-edge/components/edge", "Edge", new Link { Type = "forwards-to", To = gateway, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
+        var far = Component("repositories/sales-edge/components/far-reader", "FarReader", new Link { Type = "reads", To = outer.Id, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
+        atlas.Entries[outer.Id] = outer;
+        atlas.Entries[far.Id] = far;
+        SitePrepare.Run(atlas, dir);
+        map = Json(dir, "clusters.json");
+        Assert.True(Between(map, api, gateway) && Between(map, gateway, outer.Id) && Between(map, outer.Id, far.Id));
+        atlas.Entries.Remove(outer.Id);
+        atlas.Entries.Remove(far.Id);
+
         // Anything written into a lookup makes it part of the flow again; a stated role wins over what the links say.
         var writer = Component("repositories/sales-edge/components/customer-admin", "CustomerAdmin", new Link { Type = "writes", To = lookup, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
         atlas.Entries[writer.Id] = writer;

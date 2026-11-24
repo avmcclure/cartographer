@@ -97,10 +97,20 @@ public static class SitePrepare
         // The map: clusters, and the links between parts in the direction the data goes, with what they do, counted.
         // Calls carry requests rather than data and keep their own direction; code dependencies are left out.
         // A pass-through carries data whichever way its callers move it: what is written into it goes on to its targets,
-        // and what is read from it comes back from them. With no callers known, a forward points onward.
-        var into = edges.Where(e => e.Type != "depends-on" && Flow(e.Type) != 0).GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => Flow(e.Type)).ToHashSet(), StringComparer.Ordinal);
+        // and what is read from it comes back from them, through any chain of pass-throughs. With no callers known, a
+        // forward points onward.
+        var into = edges.Where(e => e.Type is not ("depends-on" or "forwards-to") && Flow(e.Type) != 0).GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => Flow(e.Type)).ToHashSet(), StringComparer.Ordinal);
+        var forwardedBy = edges.Where(e => e.Type == "forwards-to").GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => e.From).ToList(), StringComparer.Ordinal);
+        var ways = new Dictionary<string, HashSet<int>>(StringComparer.Ordinal);
+        HashSet<int> WaysThrough(string proxy, HashSet<string> seen)
+        {
+            if (ways.TryGetValue(proxy, out var known)) return known;
+            var found = new HashSet<int>(into.GetValueOrDefault(proxy) ?? []);
+            if (seen.Add(proxy)) foreach (var outer in forwardedBy.GetValueOrDefault(proxy) ?? []) found.UnionWith(WaysThrough(outer, seen));
+            return ways[proxy] = found;
+        }
         IEnumerable<int> Ways(string from, string type) => type != "forwards-to" ? [Flow(type)]
-            : into.GetValueOrDefault(from) is { } ways && ways.Contains(-1) ? (ways.Contains(1) ? [1, -1] : [-1]) : [1];
+            : WaysThrough(from, new(StringComparer.Ordinal)) is { Count: > 0 } w ? w.OrderDescending() : [1];
         var partLinks = edges.Where(e => e.Type != "depends-on")
             .SelectMany(e => Ways(e.From, e.Type).Select(flow => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis, e.How, e.Ops, Flow: flow)))
             .Where(e => e.From is not null && e.To is not null && e.From != e.To)
@@ -110,7 +120,8 @@ public static class SitePrepare
             {
                 from = g.Key.Item1, to = g.Key.Item2, call = g.Key.Call ? true : (bool?)null, count = g.Count(), basis = Weakest(g.Select(x => x.Basis)),
                 verbs = g.GroupBy(x => Verb(x.Type)).Select(v => new { verb = v.Key, count = v.Count() }).OrderByDescending(v => v.count).ThenBy(v => v.verb, StringComparer.Ordinal),
-                over = g.Any(x => x.How is not null) ? g.Where(x => x.How is not null).GroupBy(x => x.How!).Select(h => new { how = h.Key, count = h.Count() }).OrderByDescending(h => h.count).ThenBy(h => h.how, StringComparer.Ordinal) : null,
+                // Transports, with "" counting links that record none, so the map can filter on either.
+                over = g.Any(x => x.How is not null) ? g.GroupBy(x => x.How?.ToLowerInvariant() ?? "").Select(h => new { how = h.Key, count = h.Count() }).OrderBy(h => h.how == "").ThenByDescending(h => h.count).ThenBy(h => h.how, StringComparer.Ordinal) : null,
                 ops = g.Any(x => x.Ops is not null) ? g.SelectMany(x => x.Ops ?? []).Distinct().Order(StringComparer.Ordinal) : null,
                 forwards = g.Any(x => x.Type == "forwards-to") ? true : (bool?)null,
             }).ToList();
@@ -206,7 +217,7 @@ public static class SitePrepare
             if (e.Role is { } stated) { roles[id] = (stated.Name, true); continue; }
             if (forwarders.Contains(id)) { roles[id] = ("pass-through", false); continue; }
             var into = links.Where(l => l.To == id && !l.Call).ToList();
-            var readers = links.Where(l => l.From == id && !l.Call && l.Verbs.Any(v => v is "reads" or "receives from")).Select(l => l.To).Distinct().Count();
+            var readers = links.Where(l => l.From == id && !l.Call && l.Verbs.All(v => v is "reads" or "receives from")).Select(l => l.To).Distinct().Count();
             if (e.Kind is Kinds.Component or Kinds.External && readers >= 2 && into.All(l => atlas.Find(l.From)?.Kind == Kinds.Database))
                 roles[id] = ("lookup", false);
         }

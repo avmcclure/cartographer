@@ -128,8 +128,9 @@ public class CoreTests
         gateway.Role = new Role { Name = "proxy", Basis = Basis.Stated, Source = "person:a@2026-11-24" };
         var db = new Entry { Id = Ids.Database("Sales"), Kind = Kinds.Database, Name = "Sales", Summary = "Sales.", Role = new Role { Name = "lookup", Basis = Basis.Stated, Source = "person:a@2026-11-24" } };
         foreach (var e in new[] { api, gateway, db }) atlas.Entries[e.Id] = e;
-        var errors = Validator.Check(atlas).Where(i => i.Error).Select(i => i.Message).ToList();
-        Assert.Contains(errors, m => m.Contains("how 'REST' is not one of"));
+        var issues = Validator.Check(atlas);
+        var errors = issues.Where(i => i.Error).Select(i => i.Message).ToList();
+        Assert.Contains(issues, i => !i.Error && i.Message.Contains("how 'REST' is not one of"));
         Assert.Contains(errors, m => m.Contains("role 'proxy' is not one of"));
         Assert.Contains(errors, m => m.Contains("role belongs on components and external systems only"));
         Assert.DoesNotContain(errors, m => m.Contains("forwards-to") || m.Contains("cannot point at a component"));
