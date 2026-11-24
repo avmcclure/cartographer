@@ -235,7 +235,8 @@ public static class Resolver
                 }
                 else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes")
                 {
-                    var match = MatchObject(atlas, databases, l);
+                    // With no transport given, a component that provides the name is preferred over a table that shares it.
+                    var match = l.How is null && l.Type is "reads" or "writes" && Providers(e, l) is [var provider] ? provider : MatchObject(atlas, databases, l);
                     if (match is not null && !e.Links!.Any(o => o != l && o.Type == l.Type && o.To == match && o.Via == l.Via)) { l.To = match; l.Database = null; }
                     else if (match is not null) e.Links!.Remove(l);
                 }

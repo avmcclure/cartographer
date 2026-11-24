@@ -93,7 +93,7 @@ A component or external system can also have a `role` (`{name, basis, source}`, 
 
 - `basis` and `source` are required on every link, provided name, system membership, tag and owner.
 - `basis` is `extracted` (the CLI read it mechanically), `inferred` (an agent concluded it from reading code) or `stated` (a person said it). An agent writes `inferred`, except when folding in a person's answer, which is `stated`.
-- `uses` is the list of a library's types the consumer uses; `count` is the number of usage sites.
+- On `depends-on`, `uses` is the list of a library's types the consumer uses and `count` is the number of usage sites. On a link to a component, `uses` lists operations (above).
 - `via` is the ID of the library a link was reached through.
 - `uses` (the link type) is the fallback when only the connection to a database is known and no table or routine can be named.
 - Links the CLI extracted keep the real `name` beside `to`. You need not add `name` to a link that has a `to`.

@@ -238,7 +238,10 @@ public static class SitePrepare
             // where their data starts, and a call to another part with no known direction could be feeding it.
             bool Database(string part) => atlas.Find(part)?.Kind == Kinds.Database;
             var unknownCalls = links.Any(l => l.Call && (l.From == id && !Database(l.To) || l.To == id && !Database(l.From)));
-            if (e.Kind == Kinds.Component && readers >= 2 && into.Count > 0 && into.All(l => Database(l.From)) && !unknownCalls)
+            // And all it sends on is reads served or writes to its own databases: a service that publishes or writes
+            // onward is part of the flow.
+            var onward = links.Where(l => l.From == id && !l.Call && !l.Back).All(l => Database(l.To) || l.Verbs.All(v => v is "reads" or "receives from"));
+            if (e.Kind == Kinds.Component && readers >= 2 && into.Count > 0 && into.All(l => Database(l.From)) && !unknownCalls && onward)
                 roles[id] = ("lookup", null, readers);
         }
         return roles;

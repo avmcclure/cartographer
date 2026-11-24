@@ -97,6 +97,7 @@ public static class Validator
                 var target = atlas.Find(l.To);
                 if (target is null) Warn($"{what}: the target has no entry");
                 else if (!rule.To.Contains(target.Kind)) Error($"{what}: cannot point at a {target.Kind}");
+                else if (target.Kind == Kinds.Component && l.Type is "reads" or "writes" && e.Kind != Kinds.Component) Error($"{what}: only a component reads or writes another component");
             }
             // A warning, not an error: atlases written before the list existed may use other words.
             if (l.How is not null && !LinkTypes.Transports.Contains(l.How, StringComparer.OrdinalIgnoreCase)) Warn($"{what}: how '{l.How}' is not one of {string.Join(", ", LinkTypes.Transports)}");

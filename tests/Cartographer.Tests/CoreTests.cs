@@ -139,6 +139,13 @@ public class CoreTests
         Resolver.Run(atlas);
         Assert.All(gateway.Links!, l => Assert.Null(l.To));
         Assert.Equal(2, QuestionList.Parse(gateway.Body).Items.Count(q => q.Missing!.Contains("No scanned repository provides it")));
+
+        // With no transport, a read of a name a component provides goes to the component, not the table sharing it.
+        service.Provides!.Add(new Provided { Name = "dbo.Orders", As = "contract", Basis = Basis.Stated, Source = "person:a@2026-11-24" });
+        var bare = Component("acme-ui", "Acme.Ui", new Link { Type = "reads", Name = "dbo.Orders", Basis = Basis.Inferred, Source = "proj#L6" });
+        atlas.Entries[bare.Id] = bare;
+        Resolver.Run(atlas);
+        Assert.Equal(service.Id, bare.Links!.Single().To);
     }
 
     [Fact]
