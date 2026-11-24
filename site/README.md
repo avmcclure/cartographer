@@ -17,6 +17,13 @@ cd site && npm ci && npm run dev
 
 `CARTOGRAPHER_DATA` points the site at another data directory (default `data/`).
 
+To see the site at the size of a large company, generate Kestrel Group: a made-up retailer with about 850 repositories, 1,700 parts and 16,000 links between them. CI builds the site from it on every change.
+
+```
+python3 tools/make-enterprise-atlas.py /tmp/kestrel
+dotnet run --project src/Cartographer.Cli -- site prepare --atlas /tmp/kestrel --out site/data
+```
+
 ## Pages
 
 | Page | Path |

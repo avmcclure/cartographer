@@ -31,7 +31,8 @@ const goneTo = (name) => {
     <span><svg width="30" height="10" aria-hidden="true"><path d="M0 5 H30" stroke="currentColor" stroke-width="1.6" opacity="0.35" /></svg>inferred, not read from code</span>
     <span><span class="swatch" style="background:var(--up)"></span>feeds the selected part</span>
     <span><span class="swatch" style="background:var(--accent)"></span>fed by it</span>
-    <label class="toggle"><input type="checkbox" id="calls" checked /> Show calls</label>
+    <label class="toggle"><input type="checkbox" id="cross" checked={parts.length <= 80} /> Links between clusters</label>
+    <label class="toggle" style="margin-left:0"><input type="checkbox" id="calls" checked /> Calls</label>
   </div>
   <div class="workspace">
     <section class="stage" aria-label="Data flow map">
@@ -62,6 +63,7 @@ const goneTo = (name) => {
     <div><p class="cap" data-kind></p><h2 data-name aria-live="polite"></h2></div>
     <p><a class="button" data-open>Open its page</a> <a href="#" data-clear style="margin-left:10px">Clear</a></p>
     <p data-summary></p>
+    <div class="steps" role="group" aria-label="How far to follow the data"><span class="small">Follow</span></div>
     <div><p class="cap">Data comes from</p><ul class="rows plain" data-from></ul></div>
     <div><p class="cap">Data goes to</p><ul class="rows plain" data-to></ul></div>
     <div data-calls-block><p class="cap">Calls</p><ul class="rows plain" data-calls></ul></div>
@@ -97,7 +99,15 @@ const goneTo = (name) => {
       view.querySelector('[data-name]').textContent = p.name;
       view.querySelector('[data-open]').href = p.href;
       view.querySelector('[data-clear]').addEventListener('click', (e) => { e.preventDefault(); map.clear(); });
-      view.querySelector('[data-summary]').textContent = `${up.parts.size} part${up.parts.size === 1 ? '' : 's'} feed it; its data reaches ${down.parts.size}.${p.found ? ` Found in ${p.found}.` : ''}`;
+      const far = map.depth === Infinity ? '' : ` within ${map.depth} step${map.depth === 1 ? '' : 's'}`;
+      view.querySelector('[data-summary]').textContent = `${up.parts.size} part${up.parts.size === 1 ? '' : 's'} feed it and its data reaches ${down.parts.size}${far}.${p.found ? ` Found in ${p.found}.` : ''}`;
+      const steps = view.querySelector('.steps');
+      for (const [n, label] of [[1, '1 step'], [2, '2 steps'], [3, '3 steps'], [Infinity, 'all the way']]) {
+        const b = Object.assign(document.createElement('button'), { type: 'button', textContent: label });
+        b.setAttribute('aria-pressed', String(map.depth === n));
+        b.addEventListener('click', () => { map.steps(n); panel.querySelector(`.steps button:nth-of-type(${[1, 2, 3, Infinity].indexOf(n) + 1})`)?.focus(); });
+        steps.append(b);
+      }
       const from = data.links.filter((l) => !l.call && l.to === id), to = data.links.filter((l) => !l.call && l.from === id), calls = data.links.filter((l) => l.call && (l.from === id || l.to === id));
       const empty = (t) => Object.assign(document.createElement('li'), { className: 'small', textContent: t });
       view.querySelector('[data-from]').append(...(from.length ? from.map((l) => row(l.from, verbs(l))) : [empty('Nothing: its data starts here.')]));
@@ -110,14 +120,20 @@ const goneTo = (name) => {
     const map = createMap(svg, data, { onSelect: show });
     for (const a of resting.querySelectorAll('[data-part]')) a.addEventListener('click', (e) => { e.preventDefault(); map.focus(a.dataset.part); });
     for (const d of resting.querySelectorAll('details')) d.addEventListener('toggle', () => { if (d.open) map.lane(d.id.slice(5)); });
+    // Large maps start with links between clusters hidden; a selected part's trace always shows the ones it uses.
+    const cross = document.getElementById('cross');
+    svg.classList.toggle('no-cross', !cross.checked);
+    cross.addEventListener('change', () => svg.classList.toggle('no-cross', !cross.checked));
     document.getElementById('calls').addEventListener('change', (e) => svg.classList.toggle('no-calls', !e.target.checked));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !e.target.closest('input, textarea, select')) map.clear(); });
 
-    // #p=<part> traces a part; #c=<cluster> brings its lane into view.
+    // #p=<part>[&d=<steps>|all] traces a part; #c=<cluster> brings its lane into view.
     function follow() {
-      const [k, v] = location.hash.slice(1).split('=');
-      if (k === 'p' && v) map.focus(decodeURIComponent(v));
-      if (k === 'c' && v) { map.lane(decodeURIComponent(v)); resting.querySelector(`#lane-${CSS.escape(decodeURIComponent(v))}`)?.setAttribute('open', ''); }
+      const params = new URLSearchParams(location.hash.slice(1));
+      const [k, v] = params.has('p') ? ['p', params.get('p')] : params.has('c') ? ['c', params.get('c')] : [];
+      const d = params.get('d');
+      if (k === 'p' && v) map.focus(v, d === 'all' ? Infinity : Number(d) || undefined);
+      if (k === 'c' && v) { map.lane(v); resting.querySelector(`#lane-${CSS.escape(v)}`)?.setAttribute('open', ''); }
     }
     follow();
     window.addEventListener('hashchange', follow);

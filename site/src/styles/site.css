@@ -88,6 +88,7 @@ html:not(.js) svg.map, html:not(.js) .stage .hint { display: none; }
 .edge { fill: none; stroke: var(--line); stroke-opacity: 0.6; }
 .edge.call { stroke-dasharray: 2 4; stroke-opacity: 0.75; }
 .no-calls .edge.call { display: none; }
+.no-cross .edge.cross:not(.down):not(.up):not(.near) { display: none; }
 .edge.inferred { stroke-opacity: 0.3; }
 .edge.down { stroke: var(--accent); stroke-opacity: 1; }
 .edge.up { stroke: var(--up); stroke-opacity: 1; }
@@ -101,6 +102,9 @@ html:not(.js) svg.map, html:not(.js) .stage .hint { display: none; }
 .node.up rect { fill: var(--up-soft); stroke: var(--up); }
 .node.group rect { stroke-dasharray: 4 3; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -0.05em; margin-right: 6px; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.steps button { border: 1px solid var(--rule); background: var(--surface); border-radius: 6px; padding: 3px 9px; font-size: 12.5px; }
+.steps button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
 .toggle { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; cursor: pointer; }
 .lane-list summary { display: flex; align-items: baseline; gap: 2px; padding: 6px 0; cursor: pointer; border-top: 1px solid var(--rule); }
 .lane-list summary .n { margin-left: auto; font: 500 12px var(--mono); color: var(--muted); }
