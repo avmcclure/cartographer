@@ -42,6 +42,7 @@ Keys appear in this order. Leave out a key that has nothing in it. A key not in 
 | `systems` | component, database | List of `{id, basis, source}`. |
 | `tags` | table, view | List of `{name, basis, source}`: business-data tags such as `customer` or `payment`. |
 | `owner` | all | `{name, basis, source}`. |
+| `role` | component, external | `{name, basis, source}`: `stage`, `pass-through` or `lookup`. See below. |
 | `packages` | component | Public packages used, plain strings `"<name> <version>"`. Written by the CLI. |
 | `links` | all | The entry's links (next section). |
 | `drift` | database objects | Written by the CLI. |

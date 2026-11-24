@@ -62,7 +62,7 @@ const goneTo = (name) => {
           <h2>{plural(lanes.length, 'cluster')}, {plural(parts.length, 'part')}</h2>
         </div>
         <p style="margin-top:8px">Each lane is a cluster of parts that work together. Arrows follow the data, from where it is written or published to where it is read or consumed: upstream is to the left, downstream to the right. {map.links ? `${percent(map.inside)} of ${plural(map.links, 'link')} stay inside a cluster.` : 'No links between parts yet.'} Code dependencies and owners play no part.</p>
-        {hasRole('lookup') && <p>Lookups, such as a pricing or identity service, are only ever read from. They sit in a band at the top of their lane. Each part that reads one shows a dot, and selecting either draws the line between them.</p>}
+        {hasRole('lookup') && <p>Lookups, such as a pricing or identity service, are only ever read from. They sit in a band at the top of their lane. Each part that reads one shows a dot; the lines appear when a selected part's trace runs through them.</p>}
         {hasRole('pass-through') && <p>Pass-throughs, such as a gateway in front of an old and a new API, relay requests unchanged. They sit in the flow between their callers and what they forward to.</p>}
         <p class="cap" style="margin-top:16px">Clusters, top to bottom</p>
         {lanes.map((l) => (

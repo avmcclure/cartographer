@@ -124,12 +124,13 @@ public static class SitePrepare
                 verbs = g.GroupBy(x => x.Back ? "is read through" : Verb(x.Type)).Select(v => new { verb = v.Key, count = v.Count() }).OrderByDescending(v => v.count).ThenBy(v => v.verb, StringComparer.Ordinal),
                 // Transports, with "" counting links that record none, so the map can filter on either.
                 over = g.Any(x => x.How is not null) ? g.GroupBy(x => x.How?.ToLowerInvariant() ?? "").Select(h => new { how = h.Key, count = h.Count() }).OrderBy(h => h.how == "").ThenByDescending(h => h.count).ThenBy(h => h.how, StringComparer.Ordinal) : null,
-                ops = g.Any(x => x.Ops is not null) ? g.SelectMany(x => x.Ops ?? []).Distinct().Order(StringComparer.Ordinal) : null,
+                ops = g.Any(x => x.Ops is not null) && !g.Key.Back ? g.SelectMany(x => x.Ops ?? []).Distinct().Order(StringComparer.Ordinal) : null,   // a forward's routes say nothing about which way
                 forwards = g.Any(x => x.Type == "forwards-to") ? true : (bool?)null,
                 back = g.Key.Back ? true : (bool?)null,
             }).ToList();
         var forwarders = edges.Where(e => e.Type == "forwards-to").Select(e => PartOf(e.From)).OfType<string>().ToHashSet(StringComparer.Ordinal);
-        var roles = Roles(atlas, grouping, forwarders, partLinks.Select(l => (l.from, l.to, Call: l.call == true, Back: l.back == true, Verbs: l.verbs.Select(v => v.verb))).ToList());
+        var targetsOf = edges.Where(e => e.Type == "forwards-to").GroupBy(e => e.From).ToDictionary(g => g.Key, g => g.Select(e => e.To).Distinct().Count(), StringComparer.Ordinal);
+        var roles = Roles(atlas, grouping, forwarders, targetsOf, partLinks.Select(l => (l.from, l.to, Call: l.call == true, Back: l.back == true, Verbs: l.verbs.Select(v => v.verb))).ToList());
         var questionsOf = atlas.Entries.Values.Where(e => PartOf(e.Id) is not null).GroupBy(e => PartOf(e.Id)!).ToDictionary(g => g.Key, g => g.Sum(Unsurveyed), StringComparer.Ordinal);
         Write("clusters.json", new
         {
@@ -213,7 +214,7 @@ public static class SitePrepare
     /// in it; an external system is one only when an entry says so. A role an entry states wins. Parts with neither are stages, in the flow.
     /// </summary>
     /// <returns>Each part's role, the basis of the entry's own role when it set one, and how many parts read it.</returns>
-    static Dictionary<string, (string Name, string? Basis, int Readers)> Roles(Atlas atlas, Grouping grouping, HashSet<string> forwarders, List<(string From, string To, bool Call, bool Back, IEnumerable<string> Verbs)> links)
+    static Dictionary<string, (string Name, string? Basis, int Readers)> Roles(Atlas atlas, Grouping grouping, HashSet<string> forwarders, Dictionary<string, int> targetsOf, List<(string From, string To, bool Call, bool Back, IEnumerable<string> Verbs)> links)
     {
         var roles = new Dictionary<string, (string, string?, int)>(StringComparer.Ordinal);
         // Who reads a part, directly or through pass-throughs in front of it.
@@ -222,7 +223,8 @@ public static class SitePrepare
             var found = new HashSet<string>(StringComparer.Ordinal);
             if (!seen.Add(id)) return found;
             foreach (var l in links.Where(l => l.From == id && !l.Call))
-                if (l.Back) found.UnionWith(Readers(l.To, seen));
+                // Through a pass-through only when it forwards to nothing else: otherwise its readers may want its other targets.
+                if (l.Back) { if (targetsOf.GetValueOrDefault(l.To) == 1) found.UnionWith(Readers(l.To, seen)); }
                 else if (l.Verbs.Any(v => v is "reads" or "receives from")) found.Add(l.To);
             return found;
         }

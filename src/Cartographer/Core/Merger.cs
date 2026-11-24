@@ -163,8 +163,9 @@ public static class Resolver
     const string BrokenPrefix = "What replaces the link ";
     const string DriftPrefix = "Which source is right: ";
 
-    /// <summary>A read or write over anything but SQL is to a component, not a table.</summary>
-    static bool NotSql(string? how) => how is not null && !how.Equals("sql", StringComparison.OrdinalIgnoreCase);
+    /// <summary>A read or write over a known transport other than SQL is to a component, not a table. Other words, from
+    /// atlases written before the list, are treated as before.</summary>
+    static bool NotSql(string? how) => how is not null && LinkTypes.Transports.Contains(how, StringComparer.OrdinalIgnoreCase) && !how.Equals("sql", StringComparison.OrdinalIgnoreCase);
 
     public static void Run(Atlas atlas)
     {
@@ -236,7 +237,7 @@ public static class Resolver
                 else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes")
                 {
                     // With no transport given, a component that provides the name is preferred over a table that shares it.
-                    var match = l.How is null && l.Type is "reads" or "writes" && Providers(e, l) is [var provider] ? provider : MatchObject(atlas, databases, l);
+                    var match = l.How is null && l.Type is "reads" or "writes" && e.Kind == Kinds.Component && Providers(e, l) is [var provider] ? provider : MatchObject(atlas, databases, l);
                     if (match is not null && !e.Links!.Any(o => o != l && o.Type == l.Type && o.To == match && o.Via == l.Via)) { l.To = match; l.Database = null; }
                     else if (match is not null) e.Links!.Remove(l);
                 }
