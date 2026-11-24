@@ -35,8 +35,8 @@ function activate(g, label, go) {
   g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
 }
 
-/** Everything reachable from a part along data links, one way, and the links walked. */
-export function reach(links, id, dir) {
+/** What a part's data reaches (or what feeds it), up to a number of steps away, and the links walked. */
+export function reach(links, id, dir, steps = Infinity) {
   const next = new Map();
   for (const l of links) {
     if (l.call) continue;
@@ -44,13 +44,17 @@ export function reach(links, id, dir) {
     if (!next.has(a)) next.set(a, []);
     next.get(a).push(l);
   }
-  const parts = new Set([id]), used = new Set(), queue = [id];
-  while (queue.length) {
-    for (const l of next.get(queue.shift()) ?? []) {
-      used.add(l);
-      const b = dir > 0 ? l.to : l.from;
-      if (!parts.has(b)) { parts.add(b); queue.push(b); }
-    }
+  const parts = new Set([id]), used = new Set();
+  let frontier = [id];
+  for (let step = 0; step < steps && frontier.length; step++) {
+    const found = [];
+    for (const v of frontier)
+      for (const l of next.get(v) ?? []) {
+        used.add(l);
+        const b = dir > 0 ? l.to : l.from;
+        if (!parts.has(b)) { parts.add(b); found.push(b); }
+      }
+    frontier = found;
   }
   parts.delete(id);
   return { parts, links: used };
@@ -60,7 +64,9 @@ export function createMap(svg, data, { onSelect }) {
   const lanes = data.lanes, laneOf = new Map(data.parts.map((p) => [p.id, p.lane])), part = new Map(data.parts.map((p) => [p.id, p]));
   // Small atlases open every lane; large ones open only small lanes, and the rest open on demand.
   const open = new Set(data.parts.length <= 80 ? lanes.map((l) => l.key) : lanes.filter((l) => l.count <= 6).map((l) => l.key));
-  let picked = null, boxes = [], drawn = [], view;
+  // Following data all the way can cover most of an estate (a shared database feeds everything that reads it), so a
+  // trace stops after a few steps unless the reader asks for more.
+  let picked = null, boxes = [], drawn = [], view, steps = 2;
 
   svg.replaceChildren();
   el('defs', {}, svg).innerHTML = ['line', 'accent', 'up'].map((c) => `<marker id="a-${c}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--${c})"/></marker>`).join('');
@@ -123,7 +129,7 @@ export function createMap(svg, data, { onSelect }) {
     const edgeLayer = el('g', {}, layer);
     drawn = view.edges.map((e) => {
       const a = view.nodes.get(e.from), b = view.nodes.get(e.to);
-      const p = el('path', { class: `edge${e.call ? ' call' : ''}${e.links.every((l) => l.basis === 'inferred') ? ' inferred' : ''}`, d: route(a, b), 'stroke-width': 1.2 + Math.min(e.count, 10) * 0.25, 'marker-end': e.call ? null : 'url(#a-line)' }, edgeLayer);
+      const p = el('path', { class: `edge${e.call ? ' call' : ''}${a.lane !== b.lane ? ' cross' : ''}${e.links.every((l) => l.basis === 'inferred') ? ' inferred' : ''}`, d: route(a, b), 'stroke-width': 1.2 + Math.min(e.count, 10) * 0.25, 'marker-end': e.call ? null : 'url(#a-line)' }, edgeLayer);
       return { e, p };
     });
     boxes = [...view.nodes.values()].map((n) => {
@@ -158,7 +164,7 @@ export function createMap(svg, data, { onSelect }) {
   }
 
   function mark(notify = false) {
-    const down = picked ? reach(data.links, picked, 1) : null, up = picked ? reach(data.links, picked, -1) : null;
+    const down = picked ? reach(data.links, picked, 1, steps) : null, up = picked ? reach(data.links, picked, -1, steps) : null;
     const near = new Set(picked ? data.links.filter((l) => l.call && (l.from === picked || l.to === picked)).flatMap((l) => [l.from, l.to]) : []);
     for (const { n, g } of boxes) {
       const ids = n.parts.map((p) => p.id);
@@ -173,6 +179,7 @@ export function createMap(svg, data, { onSelect }) {
       const isCall = !!picked && e.call && e.links.some((l) => l.from === picked || l.to === picked);
       p.classList.toggle('down', isDown);
       p.classList.toggle('up', isUp && !isDown);
+      p.classList.toggle('near', isCall);
       p.classList.toggle('dim', !!picked && !isDown && !isUp && !isCall);
       if (!e.call) p.setAttribute('marker-end', isDown ? 'url(#a-accent)' : isUp ? 'url(#a-up)' : 'url(#a-line)');
     }
@@ -188,7 +195,7 @@ export function createMap(svg, data, { onSelect }) {
 
   function pick(id) {
     picked = picked === id || !part.has(id) ? null : id;
-    history.replaceState(null, '', location.pathname + location.search + (picked ? `#p=${encodeURIComponent(picked)}` : ''));
+    history.replaceState(null, '', location.pathname + location.search + (picked ? `#p=${encodeURIComponent(picked)}${steps === 2 ? '' : `&d=${steps === Infinity ? 'all' : steps}`}` : ''));
     mark(true);
   }
 
@@ -208,7 +215,9 @@ export function createMap(svg, data, { onSelect }) {
 
   return {
     lane(key) { if (lanes.some((l) => l.key === key)) show(key); },
-    focus(id) { if (!part.has(id)) return; show(laneOf.get(id), id); if (picked !== id) pick(id); },
+    focus(id, depth) { if (!part.has(id)) return; if (depth) steps = depth; show(laneOf.get(id), id); if (picked !== id) pick(id); else mark(true); },
     clear() { if (picked) pick(picked); },
+    steps(n) { steps = n; history.replaceState(null, '', location.pathname + location.search + (picked ? `#p=${encodeURIComponent(picked)}${n === 2 ? '' : `&d=${n === Infinity ? 'all' : n}`}` : '')); mark(true); },
+    get depth() { return steps; },
   };
 }

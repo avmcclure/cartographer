@@ -22,3 +22,10 @@ jobs:
         run: |
           dotnet run --project src/Cartographer.Cli -c Release -- site prepare --atlas fixtures/sample-atlas --out site/data
           cd site && npm ci && npm run build
+      - name: Build the site from a generated Fortune 500-sized atlas
+        run: |
+          python3 tools/make-enterprise-atlas.py "$RUNNER_TEMP/kestrel"
+          dotnet run --project src/Cartographer.Cli -c Release -- check --atlas "$RUNNER_TEMP/kestrel"
+          rm -rf site/data
+          dotnet run --project src/Cartographer.Cli -c Release -- site prepare --atlas "$RUNNER_TEMP/kestrel" --out site/data
+          cd site && npm run build
