@@ -1,9 +1,9 @@
 ---
 // Every entry, A to Z, with the cluster its part is in.
 import Base from '../layouts/Base.astro';
-import { everything, map, entryHref, clusterHref, kindLabel, date } from '../lib/data.js';
+import { everything, map, colourOf, entryHref, clusterHref, kindLabel, date } from '../lib/data.js';
 const rows = [...everything].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }) || a.id.localeCompare(b.id));
-const clusters = new Map(map.clusters.map((c, i) => [c.key, { ...c, color: i }]));
+const clusters = new Map(map.clusters.map((c) => [c.key, { ...c, color: colourOf(c.key) }]));
 ---
 <Base title="Everything" wide>
   <div class="table-page">

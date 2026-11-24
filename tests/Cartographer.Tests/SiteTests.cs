@@ -83,15 +83,20 @@ public class SiteTests
         SitePrepare.Run(atlas, dir);
         var map = Json(dir, "clusters.json");
         var members = map.GetProperty("clusters").EnumerateArray().SelectMany(c => c.GetProperty("members").EnumerateArray().Select(m => (Part: m.GetProperty("id").GetString()!, Key: c.GetProperty("key").GetString()!))).ToList();
-        var (parts, links) = Clusters.Graph(atlas);
+        var (parts, graph) = Clusters.Graph(atlas);
         Assert.Equal(parts.Order(StringComparer.Ordinal), members.Select(m => m.Part).Order(StringComparer.Ordinal));
 
         // A table's link counts towards its database, and the entry says which part and cluster it belongs to.
-        Assert.Equal(links.Count, map.GetProperty("parts").EnumerateArray().Sum(l => l.GetProperty("count").GetInt32()));
+        Assert.Equal(graph.Count, map.GetProperty("parts").EnumerateArray().Sum(l => l.GetProperty("count").GetInt32()));
         var table = Json(dir, "entries/databases/sales/tables/dbo/orders.json");
         Assert.Equal("databases/sales/database", table.GetProperty("part").GetProperty("id").GetString());
         Assert.Equal(members.Single(m => m.Part == "databases/sales/database").Key, table.GetProperty("cluster").GetString());
-        var reads = map.GetProperty("parts").EnumerateArray().Single(l => l.GetProperty("from").GetString() == "repositories/sales-storefront/components/webshop" && l.GetProperty("to").GetString() == "databases/sales/database");
+        // Data read from the database flows out of it to the reader; calls keep their own direction and are marked.
+        bool Call(JsonElement l) => l.TryGetProperty("call", out var c) && c.GetBoolean();
+        var links = map.GetProperty("parts").EnumerateArray().ToList();
+        var reads = links.Single(l => l.GetProperty("from").GetString() == "databases/sales/database" && l.GetProperty("to").GetString() == "repositories/sales-storefront/components/webshop" && !Call(l));
+        Assert.Contains(links, l => l.GetProperty("from").GetString() == "repositories/sales-storefront/components/webshop" && l.GetProperty("to").GetString() == "databases/sales/database" && !Call(l));   // it writes too
+        Assert.DoesNotContain(links, l => l.GetProperty("from").GetString() == "repositories/sales-storefront/components/webshop" && l.EnumerateObject().Any(p => p.Name == "verbs" && p.Value.EnumerateArray().Any(v => v.GetProperty("verb").GetString() == "depends on")));
         var verbs = reads.GetProperty("verbs").EnumerateArray().Select(v => (Verb: v.GetProperty("verb").GetString(), Count: v.GetProperty("count").GetInt32())).ToList();
         Assert.Contains(verbs, v => v.Verb == "reads" && v.Count > 0);
         Assert.Equal(verbs.OrderByDescending(v => v.Count).Select(v => v.Count), verbs.Select(v => v.Count));   // most common first

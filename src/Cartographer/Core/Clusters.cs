@@ -23,6 +23,8 @@ public static class Clusters
     /// <summary>How many percentage points more of the links a fresh grouping must keep inside clusters before a regroup is suggested.</summary>
     public const int ThresholdPoints = 3;
     public const string FileName = "clusters.yaml";
+    /// <summary>The name of the group of parts that have no links yet.</summary>
+    public const string Unlinked = "Not linked yet";
 
     sealed class File_ { public List<Pin> Clusters { get; set; } = []; }
     sealed class Pin { public string Name { get; set; } = ""; public List<string> Members { get; set; } = []; }
@@ -40,14 +42,17 @@ public static class Clusters
         };
     }
 
-    /// <summary>Every part, in ID order, and every link between two different parts.</summary>
+    /// <summary>
+    /// Every part, in ID order, and every link between two different parts. Code dependencies (depends-on) are left
+    /// out: a shared library would pull together parts that never exchange anything.
+    /// </summary>
     public static (List<string> Parts, List<(string A, string B)> Links) Graph(Atlas atlas)
     {
         var parts = atlas.Entries.Keys.Where(id => PartOf(atlas, id) == id).Order(StringComparer.Ordinal).ToList();
         var links = new List<(string, string)>();
         foreach (var e in atlas.Entries.Values.OrderBy(e => e.Id, StringComparer.Ordinal))
             foreach (var l in e.Links ?? [])
-                if (l.To is not null && PartOf(atlas, e.Id) is { } a && PartOf(atlas, l.To) is { } b && a != b) links.Add((a, b));
+                if (l.To is not null && l.Type != "depends-on" && PartOf(atlas, e.Id) is { } a && PartOf(atlas, l.To) is { } b && a != b) links.Add((a, b));
         return (parts, links);
     }
 
@@ -77,12 +82,13 @@ public static class Clusters
             }
             result.Add(new Cluster(name, true, [.. members.Distinct()!]));
         }
-        return result;
+        // The unlinked group is rebuilt on every run; a pin of it (from an older file) is ignored.
+        return [.. result.Where(c => !c.Name.Equals(Unlinked, StringComparison.OrdinalIgnoreCase))];
     }
 
     public static void WritePinned(Atlas atlas, IEnumerable<Cluster> clusters)
     {
-        var pinned = clusters.Where(c => c.Pinned).Select(c => new Pin { Name = c.Name, Members = [.. c.Members.Order(StringComparer.Ordinal)] }).ToList();
+        var pinned = clusters.Where(c => c.Pinned && !c.Name.Equals(Unlinked, StringComparison.OrdinalIgnoreCase)).Select(c => new Pin { Name = c.Name, Members = [.. c.Members.Order(StringComparer.Ordinal)] }).ToList();
         var path = Path.Combine(atlas.Root, FileName);
         if (pinned.Count == 0) { File.Delete(path); return; }
         File.WriteAllText(path, "# Pinned clusters. Written by `cartographer clusters`; parts in none of these are grouped afresh on every run.\n" +
@@ -101,7 +107,8 @@ public static class Clusters
         var placed = pinned.SelectMany(c => c.Members).ToHashSet(StringComparer.Ordinal);
         var rest = parts.Where(p => !placed.Contains(p)).ToList();
         var restLinks = links.Where(l => !placed.Contains(l.A) && !placed.Contains(l.B)).ToList();
-        var clusters = Named(atlas, [.. pinned, .. Fresh(rest, restLinks).Select(m => new Cluster("", false, m))], pins, known, links);
+        var alone = parts.Except(links.SelectMany(l => new[] { l.A, l.B })).ToHashSet(StringComparer.Ordinal);
+        var clusters = Named(atlas, [.. pinned, .. Fresh(rest, restLinks, alone).Select(m => new Cluster("", false, m))], pins, known, links);
 
         Regroup? suggestion = null;
         if (pinned.Count > 0)
@@ -155,7 +162,8 @@ public static class Clusters
         var (a, b) = (Of(from), Of(to));
         // Unpinned clusters are regrouped on every run anyway, so only moves into or out of a pinned cluster count.
         return [.. a.Keys.Order(StringComparer.Ordinal)
-            .Where(p => b.ContainsKey(p) && from[a[p]].Name != to[b[p]].Name && (from[a[p]].Pinned || to[b[p]].Pinned))
+            // A part whose links have all gone has not moved towards anything; it is not a reason to regroup.
+            .Where(p => b.ContainsKey(p) && from[a[p]].Name != to[b[p]].Name && (from[a[p]].Pinned || to[b[p]].Pinned) && to[b[p]].Name != Unlinked)
             .Select(p => (p, from[a[p]].Name, to[b[p]].Name))];
     }
 
@@ -178,6 +186,9 @@ public static class Clusters
                         where 2 * n > present[hit.Key]
                         select (i, Name: hit.Key, n)).OrderByDescending(x => x.n).ThenBy(x => x.Name, StringComparer.Ordinal).ToList();
         var result = clusters.ToList();
+        // The group of parts with no links is always named for that, first, and is never pinned or matched to a pin.
+        for (var i = 0; i < result.Count; i++)
+            if (result[i].Name == "" && result[i].Members.All(m => degree.GetValueOrDefault(m) == 0) && taken.Add(Unlinked)) result[i] = result[i] with { Name = Unlinked };
         foreach (var (i, name, _) in overlaps)
             if (result[i].Name == "" && !taken.Contains(name)) { taken.Add(name); result[i] = result[i] with { Name = name, Pinned = true }; }
         taken.UnionWith(reserved);
@@ -194,12 +205,16 @@ public static class Clusters
     }
 
     /// <summary>Parts grouped afresh; each list in ID order, the lists in order of their first part.</summary>
-    public static List<List<string>> Fresh(IReadOnlyList<string> parts, IReadOnlyList<(string A, string B)> links)
+    /// <param name="unlinked">Parts with no links at all in the whole graph; they form one group. Defaults to those with none in <paramref name="links"/>.</param>
+    public static List<List<string>> Fresh(IReadOnlyList<string> parts, IReadOnlyList<(string A, string B)> links, ISet<string>? unlinked = null)
     {
         var index = parts.Select((p, i) => (p, i)).ToDictionary(x => x.p, x => x.i, StringComparer.Ordinal);
         var edges = links.Where(l => index.ContainsKey(l.A) && index.ContainsKey(l.B)).Select(l => (index[l.A], index[l.B])).ToList();
         var community = Louvain(parts.Count, edges);
-        return [.. parts.Select((p, i) => (p, c: community[i])).GroupBy(x => x.c).Select(g => g.Select(x => x.p).ToList()).OrderBy(g => g[0], StringComparer.Ordinal)];
+        // Parts with no links at all form one group, not one group each.
+        var linked = edges.SelectMany(e => new[] { e.Item1, e.Item2 }).ToHashSet();
+        bool Alone(string p, int i) => unlinked?.Contains(p) ?? !linked.Contains(i);
+        return [.. parts.Select((p, i) => (p, c: Alone(p, i) ? -1 : community[i])).GroupBy(x => x.c).Select(g => g.Select(x => x.p).ToList()).OrderBy(g => g[0], StringComparer.Ordinal)];
     }
 
     /// <summary>

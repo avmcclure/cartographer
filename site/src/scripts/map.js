@@ -1,144 +1,214 @@
-// Draws the map of clusters and the inside of one cluster. Layout is a force simulation run to rest before
-// anything is shown, from data in the order prepare wrote it, so the same atlas draws the same picture.
-import { forceSimulation, forceLink, forceManyBody, forceCollide, forceX, forceY, forceRadial } from 'd3-force';
+// The map: one lane per cluster, data flowing left to right. A lane is either open, with a box per part, or
+// closed, with one box per column standing for the parts in it. Selecting a part follows its data upstream and
+// downstream across every lane.
 import { select } from 'd3-selection';
-import { zoom, zoomIdentity } from 'd3-zoom';
+import { zoom, zoomIdentity, zoomTransform } from 'd3-zoom';
 
 const SVG = 'http://www.w3.org/2000/svg';
-const color = (i) => `var(--c${i % 8})`;
+const COL = 210, W = 176, H = 40, GAP = 14, HEAD = 36, LANE_GAP = 12;
 const width = (s, px) => s.length * px * 0.56;
 
 function el(name, attrs = {}, parent) {
   const e = document.createElementNS(SVG, name);
-  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  for (const [k, v] of Object.entries(attrs)) if (v !== undefined && v !== null) e.setAttribute(k, v);
   parent?.append(e);
   return e;
 }
 
-function clipped(parent, attrs, text, max, px) {
+function text(parent, attrs, value, max, px) {
   const t = el('text', attrs, parent);
-  let s = text;
+  let s = value;
   if (width(s, px) > max) {
     while (s.length > 3 && width(s + '…', px) > max) s = s.slice(0, -1);
     s += '…';
-    el('title', {}, t).textContent = text;
+    el('title', {}, t).textContent = value;
   }
   t.append(s);
   return t;
 }
 
-function stage(svg, minScale = 0.8) {
-  svg.replaceChildren();
-  el('defs', {}, svg).innerHTML =
-    '<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0 0 L10 5 L0 10 z"/></marker>' +
-    '<marker id="arr-on" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow-on" d="M0 0 L10 5 L0 10 z"/></marker>';
-  const layer = el('g', {}, svg);
-  const z = zoom().scaleExtent([0.25, 3]).on('zoom', (e) => layer.setAttribute('transform', e.transform));
-  select(svg).call(z).on('dblclick.zoom', null);
-  const fit = (box) => {
-    const w = svg.clientWidth, h = svg.clientHeight, pad = 40;
-    // Never shrink text below about 10px: a big drawing is panned, not squeezed.
-    const k = Math.max(minScale, Math.min(1.3, (w - 2 * pad) / Math.max(box.w, 1), (h - 2 * pad - 40) / Math.max(box.h, 1)));
-    select(svg).call(z.transform, zoomIdentity.translate(w / 2 - k * (box.x + box.w / 2), h / 2 + 10 - k * (box.y + box.h / 2)).scale(k));
-  };
-  return { layer, fit };
-}
-
-function bounds(items) {
-  if (items.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
-  const xs = items.flatMap((d) => [d.x - d.w / 2, d.x + d.w / 2]), ys = items.flatMap((d) => [d.y - d.h / 2, d.y + d.h / 2]);
-  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
-}
-
 function activate(g, label, go) {
   g.setAttribute('tabindex', '0');
-  g.setAttribute('role', 'link');
+  g.setAttribute('role', 'button');
   g.setAttribute('aria-label', label);
   g.addEventListener('click', go);
   g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
 }
 
-/** Clusters as cards, joined by one line per pair with its link count. */
-export function drawMap(svg, data) {
-  const { layer, fit } = stage(svg, 0.6);
-  const line = 18, W = 230, shown = 6;
-  const cards = data.clusters.map((c) => ({ c, w: W, h: 62 + Math.min(c.members.length, shown) * line + (c.members.length > shown ? line : 0) }));
-  const at = new Map(cards.map((d) => [d.c.key, d]));
-  const sim = forceSimulation(cards)
-    .force('link', forceLink(data.between.map((e) => ({ source: at.get(e.a), target: at.get(e.b), count: e.count }))).distance(300).strength((e) => Math.min(1, 0.15 + e.count * 0.05)))
-    .force('charge', forceManyBody().strength(-900))
-    .force('collide', forceCollide((d) => Math.hypot(d.w, d.h) / 2 + 24))
-    .force('x', forceX(0).strength(0.04)).force('y', forceY(0).strength(0.07)).stop();
-  for (let i = 0; i < 400; i++) sim.tick();
-
-  const most = Math.max(1, ...data.between.map((e) => e.count));
-  const edges = el('g', {}, layer);
-  for (const e of data.between) {
-    const [a, b] = [at.get(e.a), at.get(e.b)];
-    el('line', { class: 'edge', x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'stroke-width': 1 + (e.count / most) * 9 }, edges);
-    const t = el('g', { class: 'count', transform: `translate(${(a.x + b.x) / 2},${(a.y + b.y) / 2})` }, edges);
-    const text = `${e.count} link${e.count === 1 ? '' : 's'}`;
-    el('rect', { x: -width(text, 11) / 2 - 7, y: -10, width: width(text, 11) + 14, height: 20, rx: 10 }, t);
-    el('text', { 'text-anchor': 'middle', y: 4 }, t).textContent = text;
+/** Everything reachable from a part along data links, one way, and the links walked. */
+export function reach(links, id, dir) {
+  const next = new Map();
+  for (const l of links) {
+    if (l.call) continue;
+    const a = dir > 0 ? l.from : l.to;
+    if (!next.has(a)) next.set(a, []);
+    next.get(a).push(l);
   }
-  for (const d of cards) {
-    const c = d.c;
-    const g = el('g', { class: 'card', transform: `translate(${d.x - d.w / 2},${d.y - d.h / 2})` }, layer);
-    activate(g, `${c.name}, ${c.members.length} parts. Open`, () => (location.href = c.href));
-    el('rect', { class: 'body', width: d.w, height: d.h, rx: 8 }, g);
-    el('rect', { width: d.w, height: 5, rx: 2, fill: color(c.color) }, g);
-    clipped(g, { class: 'title', x: 14, y: 28 }, c.name, d.w - 28, 14);
-    el('text', { class: 'meta', x: 14, y: 46 }, g).textContent = `${c.members.length} part${c.members.length === 1 ? '' : 's'} · ${c.inside} links inside${c.pinned ? ' · pinned' : ''}`;
-    c.members.slice(0, shown).forEach((m, i) => {
-      el('circle', { cx: 18, cy: 64 + i * line, r: 3.5, fill: color(c.color) }, g);
-      clipped(g, { class: 'member', x: 28, y: 68 + i * line }, m.name, d.w - 44, 12);
-    });
-    if (c.members.length > shown) el('text', { class: 'meta', x: 28, y: 68 + shown * line }, g).textContent = `and ${c.members.length - shown} more`;
+  const parts = new Set([id]), used = new Set(), queue = [id];
+  while (queue.length) {
+    for (const l of next.get(queue.shift()) ?? []) {
+      used.add(l);
+      const b = dir > 0 ? l.to : l.from;
+      if (!parts.has(b)) { parts.add(b); queue.push(b); }
+    }
   }
-  fit(bounds(cards));
+  parts.delete(id);
+  return { parts, links: used };
 }
 
-/**
- * One cluster's parts, and the parts in other clusters they link to, set round the outside.
- * Returns a function that picks out one part and what it links to (or clears with null).
- */
-export function drawCluster(svg, data, onSelect) {
-  const { layer, fit } = stage(svg);
-  const nodes = data.nodes.map((n) => ({ ...n, w: Math.min(250, Math.max(width(n.name, 12), width(n.sub, 10)) + 24), h: 40 }));
-  const at = new Map(nodes.map((n) => [n.id, n]));
-  const sim = forceSimulation(nodes)
-    .force('link', forceLink(data.links.map((l) => ({ source: at.get(l.from), target: at.get(l.to) }))).distance(160).strength(0.5))
-    .force('charge', forceManyBody().strength(-500))
-    .force('collide', forceCollide((d) => d.w / 2 + 14).strength(1))
-    .force('r', forceRadial((d) => (d.away ? 280 : 0), 0, 0).strength((d) => (d.away ? 0.35 : 0.02)))
-    .force('y', forceY(0).strength(0.05)).stop();
-  for (let i = 0; i < 500; i++) sim.tick();
+export function createMap(svg, data, { onSelect }) {
+  const lanes = data.lanes, laneOf = new Map(data.parts.map((p) => [p.id, p.lane])), part = new Map(data.parts.map((p) => [p.id, p]));
+  // Small atlases open every lane; large ones open only small lanes, and the rest open on demand.
+  const open = new Set(data.parts.length <= 80 ? lanes.map((l) => l.key) : lanes.filter((l) => l.count <= 6).map((l) => l.key));
+  let picked = null, boxes = [], drawn = [], view;
 
-  // From the edge of one box to the edge of the other, bowed a little so two-way links stay apart.
-  const curve = (a, b) => {
-    const edge = (n, tx, ty) => { const dx = tx - n.x, dy = ty - n.y, s = Math.min(n.w / 2 / Math.abs(dx || 1e-6), n.h / 2 / Math.abs(dy || 1e-6)); return [n.x + dx * s, n.y + dy * s]; };
-    const [x1, y1] = edge(a, b.x, b.y), [x2, y2] = edge(b, a.x, a.y);
-    return `M${x1},${y1} Q${(x1 + x2) / 2 - (y2 - y1) * 0.12},${(y1 + y2) / 2 + (x2 - x1) * 0.12} ${x2},${y2}`;
-  };
-  const edges = el('g', {}, layer);
-  const paths = data.links.map((l) => ({ l, p: el('path', { class: `edge${l.basis === 'inferred' ? ' inferred' : ''}`, d: curve(at.get(l.from), at.get(l.to)), 'stroke-width': 1.2 + Math.min(l.count, 8) * 0.35, 'marker-end': 'url(#arr)' }, edges) }));
-  const boxes = nodes.map((n) => {
-    const g = el('g', { class: `node${n.away ? ' away' : ''}`, transform: `translate(${n.x - n.w / 2},${n.y - n.h / 2})` }, layer);
-    activate(g, `${n.name}, ${n.sub}`, () => onSelect(n.id));
-    el('rect', { width: n.w, height: n.h, rx: 6, stroke: color(n.color) }, g);
-    clipped(g, { x: 12, y: 17 }, n.name, n.w - 20, 12);
-    clipped(g, { class: 'kind', x: 12, y: 31 }, n.sub, n.w - 20, 10);
-    return { n, g };
-  });
+  svg.replaceChildren();
+  el('defs', {}, svg).innerHTML = ['line', 'accent', 'up'].map((c) => `<marker id="a-${c}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--${c})"/></marker>`).join('');
+  const layer = el('g', {}, svg);
+  const z = zoom().scaleExtent([0.2, 2.5]).on('zoom', (e) => layer.setAttribute('transform', e.transform));
+  select(svg).call(z).on('dblclick.zoom', null);
 
-  fit(bounds(nodes));
-  return (id) => {
-    const near = new Set(id ? data.links.filter((l) => l.from === id || l.to === id).flatMap((l) => [l.from, l.to]) : []);
-    for (const { n, g } of boxes) { g.classList.toggle('sel', n.id === id); g.classList.toggle('dim', !!id && !near.has(n.id)); }
-    for (const { l, p } of paths) {
-      const on = !!id && (l.from === id || l.to === id);
-      p.classList.toggle('on', on); p.classList.toggle('dim', !!id && !on);
-      p.setAttribute('marker-end', on ? 'url(#arr-on)' : 'url(#arr)');
+  // What is drawn for a part right now: its own box, or its column's box in a closed lane.
+  const nodeOf = (id) => (open.has(laneOf.get(id)) ? id : `${laneOf.get(id)}@${part.get(id).col}`);
+
+  function layout() {
+    const nodes = new Map(), at = new Map();
+    let y = 0, right = W;
+    for (const lane of lanes) {
+      const members = data.parts.filter((p) => p.lane === lane.key);
+      const stacks = new Map();
+      for (const p of members) {
+        const key = nodeOf(p.id);
+        if (!nodes.has(key)) {
+          const k = stacks.get(p.col) ?? 0;
+          stacks.set(p.col, k + 1);
+          nodes.set(key, { id: key, lane, parts: [], x: p.col * COL, y: y + HEAD + k * (H + GAP) });
+        }
+        nodes.get(key).parts.push(p);
+        right = Math.max(right, p.col * COL + W);
+      }
+      const rows = Math.max(1, ...stacks.values());
+      at.set(lane.key, { y, h: HEAD + rows * (H + GAP) + 6 });
+      y += at.get(lane.key).h + LANE_GAP;
     }
+    // Links between what is drawn, added up where a closed lane stands several parts in one box.
+    const edges = new Map();
+    for (const l of data.links) {
+      const [a, b] = [nodeOf(l.from), nodeOf(l.to)];
+      if (a === b) continue;
+      const key = `${a}>${b}>${l.call ? 1 : 0}`;
+      if (!edges.has(key)) edges.set(key, { from: a, to: b, call: !!l.call, count: 0, links: [] });
+      edges.get(key).count += l.count;
+      edges.get(key).links.push(l);
+    }
+    return { nodes, edges: [...edges.values()], at, width: right, height: y };
+  }
+
+  function draw() {
+    view = layout();
+    layer.replaceChildren();
+    for (const lane of lanes) {
+      const a = view.at.get(lane.key), g = el('g', { class: 'lane' }, layer);
+      el('rect', { x: -16, y: a.y, width: view.width + 32, height: a.h, rx: 10 }, g);
+      el('rect', { x: -16, y: a.y, width: 5, height: a.h, rx: 2, fill: `var(--c${lane.color % 8})` }, g);
+      const head = el('g', { class: 'lane-head', 'data-lane': lane.key }, g);
+      activate(head, `${lane.name}, ${lane.count} parts. ${open.has(lane.key) ? 'Close' : 'Open'} this lane`, () => toggle(lane.key));
+      const label = `${open.has(lane.key) ? '▾' : '▸'} ${lane.name}`;
+      const sub = `${lane.count} part${lane.count === 1 ? '' : 's'}${lane.pinned ? ' · pinned' : ''}`;
+      el('rect', { class: 'hit', x: -6, y: a.y + 5, width: width(label, 13) + width(sub, 12) + 30, height: 26, rx: 6 }, head);
+      const t = el('text', { x: 0, y: a.y + 23 }, head);
+      t.append(label);
+      el('tspan', { class: 'sub', dx: 8 }, t).textContent = sub;
+    }
+    const edgeLayer = el('g', {}, layer);
+    drawn = view.edges.map((e) => {
+      const a = view.nodes.get(e.from), b = view.nodes.get(e.to);
+      const p = el('path', { class: `edge${e.call ? ' call' : ''}${e.links.every((l) => l.basis === 'inferred') ? ' inferred' : ''}`, d: route(a, b), 'stroke-width': 1.2 + Math.min(e.count, 10) * 0.25, 'marker-end': e.call ? null : 'url(#a-line)' }, edgeLayer);
+      return { e, p };
+    });
+    boxes = [...view.nodes.values()].map((n) => {
+      const g = el('g', { class: `node${n.parts.length > 1 ? ' group' : ''}`, transform: `translate(${n.x},${n.y})` }, layer);
+      el('rect', { width: W, height: H, rx: 6, stroke: `var(--c${n.lane.color % 8})` }, g);
+      if (n.parts.length === 1) {
+        const p = n.parts[0];
+        activate(g, `${p.name}, ${p.kind}`, () => pick(p.id));
+        text(g, { x: 10, y: 17 }, p.name, W - 18, 12);
+        text(g, { class: 'kind', x: 10, y: 31 }, p.type && p.type !== p.kind ? `${p.kind} · ${p.type}` : p.kind, W - 18, 10);
+      } else {
+        activate(g, `${n.parts.length} parts in ${n.lane.name}. Open the lane`, () => toggle(n.lane.key));
+        text(g, { x: 10, y: 17 }, `${n.parts.length} parts`, W - 18, 12);
+        text(g, { class: 'kind', x: 10, y: 31 }, n.parts.map((p) => p.name).join(', '), W - 18, 10);
+      }
+      return { n, g };
+    });
+    mark();
+  }
+
+  // Forward links leave the right side and enter the left. Others run between facing edges: bottom to top when the
+  // target is lower, top to bottom when it is higher, and under both boxes when they share a row.
+  function route(a, b) {
+    if (b.x > a.x) {
+      const [x1, y1, x2, y2] = [a.x + W, a.y + H / 2, b.x, b.y + H / 2], dx = Math.max(40, (x2 - x1) / 2);
+      return `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
+    }
+    const [x1, x2] = [a.x + W / 2, b.x + W / 2];
+    if (b.y > a.y) return `M${x1},${a.y + H} C${x1},${a.y + H + 60} ${x2},${b.y - 60} ${x2},${b.y}`;
+    if (b.y < a.y) return `M${x1},${a.y} C${x1},${a.y - 60} ${x2},${b.y + H + 60} ${x2},${b.y + H}`;
+    return `M${x1},${a.y + H} C${x1},${a.y + H + 34} ${x2},${b.y + H + 34} ${x2},${b.y + H}`;
+  }
+
+  function mark(notify = false) {
+    const down = picked ? reach(data.links, picked, 1) : null, up = picked ? reach(data.links, picked, -1) : null;
+    const near = new Set(picked ? data.links.filter((l) => l.call && (l.from === picked || l.to === picked)).flatMap((l) => [l.from, l.to]) : []);
+    for (const { n, g } of boxes) {
+      const ids = n.parts.map((p) => p.id);
+      const isDown = !!down && ids.some((i) => down.parts.has(i)), isUp = !!up && ids.some((i) => up.parts.has(i));
+      g.classList.toggle('sel', ids.includes(picked));
+      g.classList.toggle('down', isDown);
+      g.classList.toggle('up', isUp && !isDown);
+      g.classList.toggle('dim', !!picked && !ids.includes(picked) && !isDown && !isUp && !ids.some((i) => near.has(i)));
+    }
+    for (const { e, p } of drawn) {
+      const isDown = !!down && e.links.some((l) => down.links.has(l)), isUp = !!up && e.links.some((l) => up.links.has(l));
+      const isCall = !!picked && e.call && e.links.some((l) => l.from === picked || l.to === picked);
+      p.classList.toggle('down', isDown);
+      p.classList.toggle('up', isUp && !isDown);
+      p.classList.toggle('dim', !!picked && !isDown && !isUp && !isCall);
+      if (!e.call) p.setAttribute('marker-end', isDown ? 'url(#a-accent)' : isUp ? 'url(#a-up)' : 'url(#a-line)');
+    }
+    if (notify) onSelect(picked, down, up);
+  }
+
+  function toggle(key) {
+    open.has(key) ? open.delete(key) : open.add(key);
+    draw();
+    // Redrawing replaces the focused element; give focus back to the lane's name.
+    [...layer.querySelectorAll('.lane-head')].find((h) => h.dataset.lane === key)?.focus({ preventScroll: true });
+  }
+
+  function pick(id) {
+    picked = picked === id || !part.has(id) ? null : id;
+    history.replaceState(null, '', location.pathname + location.search + (picked ? `#p=${encodeURIComponent(picked)}` : ''));
+    mark(true);
+  }
+
+  // Bring a lane, or a part, into view at the current zoom, opening its lane first if it is closed.
+  function show(lane, id) {
+    if (!open.has(lane)) { open.add(lane); draw(); }
+    const k = zoomTransform(svg).k;
+    const box = id ? view.nodes.get(id) : null;
+    const [x, y] = box ? [box.x - svg.clientWidth / (3 * k), box.y - svg.clientHeight / (3 * k)] : [-30 / k, view.at.get(lane).y - 20 / k];
+    select(svg).call(z.transform, zoomIdentity.translate(-x * k, -y * k).scale(k));
+  }
+
+  draw();
+  // Readable first: fit the height if it can be done at 80% or more, then pan along the flow for the rest.
+  const k = Math.max(0.8, Math.min(1, (svg.clientHeight - 60) / Math.max(view.height, 1)));
+  select(svg).call(z.transform, zoomIdentity.translate(30, 20).scale(k));
+
+  return {
+    lane(key) { if (lanes.some((l) => l.key === key)) show(key); },
+    focus(id) { if (!part.has(id)) return; show(laneOf.get(id), id); if (picked !== id) pick(id); },
+    clear() { if (picked) pick(picked); },
   };
 }

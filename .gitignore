@@ -7,3 +7,5 @@ dist/
 *.nupkg
 TestResults/
 prototypes/clusters.html
+prototypes/flow.html
+prototypes/preview.html
