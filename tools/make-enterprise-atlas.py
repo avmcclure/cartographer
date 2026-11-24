@@ -384,11 +384,17 @@ for key in ["pricing", "identity", "catalog", "customer"]:
         continue
     lid = random.choice(svcs)
     entries[lid]["links"] = [l for l in entries[lid]["links"] if l["type"] not in ("consumes-from", "receives-from") and not (l["type"] in ("reads", "calls") and l.get("to", "").startswith("repositories/"))]
+    # whatever pointed at it now reads it; a gateway in front of it keeps forwarding, and a part keeps one read
     for cs in components.values():
         for cid in cs:
+            kept, read = [], False
             for l in entries[cid]["links"]:
-                if l.get("to") == lid and l["type"] != "depends-on":
-                    l["type"], l["uses"] = "reads", [l.get("uses", [f"GET /{key}"])[0].replace("POST", "GET").replace("PUT", "GET")]
+                if l.get("to") == lid and l["type"] not in ("depends-on", "forwards-to"):
+                    if read:
+                        continue
+                    l["type"], l["uses"], read = "reads", [l.get("uses", [f"GET /{key}"])[0].replace("POST", "GET").replace("PUT", "GET")], True
+                kept.append(l)
+            entries[cid]["links"] = kept
     readers = random.sample([c for cs in components.values() for c in cs if entries[c]["type"] != "library" and c != lid], 25)
     for r in readers:
         link(r, {"type": "reads", "to": lid, "how": "http", "uses": [f"GET /{key}/{{id}}"], "basis": random.choice(["extracted", "inferred"]), "source": src()})

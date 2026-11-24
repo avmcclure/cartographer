@@ -74,8 +74,11 @@ export function bypass(links, parts) {
   if (!through.size) return links;
   const kept = links.filter((l) => !through.has(l.from) && !through.has(l.to));
   const joined = new Map();
+  // Join a caller's link with a forward, never two callers' links or two forwards: data written in goes on to the
+  // targets, data read out comes back from them.
+  const forwards = (l) => l.verbs.some((v) => v.verb === 'forwards to');
   for (const a of links.filter((l) => !l.call && through.has(l.to) && !through.has(l.from)))
-    for (const b of links.filter((l) => !l.call && l.from === a.to && !through.has(l.to))) {
+    for (const b of links.filter((l) => !l.call && l.from === a.to && !through.has(l.to) && l.to !== a.from && forwards(l) !== forwards(a))) {
       const key = `${a.from}>${b.to}`;
       const j = joined.get(key) ?? joined.set(key, { from: a.from, to: b.to, count: 0, basis: 'extracted', verbs: [], over: [], ops: [], via: [] }).get(key);
       j.count += Math.min(a.count, b.count);
@@ -131,7 +134,7 @@ export function createMap(svg, data, { onSelect }) {
         n.parts.push(p);
         right = Math.max(right, n.x + W);
       }
-      const rows = Math.max(1, ...stacks.values());
+      const rows = stacks.size ? Math.max(...stacks.values()) : band ? 0 : 1;
       at.set(lane.key, { y, h: HEAD + band + rows * (H + GAP) + 6, band });
       y += at.get(lane.key).h + LANE_GAP;
     }
@@ -140,13 +143,13 @@ export function createMap(svg, data, { onSelect }) {
     for (const l of links) {
       const [a, b] = [nodeOf(l.from), nodeOf(l.to)];
       if (a === b || !nodes.has(a) || !nodes.has(b)) continue;
-      // Data read from a lookup: drawn only while the lookup is selected; its readers show a dot each instead.
-      const look = readFromLookup(l, part);
       const key = `${a}>${b}>${l.call ? 1 : 0}`;
-      if (!edges.has(key)) edges.set(key, { from: a, to: b, call: !!l.call, look, count: 0, links: [] });
+      if (!edges.has(key)) edges.set(key, { from: a, to: b, call: !!l.call, count: 0, links: [] });
       edges.get(key).count += l.count;
       edges.get(key).links.push(l);
     }
+    // Data read from a lookup: drawn only while the lookup is selected; its readers show a dot each instead.
+    for (const e of edges.values()) e.look = e.links.every((l) => readFromLookup(l, part));
     return { nodes, edges: [...edges.values()], at, width: right, height: y };
   }
 
@@ -178,7 +181,7 @@ export function createMap(svg, data, { onSelect }) {
     });
     tagLayer = el('g', { class: 'tags' }, layer);
     const reads = new Map();
-    for (const e of view.edges) if (e.look) reads.set(e.to, (reads.get(e.to) ?? 0) + 1);
+    for (const l of links) if (readFromLookup(l, part)) (reads.get(l.to) ?? reads.set(l.to, new Set()).get(l.to)).add(l.from);
     boxes = [...view.nodes.values()].map((n) => {
       const g = el('g', { class: `node${n.parts.length > 1 ? ' group' : ''}`, transform: `translate(${n.x},${n.y})` }, layer);
       const role = n.parts.length === 1 ? n.parts[0].role : n.look ? 'lookup' : null;
@@ -193,7 +196,7 @@ export function createMap(svg, data, { onSelect }) {
         text(g, { x: pad, y: 17 }, p.name, W - pad - 18, 12);
         text(g, { class: 'kind', x: pad, y: 31 }, label, W - pad - 8, 10);
         // One dot per lookup this part reads, rather than a line to each across the map.
-        const k = reads.get(n.id) ?? 0;
+        const k = reads.get(p.id)?.size ?? 0;
         for (let i = 0; i < Math.min(k, 4); i++) el('circle', { class: 'pip', cx: W - 10 - i * 8, cy: 9, r: 2.6 }, g);
         if (k) el('title', {}, g).textContent = `Reads ${k} lookup${k === 1 ? '' : 's'}`;
       } else {
@@ -257,7 +260,7 @@ export function createMap(svg, data, { onSelect }) {
   }
 
   function pick(id) {
-    picked = picked === id || !part.has(id) ? null : id;
+    picked = picked === id || !part.has(id) || !shown(part.get(id)) ? null : id;
     history.replaceState(null, '', location.pathname + location.search + (picked ? `#p=${encodeURIComponent(picked)}${steps === 2 ? '' : `&d=${steps === Infinity ? 'all' : steps}`}` : ''));
     mark(true);
   }
@@ -278,7 +281,7 @@ export function createMap(svg, data, { onSelect }) {
 
   return {
     lane(key) { if (lanes.some((l) => l.key === key)) show(key); },
-    focus(id, depth) { if (!part.has(id)) return; if (depth) steps = depth; show(laneOf.get(id), id); if (picked !== id) pick(id); else mark(true); },
+    focus(id, depth) { if (!part.has(id) || !shown(part.get(id))) return; if (depth) steps = depth; show(laneOf.get(id), id); if (picked !== id) pick(id); else mark(true); },
     clear() { if (picked) pick(picked); },
     /** Show or hide pass-throughs; hidden, what went into one joins each part it forwards to. */
     passThroughs(on) {
@@ -286,6 +289,7 @@ export function createMap(svg, data, { onSelect }) {
       links = on ? data.links : bypass(data.links, data.parts);
       if (!on && part.get(picked)?.role === 'pass-through') pick(picked);
       draw();
+      mark(true);   // the panel lists links, which have changed
     },
     /** Hide links over these transports ('' for links with none recorded). */
     transports(off) { hidden = new Set(off); mark(true); },
