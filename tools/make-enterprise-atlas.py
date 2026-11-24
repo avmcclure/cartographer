@@ -390,6 +390,9 @@ for key in ["pricing", "identity", "catalog", "customer"]:
     # whatever pointed at it now reads it; a gateway in front of it keeps forwarding, and a part keeps one read
     for cs in components.values():
         for cid in cs:
+            if cid in chosen and cid != lid:
+                entries[cid]["links"] = [l for l in entries[cid]["links"] if l.get("to") != lid]   # an earlier lookup is fed by nothing new
+                continue
             kept, read = [], False
             for l in entries[cid]["links"]:
                 if l.get("to") == lid and l["type"] not in ("depends-on", "forwards-to"):

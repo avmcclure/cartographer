@@ -78,7 +78,7 @@ public static class Validator
         if (e.Role is not null)
         {
             Fact("role", e.Role.Basis, e.Role.Source);
-            if (!LinkTypes.Roles.Contains(e.Role.Name)) Error($"role '{e.Role.Name}' is not one of {string.Join(", ", LinkTypes.Roles)}");
+            if (!LinkTypes.Roles.Contains(e.Role.Name, StringComparer.OrdinalIgnoreCase)) Error($"role '{e.Role.Name}' is not one of {string.Join(", ", LinkTypes.Roles)}");
             if (e.Kind is not (Kinds.Component or Kinds.External)) Error("role belongs on components and external systems only");
         }
         if (e.Systems is not null && e.Kind is not (Kinds.Component or Kinds.Database)) Error("systems belong on components and databases only");

@@ -231,7 +231,7 @@ public static class SitePrepare
             var e = atlas.Entries[id];
             var readers = Readers(id, new(StringComparer.Ordinal)).Count;
             // An entry's own role counts only where check would accept it.
-            if (e.Role is { } own && LinkTypes.Roles.Contains(own.Name) && e.Kind is Kinds.Component or Kinds.External) { roles[id] = (own.Name, own.Basis, readers); continue; }
+            if (e.Role is { } own && LinkTypes.Roles.Contains(own.Name, StringComparer.OrdinalIgnoreCase) && e.Kind is Kinds.Component or Kinds.External) { roles[id] = (own.Name.ToLowerInvariant(), own.Basis, readers); continue; }
             if (forwarders.Contains(id)) { roles[id] = ("pass-through", null, readers); continue; }
             var into = links.Where(l => l.To == id && !l.Call).ToList();
             // Only a component, fed by at least one database and by nothing else: an external system read by two parts is

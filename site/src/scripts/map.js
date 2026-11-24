@@ -222,8 +222,8 @@ export function createMap(svg, data, { onSelect }) {
       const isDown = !!down && e.links.some((l) => down.links.has(l)), isUp = !!up && e.links.some((l) => up.links.has(l));
       const isCall = !!picked && e.call && e.links.some((l) => l.from === picked || l.to === picked);
       const touches = e.links.filter((l) => live(l) && (l.from === picked || l.to === picked));
-      // A lookup's lines show only while it is selected; a reader shows a dot for each lookup instead.
-      p.classList.toggle('off', e.look && !e.links.some((l) => l.from === picked));
+      // A lookup's lines show only while it or that reader is selected; at rest a reader shows a dot for each instead.
+      p.classList.toggle('off', e.look && !touches.length);
       const over = [...new Set(touches.flatMap(transportsOf))].filter((t) => t && !hidden.has(t));
       if (over.length && !p.classList.contains('off')) el('text', { class: `tag${e.call ? ' call' : ''}`, x: mid[0], y: mid[1] - 4, 'text-anchor': 'middle' }, tagLayer).textContent = over.join(', ');
       p.classList.toggle('down', isDown);
