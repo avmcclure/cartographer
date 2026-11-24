@@ -378,12 +378,14 @@ for key in ["ecom", "orders", "credit", "pricing"]:
                     l["to"] = gid
 
 # lookups: services many parts read from and nothing feeds but their own database
+chosen = set()
 for key in ["pricing", "identity", "catalog", "customer"]:
     behind = {l["to"] for cs in components.values() for c in cs for l in entries[c]["links"] if l["type"] == "forwards-to"}
     svcs = [c for c in components[key] if entries[c]["type"] == "service" and not c.endswith("-gateway") and c not in behind]
     if not svcs:
         continue
     lid = random.choice(svcs)
+    chosen.add(lid)
     entries[lid]["links"] = [l for l in entries[lid]["links"] if l["type"] not in ("consumes-from", "receives-from") and not (l["type"] in ("reads", "calls") and l.get("to", "").startswith("repositories/"))]
     # whatever pointed at it now reads it; a gateway in front of it keeps forwarding, and a part keeps one read
     for cs in components.values():
@@ -396,7 +398,7 @@ for key in ["pricing", "identity", "catalog", "customer"]:
                     l["type"], l["uses"], read = "reads", [l.get("uses", [f"GET /{key}"])[0].replace("POST", "GET").replace("PUT", "GET")], True
                 kept.append(l)
             entries[cid]["links"] = kept
-    readers = random.sample([c for cs in components.values() for c in cs if entries[c]["type"] != "library" and c != lid], 25)
+    readers = random.sample([c for cs in components.values() for c in cs if entries[c]["type"] != "library" and c not in chosen], 25)
     for r in readers:
         link(r, {"type": "reads", "to": lid, "how": "http", "uses": [f"GET /{key}/{{id}}"], "basis": random.choice(["extracted", "inferred"]), "source": src()})
 

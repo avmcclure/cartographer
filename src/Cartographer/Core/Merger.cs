@@ -47,7 +47,9 @@ public static class Merger
                 continue;
             }
             // What an agent added to an extracted link (the names or operations used, how often, and the transport) survives the link being re-extracted.
-            var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null || l.How is not null).GroupBy(l => l.Identity).ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count, g.First().How));
+            // A transport an extractor gave is its own to change; only one an agent or person added is kept.
+            var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null || l.How is not null).GroupBy(l => l.Identity)
+                .ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count, How: g.FirstOrDefault(l => l.Basis != Basis.Extracted)?.How));
             DropFacts(e, origin);
             if (origin.StartsWith("instance:")) RecordDrift(e, p, origin);
             // Rename the incoming source keys that clash with keys kept from another origin.
@@ -167,12 +169,12 @@ public static class Resolver
         // Which components provide a name, counting only the kinds of name this link can mean.
         List<string> Providers(Entry from, Link l)
         {
-            string[] kinds = l.Type != "depends-on" ? [l.How == "com" ? "progid" : "contract"] : ["nuget", "assembly", "typelib"];
+            string[] kinds = l.Type != "depends-on" ? [l.How?.ToLowerInvariant() == "com" ? "progid" : "contract"] : ["nuget", "assembly", "typelib"];
             static string Bare(string n) => Regex.Replace(n, @"\.(dll|exe|ocx|tlb)$", "", RegexOptions.IgnoreCase);
             var candidates = provided.Where(p => kinds.Contains(p.As) && p.Id != from.Id).ToList();
             var hits = candidates.Where(p => Bare(p.Name).Equals(Bare(l.Name!), StringComparison.OrdinalIgnoreCase)).ToList();
             // A generated WCF client often names the contract "<ReferenceName>.IOrderService": fall back to the interface's own name.
-            if (hits.Count == 0 && l.How == "wcf") hits = candidates.Where(p => p.Name.Split('.')[^1].Equals(l.Name!.Split('.')[^1], StringComparison.OrdinalIgnoreCase)).ToList();
+            if (hits.Count == 0 && "wcf".Equals(l.How, StringComparison.OrdinalIgnoreCase)) hits = candidates.Where(p => p.Name.Split('.')[^1].Equals(l.Name!.Split('.')[^1], StringComparison.OrdinalIgnoreCase)).ToList();
             return hits.Select(p => p.Id).Distinct().Order(StringComparer.Ordinal).ToList();
         }
         var packageProviders = provided.Where(p => p.As is "nuget" or "assembly").GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
@@ -196,7 +198,7 @@ public static class Resolver
             foreach (var l in (e.Links ?? []).ToList())
             {
                 // A COM or WCF call, read, write or forward names a provided name just as a depends-on does, but it is never a public package.
-                if ((l.Type == "depends-on" || l is { Type: "calls" or "reads" or "writes" or "forwards-to", How: "com" or "wcf" }) && l.To is null && l.Name is not null)
+                if ((l.Type == "depends-on" || l.Type is "calls" or "reads" or "writes" or "forwards-to" && l.How?.ToLowerInvariant() is "com" or "wcf") && l.To is null && l.Name is not null)
                 {
                     var ids = Providers(e, l);
                     if (ids.Count == 1)

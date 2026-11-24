@@ -63,7 +63,7 @@ export function reach(links, id, dir, steps = Infinity) {
 
 const readVerb = (v) => v.verb === 'reads' || v.verb === 'receives from';
 /** Data another part reads from a lookup, as opposed to what the lookup itself writes or publishes. */
-export const readFromLookup = (l, part) => !l.call && part.get(l.from)?.role === 'lookup' && l.verbs.some(readVerb);
+export const readFromLookup = (l, part) => !l.call && part.get(l.from)?.role === 'lookup' && (l.verbs.some(readVerb) || !!l.back);   // back: read through a pass-through in front
 /** A link that is only reads from a lookup, drawn just while the lookup is selected. */
 const onlyReadFromLookup = (l, part) => readFromLookup(l, part) && l.verbs.every(readVerb);
 
@@ -113,7 +113,7 @@ export function createMap(svg, data, { onSelect }) {
         right = Math.max(right, n.x + W);
       }
       const rows = stacks.size ? Math.max(...stacks.values()) : band ? 0 : 1;
-      at.set(lane.key, { y, h: HEAD + band + rows * (H + GAP) + 6, band });
+      at.set(lane.key, { y, h: HEAD + band + rows * (H + GAP) + 6, band, looks });
       y += at.get(lane.key).h + LANE_GAP;
     }
     // Links between what is drawn, added up where a closed lane stands several parts in one box.
@@ -140,7 +140,7 @@ export function createMap(svg, data, { onSelect }) {
       el('rect', { x: -16, y: a.y, width: 5, height: a.h, rx: 2, fill: `var(--c${lane.color % 8})` }, g);
       if (a.band) {
         el('rect', { class: 'band', x: -4, y: a.y + HEAD - 4, width: view.width + 8, height: a.band - 6, rx: 6 }, g);
-        el('text', { class: 'band-name', x: view.width, y: a.y + HEAD + 10, 'text-anchor': 'end' }, g).textContent = 'Lookups, beside the flow';
+        el('text', { class: 'band-name', x: (a.looks - 1) * COL + W + 14, y: a.y + HEAD + H / 2 + 7 }, g).textContent = 'Lookups, beside the flow';
       }
       const head = el('g', { class: 'lane-head', 'data-lane': lane.key }, g);
       activate(head, `${lane.name}, ${lane.count} parts. ${open.has(lane.key) ? 'Close' : 'Open'} this lane`, () => toggle(lane.key));
@@ -217,10 +217,10 @@ export function createMap(svg, data, { onSelect }) {
     for (const { e, p, mid } of drawn) {
       const isDown = !!down && e.links.some((l) => down.links.has(l)), isUp = !!up && e.links.some((l) => up.links.has(l));
       const isCall = !!picked && e.call && e.links.some((l) => l.from === picked || l.to === picked);
-      const touches = e.links.filter((l) => l.from === picked || l.to === picked);
+      const touches = e.links.filter((l) => live(l) && (l.from === picked || l.to === picked));
       p.classList.toggle('off', !e.links.some(live) || (e.look && !e.links.some((l) => l.from === picked)));
       const over = [...new Set(touches.flatMap(transportsOf))].filter(Boolean);
-      if (over.length && !p.classList.contains('off')) el('text', { class: 'tag', x: mid[0], y: mid[1] - 4, 'text-anchor': 'middle' }, tagLayer).textContent = over.join(', ');
+      if (over.length && !p.classList.contains('off')) el('text', { class: `tag${e.call ? ' call' : ''}`, x: mid[0], y: mid[1] - 4, 'text-anchor': 'middle' }, tagLayer).textContent = over.join(', ');
       p.classList.toggle('down', isDown);
       p.classList.toggle('up', isUp && !isDown);
       p.classList.toggle('near', isCall);
