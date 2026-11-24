@@ -146,9 +146,11 @@ const goneTo = (name) => {
       } else view.querySelector('[data-looks-block]').remove();
       const note = view.querySelector('[data-role]');
       if (p.role === 'pass-through') {
-        const forwards = (l) => !!l.forwards;
+        // Its own forwards run out from it, or back into it when data is read through; a forward from an outer
+        // pass-through makes that one a caller.
+        const onward = (l) => !!l.forwards && ((l.from === id && !l.back) || (l.to === id && l.back));
         const mine = links.filter((l) => !l.call && (l.from === id || l.to === id)), other = (l) => part.get(l.from === id ? l.to : l.from).name;
-        const onto = [...new Set(mine.filter(forwards).map(other))], callers = [...new Set(mine.filter((l) => !forwards(l)).map(other))];
+        const onto = [...new Set(mine.filter(onward).map(other))], callers = [...new Set(mine.filter((l) => !onward(l)).map(other))];
         const list = (names) => (names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', '));
         note.textContent = `Pass-through: relays requests from ${list(callers) || 'its callers'} to ${list(onto) || 'what it forwards to'} unchanged.${p.roleStated ? ' A person stated this role.' : ''}`;
         note.hidden = false;

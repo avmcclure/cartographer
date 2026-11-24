@@ -47,7 +47,8 @@ public static class Merger
                 continue;
             }
             // What an agent added to an extracted link (the names or operations used, how often, and the transport) survives the link being re-extracted.
-            // A transport the extractor gives wins; one an agent added survives a re-extraction that gives none.
+            // A transport the extractor gives wins. One already on the link survives a re-extraction that gives none: an
+            // agent may have added it to an extracted link, which cannot be told apart from one the extractor once gave.
             var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null || l.How is not null).GroupBy(l => l.Identity)
                 .ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count, g.First().How));
             DropFacts(e, origin);
@@ -226,7 +227,8 @@ public static class Resolver
                         if (e.Links!.Any(o => o != l && o.Type == "uses" && o.To == dbs[0].Id)) e.Links!.Remove(l); else l.To = dbs[0].Id;
                     }
                 }
-                else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes")
+                // A name over any other transport is an API, not a table that happens to share its name.
+                else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes" && l.How?.ToLowerInvariant() is null or "sql")
                 {
                     var match = MatchObject(atlas, databases, l);
                     if (match is not null && !e.Links!.Any(o => o != l && o.Type == l.Type && o.To == match && o.Via == l.Via)) { l.To = match; l.Database = null; }

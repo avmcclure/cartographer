@@ -207,9 +207,9 @@ public static class SitePrepare
     };
 
     /// <summary>
-    /// Where each part sits (spec section 8). A pass-through forwards requests to other parts. A lookup is a component or
-    /// external system that two or more parts read from, whose data comes only from databases, so it sits beside the
-    /// flow rather than in it. A role an entry states wins. Parts with neither are stages, in the flow.
+    /// Where each part sits (spec section 8). A pass-through forwards requests to other parts. A lookup is a component
+    /// that two or more parts read from, whose data comes only from databases, so it sits beside the flow rather than
+    /// in it; an external system is one only when an entry says so. A role an entry states wins. Parts with neither are stages, in the flow.
     /// </summary>
     static Dictionary<string, (string Name, bool Stated)> Roles(Atlas atlas, Grouping grouping, HashSet<string> forwarders, List<(string From, string To, bool Call, bool Back, IEnumerable<string> Verbs)> links)
     {
@@ -232,7 +232,8 @@ public static class SitePrepare
             if (forwarders.Contains(id)) { roles[id] = ("pass-through", false); continue; }
             var into = links.Where(l => l.To == id && !l.Call).ToList();
             var readers = Readers(id, new(StringComparer.Ordinal)).Count;
-            if (e.Kind is Kinds.Component or Kinds.External && readers >= 2 && into.All(l => atlas.Find(l.From)?.Kind == Kinds.Database))
+            // Only a component: an external system read by two parts is where their data starts, not a lookup.
+            if (e.Kind == Kinds.Component && readers >= 2 && into.All(l => atlas.Find(l.From)?.Kind == Kinds.Database))
                 roles[id] = ("lookup", false);
         }
         return roles;

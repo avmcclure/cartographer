@@ -77,7 +77,7 @@ A component that relays requests to another component unchanged, such as a gatew
 _Avoid_: proxy, facade, wrapper
 
 **Lookup**:
-A component or external system that other parts only read from, such as a pricing or identity service. Drawn beside the flow, not in it.
+A component (or, when an entry says so, an external system) that other parts only read from, such as a pricing or identity service. Drawn beside the flow, not in it.
 _Avoid_: reference service, side service
 
 **Flow**:
