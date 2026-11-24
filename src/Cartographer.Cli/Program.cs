@@ -25,7 +25,13 @@ namespace Cartographer.Cli
             }
         }
 
-        public bool Flag(string name) => _options.ContainsKey(name);
+        /// <summary>A switch such as --all. The parser cannot tell a switch from an option, so a word after a switch
+        /// would be read as its value; that is refused rather than dropped.</summary>
+        public bool Flag(string name)
+        {
+            if (!_options.TryGetValue(name, out var value)) return false;
+            return value is null ? true : throw new UsageException($"--{name} takes no value, but was given \"{value}\"");
+        }
         public string? Option(string name) => _options.GetValueOrDefault(name);
         public string Required(string name) => Option(name) ?? throw new UsageException($"--{name} <value> is required");
         public int Int(string name, int fallback) => Option(name) is { } v ? int.TryParse(v, out var n) ? n : throw new UsageException($"--{name} must be a number") : fallback;
