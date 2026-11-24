@@ -140,7 +140,8 @@ public static class SitePrepare
                 members = c.Members.Select(m => new
                 {
                     id = m, atlas.Entries[m].Name, atlas.Entries[m].Kind, atlas.Entries[m].Type, found = Found(atlas, atlas.Entries[m]), unsurveyed = questionsOf.GetValueOrDefault(m),
-                    role = roles.TryGetValue(m, out var r) && r.Name != "stage" ? r.Name : null, roleStated = r.Stated && r.Name != "stage" ? true : (bool?)null,
+                    role = roles.TryGetValue(m, out var r) && r.Name != "stage" ? r.Name : null,
+                    roleBasis = r.Name is not (null or "stage") ? r.Basis : null, readers = r.Name == "lookup" ? r.Readers : (int?)null,
                 }),
             }),
             parts = partLinks,
@@ -211,9 +212,10 @@ public static class SitePrepare
     /// that two or more parts read from, whose data comes only from databases, so it sits beside the flow rather than
     /// in it; an external system is one only when an entry says so. A role an entry states wins. Parts with neither are stages, in the flow.
     /// </summary>
-    static Dictionary<string, (string Name, bool Stated)> Roles(Atlas atlas, Grouping grouping, HashSet<string> forwarders, List<(string From, string To, bool Call, bool Back, IEnumerable<string> Verbs)> links)
+    /// <returns>Each part's role, the basis of the entry's own role when it set one, and how many parts read it.</returns>
+    static Dictionary<string, (string Name, string? Basis, int Readers)> Roles(Atlas atlas, Grouping grouping, HashSet<string> forwarders, List<(string From, string To, bool Call, bool Back, IEnumerable<string> Verbs)> links)
     {
-        var roles = new Dictionary<string, (string, bool)>(StringComparer.Ordinal);
+        var roles = new Dictionary<string, (string, string?, int)>(StringComparer.Ordinal);
         // Who reads a part, directly or through pass-throughs in front of it.
         HashSet<string> Readers(string id, HashSet<string> seen)
         {
@@ -227,17 +229,17 @@ public static class SitePrepare
         foreach (var id in grouping.Clusters.SelectMany(c => c.Members))
         {
             var e = atlas.Entries[id];
-            // A stated role counts only where check would accept it.
-            if (e.Role is { } stated && LinkTypes.Roles.Contains(stated.Name) && e.Kind is Kinds.Component or Kinds.External) { roles[id] = (stated.Name, true); continue; }
-            if (forwarders.Contains(id)) { roles[id] = ("pass-through", false); continue; }
-            var into = links.Where(l => l.To == id && !l.Call).ToList();
             var readers = Readers(id, new(StringComparer.Ordinal)).Count;
+            // An entry's own role counts only where check would accept it.
+            if (e.Role is { } own && LinkTypes.Roles.Contains(own.Name) && e.Kind is Kinds.Component or Kinds.External) { roles[id] = (own.Name, own.Basis, readers); continue; }
+            if (forwarders.Contains(id)) { roles[id] = ("pass-through", null, readers); continue; }
+            var into = links.Where(l => l.To == id && !l.Call).ToList();
             // Only a component, fed by at least one database and by nothing else: an external system read by two parts is
             // where their data starts, and a call to another part with no known direction could be feeding it.
             bool Database(string part) => atlas.Find(part)?.Kind == Kinds.Database;
             var unknownCalls = links.Any(l => l.Call && (l.From == id && !Database(l.To) || l.To == id && !Database(l.From)));
             if (e.Kind == Kinds.Component && readers >= 2 && into.Count > 0 && into.All(l => Database(l.From)) && !unknownCalls)
-                roles[id] = ("lookup", false);
+                roles[id] = ("lookup", null, readers);
         }
         return roles;
     }

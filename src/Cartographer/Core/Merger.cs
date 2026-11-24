@@ -227,8 +227,8 @@ public static class Resolver
                         if (e.Links!.Any(o => o != l && o.Type == "uses" && o.To == dbs[0].Id)) e.Links!.Remove(l); else l.To = dbs[0].Id;
                     }
                 }
-                // A name over any other transport is an API, not a table that happens to share its name.
-                else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes" && l.How?.ToLowerInvariant() is null or "sql")
+                // A name reached over an API is a component, not a table that happens to share its name.
+                else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes" && l.How?.ToLowerInvariant() is not ("http" or "grpc" or "soap" or "wcf" or "graphql" or "websocket" or "com" or "remoting"))
                 {
                     var match = MatchObject(atlas, databases, l);
                     if (match is not null && !e.Links!.Any(o => o != l && o.Type == l.Type && o.To == match && o.Via == l.Via)) { l.To = match; l.Database = null; }

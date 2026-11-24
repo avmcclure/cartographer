@@ -6,7 +6,7 @@ import { columns, loopsBack } from '../lib/flow.js';
 const col = columns(map);
 const byKey = new Map(map.clusters.map((c) => [c.key, c]));
 const lanes = order.map((key, i) => ({ key, name: byKey.get(key).name, pinned: byKey.get(key).pinned, color: i, count: byKey.get(key).members.length }));
-const parts = order.flatMap((key) => byKey.get(key).members.map((m) => ({ id: m.id, name: m.name, kind: m.kind === 'external' ? 'external system' : m.kind, type: m.type, role: m.role, roleStated: m.roleStated, lane: key, col: col.get(m.id), found: m.found, href: entryHref(m.id) })))
+const parts = order.flatMap((key) => byKey.get(key).members.map((m) => ({ id: m.id, name: m.name, kind: m.kind === 'external' ? 'external system' : m.kind, type: m.type, role: m.role, roleBasis: m.roleBasis, readers: m.readers, lane: key, col: col.get(m.id), found: m.found, href: entryHref(m.id) })))
   .sort((a, b) => order.indexOf(a.lane) - order.indexOf(b.lane) || a.col - b.col || a.name.localeCompare(b.name));
 const data = { lanes, parts, links: map.parts.map(({ from, to, call, count, basis, verbs, over, ops, forwards, back }) => ({ from, to, call, count, basis, verbs, over, ops, forwards, back })) };
 // Links by transport, most first; links with none recorded last.
@@ -44,8 +44,8 @@ const goneTo = (name) => {
     <label class="toggle" style="margin-left:0"><input type="checkbox" id="calls" checked /> Calls</label>
   </div>
   {transports.length > 1 && (
-    <div class="transports small" role="group" aria-label="Show links by what they travel over">
-      <span>Over</span>
+    <div class="transports small" role="group" aria-label="Show links by what they travel over. A link between two parts that travels over several stays while any of them is on.">
+      <span title="A link between two parts that travels over several stays while any of them is on.">Over</span>
       {transports.map((t) => <button type="button" class="chip" data-how={t.how} aria-pressed="true">{t.how || 'not recorded'}<span class="n">{t.count}</span></button>)}
     </div>
   )}
@@ -89,7 +89,7 @@ const goneTo = (name) => {
   </template>
   <script type="application/json" id="map-data" set:html={json(data)} />
   <script>
-    import { createMap, readFromLookup } from '../scripts/map.js';
+    import { createMap, readFromLookup, onlyReadFromLookup } from '../scripts/map.js';
     const svg = document.getElementById('map');
     const panel = document.getElementById('panel');
     const resting = document.getElementById('resting');
@@ -110,6 +110,8 @@ const goneTo = (name) => {
       return li;
     }
     // "writes 2 over http · POST /orders, GET /orders/{id} · inferred"
+    // Where a role an entry sets came from; a role worked out from links says nothing.
+    const said = (p) => ({ stated: ' A person stated this role.', inferred: ' An agent inferred this role from the code.', extracted: ' This role was read from the code.' })[p.roleBasis] ?? '';
     const verbs = (l) => [
       l.verbs.map((v) => `${v.verb} ${v.count}`).join(', ') + (l.over?.some((o) => o.how) ? ` over ${l.over.map((o) => o.how).filter(Boolean).join(', ')}` : ''),
       l.ops?.length ? l.ops.slice(0, 3).join(', ') + (l.ops.length > 3 ? ` and ${l.ops.length - 3} more` : '') : null,
@@ -136,7 +138,9 @@ const goneTo = (name) => {
       const links = map.links;
       // A lookup's readers, and the lookups a part reads, are listed on their own: they sit beside the flow.
       const looks = links.filter((l) => readFromLookup(l, part) && (p.role === 'lookup' ? l.from === id : l.to === id));
-      const from = links.filter((l) => !l.call && l.to === id && !looks.includes(l)), to = links.filter((l) => !l.call && l.from === id && !looks.includes(l)), calls = links.filter((l) => l.call && (l.from === id || l.to === id));
+      // A link that also carries something other than a read is listed in the flow too.
+      const besides = (l) => !onlyReadFromLookup(l, part);
+      const from = links.filter((l) => !l.call && l.to === id && besides(l)), to = links.filter((l) => !l.call && l.from === id && besides(l)), calls = links.filter((l) => l.call && (l.from === id || l.to === id));
       const empty = (t) => Object.assign(document.createElement('li'), { className: 'small', textContent: t });
       view.querySelector('[data-from]').append(...(from.length ? from.map((l) => row(l.from, verbs(l))) : [empty('Nothing: its data starts here.')]));
       view.querySelector('[data-to]').append(...(to.length ? to.map((l) => row(l.to, verbs(l))) : [empty(p.role === 'lookup' ? 'Nothing besides the parts that read it.' : 'Nothing: its data ends here.')]));
@@ -152,10 +156,11 @@ const goneTo = (name) => {
         const mine = links.filter((l) => !l.call && (l.from === id || l.to === id)), other = (l) => part.get(l.from === id ? l.to : l.from).name;
         const onto = [...new Set(mine.filter(onward).map(other))], callers = [...new Set(mine.filter((l) => !onward(l)).map(other))];
         const list = (names) => (names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', '));
-        note.textContent = `Pass-through: relays requests from ${list(callers) || 'its callers'} to ${list(onto) || 'what it forwards to'} unchanged.${p.roleStated ? ' A person stated this role.' : ''}`;
+        note.textContent = `Pass-through: relays requests from ${list(callers) || 'its callers'} to ${list(onto) || 'what it forwards to'} unchanged.${said(p)}`;
         note.hidden = false;
       } else if (p.role === 'lookup') {
-        note.textContent = `Lookup: read by ${looks.length} part${looks.length === 1 ? '' : 's'}${p.roleStated ? '. A person stated this role' : ', with its own data coming only from databases'}, so it sits beside the flow.`;
+        const n = p.readers ?? looks.length;
+        note.textContent = `Lookup: read by ${n} part${n === 1 ? '' : 's'}${p.roleBasis ? '' : ', with its own data coming only from databases'}, so it sits beside the flow.${said(p)}`;
         note.hidden = false;
       }
       if (calls.length) view.querySelector('[data-calls]').append(...calls.map((l) => row(l.from === id ? l.to : l.from, l.from === id ? `called by this part · ${verbs(l)}` : `calls this part · ${verbs(l)}`)));

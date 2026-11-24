@@ -65,7 +65,7 @@ const readVerb = (v) => v.verb === 'reads' || v.verb === 'receives from';
 /** Data another part reads from a lookup, as opposed to what the lookup itself writes or publishes. */
 export const readFromLookup = (l, part) => !l.call && part.get(l.from)?.role === 'lookup' && (l.verbs.some(readVerb) || !!l.back);   // back: read through a pass-through in front
 /** A link that is only reads from a lookup, drawn just while the lookup is selected. */
-const onlyReadFromLookup = (l, part) => readFromLookup(l, part) && (l.verbs.every(readVerb) || !!l.back);
+export const onlyReadFromLookup = (l, part) => readFromLookup(l, part) && (l.verbs.every(readVerb) || !!l.back);
 
 /** A link's transports, or [''] when none is recorded. */
 export const transportsOf = (l) => (l.over?.length ? l.over.map((o) => o.how) : ['']);
@@ -218,7 +218,8 @@ export function createMap(svg, data, { onSelect }) {
       const isDown = !!down && e.links.some((l) => down.links.has(l)), isUp = !!up && e.links.some((l) => up.links.has(l));
       const isCall = !!picked && e.call && e.links.some((l) => l.from === picked || l.to === picked);
       const touches = e.links.filter((l) => live(l) && (l.from === picked || l.to === picked));
-      p.classList.toggle('off', !e.links.some(live) || (e.look && !touches.length));
+      // A lookup's lines show only while it is selected; a reader shows a dot for each lookup instead.
+      p.classList.toggle('off', !e.links.some(live) || (e.look && !e.links.some((l) => l.from === picked)));
       const over = [...new Set(touches.flatMap(transportsOf))].filter((t) => t && !hidden.has(t));
       if (over.length && !p.classList.contains('off')) el('text', { class: `tag${e.call ? ' call' : ''}`, x: mid[0], y: mid[1] - 4, 'text-anchor': 'middle' }, tagLayer).textContent = over.join(', ');
       p.classList.toggle('down', isDown);
