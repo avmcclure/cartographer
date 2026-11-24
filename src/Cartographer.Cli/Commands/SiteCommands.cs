@@ -74,8 +74,10 @@ public sealed class SiteCommands : ICommands
 
     static int Run(string file, string dir, Dictionary<string, string>? env, params string[] args)
     {
-        var info = new ProcessStartInfo(file) { WorkingDirectory = dir, UseShellExecute = false };
-        foreach (var arg in args) info.ArgumentList.Add(arg);
+        // Windows will not start npm.cmd directly, so it runs through cmd.exe, as Credentials does for az.cmd.
+        var viaCmd = OperatingSystem.IsWindows() && file.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase);
+        var info = new ProcessStartInfo(viaCmd ? "cmd.exe" : file) { WorkingDirectory = dir, UseShellExecute = false };
+        foreach (var arg in viaCmd ? ["/d", "/c", file, .. args] : args) info.ArgumentList.Add(arg);
         foreach (var (k, v) in env ?? []) info.Environment[k] = v;
         using var p = Process.Start(info)!;
         p.WaitForExit();
