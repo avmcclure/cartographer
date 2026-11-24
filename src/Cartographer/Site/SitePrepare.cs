@@ -6,8 +6,8 @@ using System.Text.RegularExpressions;
 namespace Cartographer;
 
 /// <summary>
-/// Writes everything the site is built from (spec section 8) as JSON files, and the plan layouts into the atlas.
-/// The shapes are described in site/README.md. Output depends only on the atlas: sorted, no timestamps.
+/// Writes everything the site is built from (spec section 8) as JSON files. The shapes are described in
+/// site/README.md. Output depends only on the atlas and its pinned clusters: sorted, no timestamps.
 /// </summary>
 public static class SitePrepare
 {
@@ -18,14 +18,16 @@ public static class SitePrepare
     };
 
     /// <summary>The names of what prepare writes directly under the output directory; anything else there is left alone.</summary>
-    static readonly string[] Owned = ["entries", "sheets", "site.json", "gazetteer.json", "graph.json", "questions.json", "changes.json", "tags.json"];
+    static readonly string[] Owned = ["entries", "sheets", "site.json", "clusters.json", "everything.json", "gazetteer.json", "graph.json", "questions.json", "changes.json", "tags.json"];
 
     /// <param name="editUrl">Where an atlas file can be edited, e.g. https://github.com/acme/atlas/edit/main; null for no edit links.</param>
-    public static List<Surveyed> Run(Atlas atlas, string outDir, string? editUrl = null)
+    public static Grouping Run(Atlas atlas, string outDir, string? editUrl = null)
     {
-        var w = new World(atlas);
-        var sheets = Sheets.All(w);
-        var surveyed = sheets.Select(s => Surveyor.Lay(w, s)).ToList();
+        var grouping = Clusters.Current(atlas);
+        var keys = Keys(grouping.Clusters);
+        var clusterOf = grouping.Clusters.SelectMany(c => c.Members.Select(m => (m, key: keys[c]))).ToDictionary(x => x.m, x => x.key, StringComparer.Ordinal);
+        string? PartOf(string id) => Clusters.PartOf(atlas, id);
+        string? ClusterOf(string id) => PartOf(id) is { } part ? clusterOf.GetValueOrDefault(part) : null;
 
         Directory.CreateDirectory(outDir);
         foreach (var name in Owned)
@@ -41,19 +43,9 @@ public static class SitePrepare
             File.WriteAllText(full, JsonSerializer.Serialize(value, Json) + "\n");
         }
 
-        foreach (var s in sheets) Write($"sheets/{s.Id}.json", s);
-
-        // Where each entry is drawn as a plot of its own: the most detailed sheet that has it.
-        var home = new Dictionary<string, (string Sheet, Plot Plot)>(StringComparer.Ordinal);
-        foreach (var level in new[] { "area", "system", "organisation" })
-            foreach (var s in sheets.Where(s => s.Level == level))
-                foreach (var p in s.Plots.Where(p => p.Entry is not null && !p.Neighbour)) home.TryAdd(p.Entry!, (s.Id, p));
-        string? Opens(Entry e) => e.Kind switch
-        {
-            Kinds.Repository or Kinds.Database => Sheets.AreaSheet(e.Id),
-            Kinds.System => w.Groups.FirstOrDefault(g => g.Entry == e.Id)?.Sheet,
-            _ => null,
-        };
+        // Links between entries that both exist, as the site draws and selects them.
+        var edges = atlas.Entries.Values.SelectMany(e => (e.Links ?? []).Where(l => l.To is not null && l.To != e.Id && atlas.Find(l.To) is not null)
+            .Select(l => (From: e.Id, To: l.To!, l.Type, l.Basis))).ToList();
 
         var inbound = Indexer.Inbound(atlas);
         var questions = atlas.Entries.Values.ToDictionary(e => e.Id, e => QuestionList.Parse(e.Body), StringComparer.Ordinal);
@@ -74,7 +66,6 @@ public static class SitePrepare
                         : from.Links?.FirstOrDefault(x => x.Type == l.Type && x.To == e.Id && x.Basis == l.Basis)?.Source;
                     return new { l.Type, heading = Indexer.Reverse(l.Type), from = Ref(l.From), l.Basis, evidence = Evidences.Of(atlas, from, source) };
                 }).ToList();
-            var at = home.TryGetValue(e.Id, out var h) ? new { h.Sheet, plot = h.Plot.Id, h.Plot.Number, h.Plot.Ref } : null;
             Write($"entries/{e.Id}.json", new
             {
                 e.Id, e.Kind, e.Type, e.Name, e.Summary, e.Status,
@@ -84,30 +75,48 @@ public static class SitePrepare
                 systems = e.Systems?.Select(s => new { system = Ref(s.Id), s.Basis, evidence = Ev(s.Source) }),
                 tags = e.Tags?.Select(t => new { t.Name, t.Basis, evidence = Ev(t.Source) }),
                 owner = e.Owner is { } o ? new { o.Name, o.Basis, evidence = Ev(o.Source) } : null,
-                uses = e.Links?.Select(l => new { l.Type, verb = Sheets.Verb(l.Type), to = Ref(l.To), unresolved = l.To is null ? l.Name : null, l.Name, l.Database, l.Version, l.How, via = Ref(l.Via), names = l.Uses, l.Count, l.Basis, evidence = Ev(l.Source) }),
+                uses = e.Links?.Select(l => new { l.Type, verb = Verb(l.Type), to = Ref(l.To), unresolved = l.To is null ? l.Name : null, l.Name, l.Database, l.Version, l.How, via = Ref(l.Via), names = l.Uses, l.Count, l.Basis, evidence = Ev(l.Source) }),
                 usedBy,
                 drift = e.Drift?.Select(d => new { d.What, sources = d.Sources.Select(Ev) }),
                 e.Verified, stale = Stale(e) ? true : (bool?)null,
                 sections = Sections.Split(e.Body).Where(s => s.Title != Sections.Questions && s.Text.Trim().Length > 0).Select(s => new { s.Title, markdown = s.Text }),
                 questions = questions[e.Id].Items.Select(q => new { q.Id, q.State, q.RaisedBy, q.Attempts, q.Missing, q.WaitingOn, q.AnswerLooksLike, q.Answer }),
                 dismissed = questions[e.Id].Dismissed.Count > 0 ? questions[e.Id].Dismissed : null,
-                home = at, opens = Opens(e), editUrl = Edit(e.Id),
+                part = PartOf(e.Id) is { } part && part != e.Id ? Ref(part) : null, cluster = ClusterOf(e.Id), editUrl = Edit(e.Id),
             });
         }
 
-        Write("gazetteer.json", atlas.Entries.Values.Select(e => new
+        int Unsurveyed(Entry e) => questions[e.Id].Items.Count(q => q.State is "open" or "needs-person");
+        Write("everything.json", atlas.Entries.Values.Select(e => new
         {
-            e.Id, e.Name, e.Kind, e.Type, e.Summary, e.Status,
-            sheet = home.TryGetValue(e.Id, out var h) ? h.Sheet : null, number = h.Plot?.Number, @ref = h.Plot?.Ref,
-            unsurveyed = w.Questions(e.Id), verified = e.Verified?.Date, stale = Stale(e) ? true : (bool?)null,
+            e.Id, e.Name, e.Kind, e.Type, e.Summary, e.Status, cluster = ClusterOf(e.Id),
+            unsurveyed = Unsurveyed(e), verified = e.Verified?.Date, stale = Stale(e) ? true : (bool?)null,
         }));
 
-        // Everything selection needs in the browser: who links to whom, and which entries a group stands for.
-        Write("graph.json", new
+        // The map: clusters, and the links between parts with what they do, counted.
+        var partLinks = edges.Select(e => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis)).Where(e => e.From is not null && e.To is not null && e.From != e.To)
+            .GroupBy(e => (e.From!, e.To!)).OrderBy(g => g.Key.Item1, StringComparer.Ordinal).ThenBy(g => g.Key.Item2, StringComparer.Ordinal)
+            .Select(g => new
+            {
+                from = g.Key.Item1, to = g.Key.Item2, count = g.Count(), basis = Weakest(g.Select(x => x.Basis)),
+                verbs = g.GroupBy(x => Verb(x.Type)).Select(v => new { verb = v.Key, count = v.Count() }).OrderByDescending(v => v.count).ThenBy(v => v.verb, StringComparer.Ordinal),
+            }).ToList();
+        var questionsOf = atlas.Entries.Values.Where(e => PartOf(e.Id) is not null).GroupBy(e => PartOf(e.Id)!).ToDictionary(g => g.Key, g => g.Sum(Unsurveyed), StringComparer.Ordinal);
+        Write("clusters.json", new
         {
-            entries = new SortedDictionary<string, string[]>(atlas.Entries.Values.ToDictionary(e => e.Id, e => new[] { e.Name, e.Kind }), StringComparer.Ordinal),
-            links = w.Edges.Select(e => new[] { e.From, e.To, e.Type, e.Basis }),
-            groups = new SortedDictionary<string, IEnumerable<string>>(w.Groups.ToDictionary(g => g.Key, g => (IEnumerable<string>)w.Covered(g)), StringComparer.Ordinal),
+            links = grouping.Links, inside = grouping.Inside,
+            clusters = grouping.Clusters.Select(c => new
+            {
+                key = keys[c], c.Name, c.Pinned,
+                members = c.Members.Select(m => new { id = m, atlas.Entries[m].Name, atlas.Entries[m].Kind, atlas.Entries[m].Type, found = Found(atlas, atlas.Entries[m]), unsurveyed = questionsOf.GetValueOrDefault(m) }),
+            }),
+            parts = partLinks,
+            suggestion = grouping.Suggestion is { } s ? new
+            {
+                s.Inside,
+                moved = s.Moved.Select(m => new { part = Ref(m.Part), m.From, m.To }),
+                gone = grouping.Clusters.Where(c => c.Pinned && s.Clusters.All(f => f.Name != c.Name)).Select(c => c.Name),
+            } : null,
         });
 
         Write("questions.json", atlas.Entries.Values.SelectMany(e => questions[e.Id].Items.Select(q => new
@@ -132,31 +141,53 @@ public static class SitePrepare
                 };
             }));
 
-        // Business-data tags: the tables that carry each, and the system sheets those tables are drawn on.
+        // Business-data tags: the tables that carry each, and the clusters those tables are in.
         Write("tags.json", atlas.OfKind(Kinds.Table, Kinds.View).SelectMany(e => (e.Tags ?? []).Select(t => (Tag: t, Entry: e)))
             .GroupBy(x => x.Tag.Name).OrderBy(g => g.Key, StringComparer.Ordinal).Select(g => new
             {
                 name = g.Key,
                 tables = g.OrderBy(x => x.Entry.Id, StringComparer.Ordinal).Select(x => new { entry = Ref(x.Entry.Id), x.Tag.Basis, evidence = Evidences.Of(atlas, x.Entry, x.Tag.Source) }),
-                sheets = g.SelectMany(x => w.GroupsOf(x.Entry.Id)).Distinct().Order(StringComparer.Ordinal).Select(k => w.GroupByKey(k).Sheet),
+                clusters = g.Select(x => ClusterOf(x.Entry.Id)).OfType<string>().Distinct().Order(StringComparer.Ordinal),
             }));
 
         Write("site.json", new
         {
             organisation = atlas.Config.Organisation, cartographer = Clock.Version, latestVerified = latest, staleAfterDays = atlas.Config.Limits.VerifiedAgeDays,
             editable = editUrl is not null,
-            sheets = sheets.Select(s => new { s.Id, s.Title, s.Level, s.Subject, s.Up, plots = s.Plots.Count, unplaced = s.Unplaced }),
         });
-        return surveyed;
+        return grouping;
     }
 
-    /// <summary>Lays one sheet out afresh and stores the layout. Grid references on it change.</summary>
-    public static Surveyed Resurvey(Atlas atlas, string sheetId)
+    public static string Verb(string type) => type.Replace('-', ' ');
+
+    static string Weakest(IEnumerable<string> bases)
     {
-        var w = new World(atlas);
-        var sheets = Sheets.All(w);
-        var sheet = sheets.FirstOrDefault(s => s.Id == sheetId)
-            ?? throw new UsageException($"no sheet '{sheetId}'. Sheets: {string.Join(", ", sheets.Select(s => s.Id))}");
-        return Surveyor.Lay(w, sheet, fresh: true);
+        var all = bases.ToHashSet(StringComparer.Ordinal);
+        return all.Contains(Basis.Inferred) ? Basis.Inferred : all.Contains(Basis.Extracted) ? Basis.Extracted : Basis.Stated;
     }
+
+    /// <summary>Where a part was found: its repository or database, by name. Shown, never used for grouping.</summary>
+    static string? Found(Atlas atlas, Entry e) => e.Kind switch
+    {
+        Kinds.Component => atlas.Find(e.Repository ?? Ids.Area(e.Id) + "/repository")?.Name,
+        Kinds.Database => e.Name,
+        _ => null,
+    };
+
+    /// <summary>A short web-safe key per cluster, from its name, unique on the map.</summary>
+    static Dictionary<Cluster, string> Keys(IReadOnlyList<Cluster> clusters)
+    {
+        var keys = new Dictionary<Cluster, string>();
+        var used = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var c in clusters)
+        {
+            var slug = Regex.Replace(c.Name.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+            if (slug.Length == 0) slug = "cluster";
+            var key = slug;
+            for (var k = 2; !used.Add(key); k++) key = $"{slug}-{k}";
+            keys[c] = key;
+        }
+        return keys;
+    }
+
 }

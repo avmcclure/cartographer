@@ -131,7 +131,7 @@ cartographer question add <entry id> --missing "<the exact fact that is missing>
 
 **Stay inside your repository's folder.** Write only under `repositories/<folder>/`, plus the entries of a database this repository defines, plus a new channel, external-system or database entry that did not exist. Other agents are working on other repositories at the same moment. If another repository's entry looks wrong, add a question to your own entry that waits on `entry <its id>`.
 
-**Do not edit generated or tool-owned files.** `_generated/`, `changes/`, `layouts/` and `scan-state.yml`. Do not commit either; the agent that started you does that.
+**Do not edit generated or tool-owned files.** `_generated/`, `changes/`, `clusters.yaml` and `scan-state.yml`. Do not commit either; the agent that started you does that.
 
 ### People win: folding in an answer
 

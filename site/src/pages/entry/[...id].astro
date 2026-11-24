@@ -1,15 +1,15 @@
 ---
 // One entry: a plain documentation column. Counts first, then each relationship with how it is known.
 import Base from '../../layouts/Base.astro';
-import Locator from '../../components/Locator.astro';
 import Basis from '../../components/Basis.astro';
 import Evidence from '../../components/Evidence.astro';
-import { gazetteer, entry as read, sheet as readSheet, entryHref, sheetHref, sheetNumber, kindLabel, date, markdown, href } from '../../lib/data.js';
+import { everything, entry as read, cluster as readCluster, map, entryHref, clusterHref, kindLabel, date, markdown, href } from '../../lib/data.js';
 export function getStaticPaths() {
-  return gazetteer.map((e) => ({ params: { id: e.id } }));
+  return everything.map((e) => ({ params: { id: e.id } }));
 }
 const e = read(Astro.params.id);
-const home = e.home ? readSheet(e.home.sheet) : null;
+const home = e.cluster ? readCluster(e.cluster) : null;
+const colour = home ? map.clusters.indexOf(home) % 8 : 0;
 const usedBy = Object.entries(Object.groupBy(e.usedBy ?? [], (l) => l.heading));
 const uses = Object.entries(Object.groupBy(e.uses ?? [], (l) => l.verb));
 const open = (e.questions ?? []).filter((q) => q.state === 'open' || q.state === 'needs-person');
@@ -17,8 +17,9 @@ const settled = (e.questions ?? []).filter((q) => q.state === 'answered');
 const counts = [
   ...usedBy.map(([heading, list]) => `${list.length} ${heading.toLowerCase().replace(/ by$/, '').replace('members', 'member' + (list.length === 1 ? '' : 's')).replace('triggers', 'trigger' + (list.length === 1 ? '' : 's'))}${/ by$/.test(heading) ? ' by' : ''}`),
   ...(e.uses?.length ? [`uses ${e.uses.length}`] : []),
-  `${open.length} unsurveyed`,
+  `${open.length} open question${open.length === 1 ? '' : 's'}`,
 ];
+const overview = (e.sections ?? []).find((s) => s.title === 'Overview');
 const affected = { table: 'table', view: 'view', routine: 'routine', component: 'component', database: 'database', channel: 'channel' }[e.kind];
 const where = [kindLabel(e), e.repository?.name, e.database?.name].filter(Boolean).join(' · ');
 const link = (r) => (r.kind === 'missing' ? r.id : r.name);
@@ -33,16 +34,17 @@ const link = (r) => (r.kind === 'missing' ? r.id : r.name);
       </div>
       {home && (
         <div class="inset">
-          <a href={`${sheetHref(e.home.sheet)}?sel=${encodeURIComponent(e.id)}`} data-keep aria-label={`Show ${e.name} on sheet ${sheetNumber(e.home.sheet)}, ${home.title}`}>
-            <Locator sheet={home} mark={e.home.plot} width={170} />
-          </a>
-          <span>Sheet {sheetNumber(e.home.sheet)} · plot {e.home.number} · {e.home.ref}</span>
-          <a href={`${sheetHref(e.home.sheet)}?sel=${encodeURIComponent(e.id)}`} data-keep>Show on the plan</a>
-          {e.opens && <a href={sheetHref(e.opens)}>Open its own sheet</a>}
+          <span class="cap" style="margin:0">Cluster</span>
+          <a href={clusterHref(home.key)}><span class="dot" style={`background:var(--c${colour})`}></span>{home.name}</a>
+          {e.part && <span class="small">Counted as part of <a href={entryHref(e.part.id)}>{e.part.name}</a></span>}
         </div>
       )}
     </div>
     <p><span class="counts">{counts.map((c) => <span>{c}</span>)}</span></p>
+    {overview && <section class="sec"><h2 class="cap">Overview</h2><div class="prose" set:html={markdown(overview.markdown)} /></section>}
+    {(usedBy.length > 0 || uses.length > 0) && (
+      <p class="small key"><span><Basis basis="extracted" />extracted from the code</span><span><Basis basis="inferred" />inferred by an agent</span><span><Basis basis="stated" />stated by a person</span></p>
+    )}
 
     {e.drift?.map((d) => (
       <p class="drift"><strong>Drift.</strong> {d.what} <span class="small">Sources that disagree: {d.sources.map((s) => s?.label).filter(Boolean).join('; ')}.</span></p>
@@ -50,7 +52,7 @@ const link = (r) => (r.kind === 'missing' ? r.id : r.name);
 
     {usedBy.map(([heading, list]) => (
       <section class="sec">
-        <h2 class="cap">{heading}{['Read by', 'Called by', 'Depended on by', 'Consumed by', 'Used by'].includes(heading) && affected && <> · <em>affected if this {affected} changes</em></>}</h2>
+        <h2 class="cap">{heading}{affected && <> · <em>affected if this {affected} changes</em></>}</h2>
         <ul class="rows">
           {list.map((l) => (
             <li><Basis basis={l.basis} /><span><a href={entryHref(l.from.id)}>{l.from.name}</a> <span class="small">{kindLabel(l.from)}</span><span class="what"><Evidence basis={l.basis} evidence={l.evidence} /></span></span></li>
@@ -79,7 +81,7 @@ const link = (r) => (r.kind === 'missing' ? r.id : r.name);
 
     {open.length > 0 && (
       <section class="sec">
-        <h2 class="cap">Unsurveyed · {open.length} open question{open.length === 1 ? '' : 's'}</h2>
+        <h2 class="cap">{open.length} open question{open.length === 1 ? '' : 's'}</h2>
         {open.map((q) => (
           <div class="unsurveyed">
             <p><strong>{q.missing}</strong></p>
@@ -89,7 +91,7 @@ const link = (r) => (r.kind === 'missing' ? r.id : r.name);
       </section>
     )}
 
-    {(e.sections ?? []).map((s) => (
+    {(e.sections ?? []).filter((s) => s !== overview).map((s) => (
       <section class="sec">
         <h2 class="cap">{s.title}</h2>
         <div class="prose" set:html={markdown(s.markdown)} />

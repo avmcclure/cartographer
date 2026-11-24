@@ -1,6 +1,6 @@
 # Cartographer
 
-Maps an organisation's repositories, databases and the links between them into an **atlas**: a git repository of Markdown entries that agents and people can both read, with a static site of drawn plans built from it.
+Maps an organisation's repositories, databases and the links between them into an **atlas**: a git repository of Markdown entries that agents and people can both read, with a static site built from it: a map of parts grouped by how they talk to each other.
 
 - A deterministic CLI (C#/.NET, never calls a model) reads what can be read mechanically: project files, config, VB6 and classic ASP, SQL Server schema from files and from live instances.
 - Agent skills, run inside Claude Code or GitHub Copilot, add what needs judgement: plain-language descriptions, links found by reading code, systems, open questions.
@@ -18,7 +18,7 @@ Status: v1 is built and tested against fixtures and public repositories. It has 
 
 | Path | What |
 |---|---|
-| `src/Cartographer` | The library: atlas core, extractors, scan sessions, SCM access, live database reading, site data and plan layout. |
+| `src/Cartographer` | The library: atlas core, extractors, scan sessions, SCM access, live database reading, site data and clusters. |
 | `src/Cartographer.Cli` | The `cartographer` dotnet tool. |
 | `site/` | The Astro site template the tool ships and builds. |
 | `skills/`, `.claude-plugin/` | The four skills and the plugin that ships them. |

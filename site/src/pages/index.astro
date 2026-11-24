@@ -1,5 +1,53 @@
 ---
-import SheetPage from '../components/SheetPage.astro';
-import { sheet } from '../lib/data.js';
+// The map: parts grouped by how they interact (ADR 1), and the links between the groups.
+import Base from '../layouts/Base.astro';
+import { map, between, insideCount, clusterHref, percent, plural, json } from '../lib/data.js';
+const clusters = map.clusters.map((c, i) => ({ ...c, color: i, inside: insideCount(c), href: clusterHref(c.key) }));
+const data = { clusters: clusters.map(({ key, name, pinned, color, inside, href, members }) => ({ key, name, pinned, color, inside, href, members: members.map(({ id, name }) => ({ id, name })) })), between: between() };
+const parts = clusters.reduce((n, c) => n + c.members.length, 0);
+const s = map.suggestion;
+const goneTo = (name) => {
+  const to = Object.entries(Object.groupBy(s.moved.filter((m) => m.from === name), (m) => m.to)).sort((a, b) => b[1].length - a[1].length).map(([t]) => t);
+  return to.length === 1 ? `join ${to[0]}` : `split between ${to.slice(0, -1).join(', ')} and ${to.at(-1)}`;
+};
 ---
-<SheetPage sheet={sheet('organisation')} />
+<Base title="Map" wide>
+  {s && (
+    <div class="notice" role="note">
+      <p>
+        The links have changed since these clusters were pinned. Regrouping would keep <strong>{percent(s.inside)}</strong> of links inside a cluster, up from {percent(map.inside)}.
+        {' '}{[...s.gone.map((g) => `${g} would ${goneTo(g)}`), ...s.moved.filter((m) => !s.gone.includes(m.from)).map((m) => `${m.part.name} would move from ${m.from} to ${m.to}`)].join('; ')}.
+      </p>
+      <p class="small">To regroup, run <code>cartographer clusters regroup</code> in the atlas and rebuild the site.</p>
+    </div>
+  )}
+  <div class="workspace">
+    <section class="stage" aria-label="Map of clusters">
+      <div class="crumbs"><strong>All clusters</strong></div>
+      <svg class="map" id="map" role="group" aria-label="Clusters and the links between them. The list beside it has the same clusters."></svg>
+      <noscript><p>The drawing needs JavaScript. Every cluster is listed beside it.</p></noscript>
+      <p class="hint">Drag to pan · scroll to zoom · select a cluster to open it</p>
+    </section>
+    <aside class="panel">
+      <div>
+        <p class="cap">Clusters</p>
+        <h2>{plural(clusters.length, 'cluster')}, {plural(parts, 'part')}</h2>
+      </div>
+      <p>Parts that talk to each other a lot are grouped together. {map.links ? `${percent(map.inside)} of ${plural(map.links, 'link')} stay inside a cluster.` : 'No links between parts yet.'} Who owns a part plays no part in the grouping.</p>
+      <ul class="rows plain">
+        {clusters.map((c) => (
+          <li><a href={c.href}><span class="dot" style={`background:var(--c${c.color % 8})`}></span>{c.name}</a><span class="n">{c.members.length}{c.pinned && <span class="pinned" style="margin-left:8px">pinned</span>}</span></li>
+        ))}
+      </ul>
+    </aside>
+  </div>
+  <script type="application/json" id="map-data" set:html={json(data)} />
+  <script>
+    import { drawMap } from '../scripts/map.js';
+    const svg = document.getElementById('map');
+    const data = JSON.parse(document.getElementById('map-data').textContent);
+    drawMap(svg, data);
+    let last = svg.clientWidth;
+    new ResizeObserver(() => { if (Math.abs(svg.clientWidth - last) > 40) { last = svg.clientWidth; drawMap(svg, data); } }).observe(svg);
+  </script>
+</Base>
