@@ -163,6 +163,8 @@ public static class Resolver
     const string BrokenPrefix = "What replaces the link ";
     const string DriftPrefix = "Which source is right: ";
 
+    static bool Api(string? how) => how?.ToLowerInvariant() is "http" or "grpc" or "soap" or "wcf" or "graphql" or "websocket" or "com" or "remoting";
+
     public static void Run(Atlas atlas)
     {
         var provided = atlas.OfKind(Kinds.Component).Where(c => c.Status is null)
@@ -198,8 +200,9 @@ public static class Resolver
 
             foreach (var l in (e.Links ?? []).ToList())
             {
-                // A COM or WCF call, read, write or forward names a provided name just as a depends-on does, but it is never a public package.
-                if ((l.Type == "depends-on" || l.Type is "calls" or "reads" or "writes" or "forwards-to" && l.How?.ToLowerInvariant() is "com" or "wcf") && l.To is null && l.Name is not null)
+                // A forward, or a call, read or write over an API, names a provided name just as a depends-on does, but it is
+                // never a public package: with no provider it stays a question.
+                if ((l.Type is "depends-on" or "forwards-to" || l.Type is "calls" or "reads" or "writes" && Api(l.How)) && l.To is null && l.Name is not null)
                 {
                     var ids = Providers(e, l);
                     if (ids.Count == 1)
@@ -228,7 +231,7 @@ public static class Resolver
                     }
                 }
                 // A name reached over an API is a component, not a table that happens to share its name.
-                else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes" && l.How?.ToLowerInvariant() is not ("http" or "grpc" or "soap" or "wcf" or "graphql" or "websocket" or "com" or "remoting"))
+                else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes" && !Api(l.How))
                 {
                     var match = MatchObject(atlas, databases, l);
                     if (match is not null && !e.Links!.Any(o => o != l && o.Type == l.Type && o.To == match && o.Via == l.Via)) { l.To = match; l.Database = null; }

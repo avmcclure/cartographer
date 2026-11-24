@@ -128,6 +128,17 @@ public class CoreTests
         atlas.Entries[client.Id] = client;
         Resolver.Run(atlas);
         Assert.Equal(service.Id, client.Links!.Single().To);
+
+        // A forward or an HTTP read that names nothing known stays a question, never a table that shares the name.
+        var gateway = Component("acme-edge", "Acme.Edge",
+            new Link { Type = "forwards-to", Name = "orders-api", How = "http", Basis = Basis.Inferred, Source = "proj#L4" },
+            new Link { Type = "reads", Name = "dbo.Orders", How = "http", Basis = Basis.Inferred, Source = "proj#L5" });
+        var table = new Entry { Id = Ids.DbObject("Sales", "tables", "dbo", "Orders"), Kind = Kinds.Table, Name = "dbo.Orders", Summary = "Orders.", Database = Ids.Database("Sales") };
+        atlas.Entries[gateway.Id] = gateway;
+        atlas.Entries[table.Id] = table;
+        Resolver.Run(atlas);
+        Assert.All(gateway.Links!, l => Assert.Null(l.To));
+        Assert.Equal(2, QuestionList.Parse(gateway.Body).Items.Count(q => q.Missing!.Contains("No scanned repository provides it")));
     }
 
     [Fact]

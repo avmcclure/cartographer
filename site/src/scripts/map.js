@@ -201,9 +201,13 @@ export function createMap(svg, data, { onSelect }) {
     return `M${x1},${a.y + H} C${x1},${a.y + H + 34} ${x2},${b.y + H + 34} ${x2},${b.y + H}`;
   }
 
-  function mark(notify = false) {
+  const reached = () => {
     const shownLinks = links.filter(live);
-    const down = picked ? reach(shownLinks, picked, 1, steps) : null, up = picked ? reach(shownLinks, picked, -1, steps) : null;
+    return picked ? [reach(shownLinks, picked, 1, steps), reach(shownLinks, picked, -1, steps)] : [null, null];
+  };
+
+  function mark(notify = false) {
+    const [down, up] = reached(), shownLinks = links.filter(live);
     const near = new Set(picked ? shownLinks.filter((l) => l.call && (l.from === picked || l.to === picked)).flatMap((l) => [l.from, l.to]) : []);
     tagLayer.replaceChildren();
     for (const { n, g } of boxes) {
@@ -219,7 +223,7 @@ export function createMap(svg, data, { onSelect }) {
       const isCall = !!picked && e.call && e.links.some((l) => l.from === picked || l.to === picked);
       const touches = e.links.filter((l) => live(l) && (l.from === picked || l.to === picked));
       // A lookup's lines show only while it is selected; a reader shows a dot for each lookup instead.
-      p.classList.toggle('off', !e.links.some(live) || (e.look && !e.links.some((l) => l.from === picked)));
+      p.classList.toggle('off', e.look && !e.links.some((l) => l.from === picked));
       const over = [...new Set(touches.flatMap(transportsOf))].filter((t) => t && !hidden.has(t));
       if (over.length && !p.classList.contains('off')) el('text', { class: `tag${e.call ? ' call' : ''}`, x: mid[0], y: mid[1] - 4, 'text-anchor': 'middle' }, tagLayer).textContent = over.join(', ');
       p.classList.toggle('down', isDown);
@@ -263,7 +267,7 @@ export function createMap(svg, data, { onSelect }) {
     focus(id, depth) { if (!part.has(id)) return; if (depth) steps = depth; show(laneOf.get(id), id); if (picked !== id) pick(id); else mark(true); },
     clear() { if (picked) pick(picked); },
     /** Hide links over these transports ('' for links with none recorded). */
-    transports(off) { hidden = new Set(off); draw(); mark(true); },
+    transports(off) { hidden = new Set(off); draw(); onSelect(picked, ...reached()); },
     /** The links shown now: those over a hidden transport are left out. */
     get links() { return links.filter(live); },
     steps(n) { steps = n; history.replaceState(null, '', location.pathname + location.search + (picked ? `#p=${encodeURIComponent(picked)}${n === 2 ? '' : `&d=${n === Infinity ? 'all' : n}`}` : '')); mark(true); },
