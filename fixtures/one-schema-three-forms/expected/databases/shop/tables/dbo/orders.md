@@ -10,7 +10,6 @@ links:
   - type: references
     to: databases/shop/tables/dbo/customers
     name: FK_Orders_Customers
-    how: sql
     basis: extracted
     source: sql#L7
 verified:

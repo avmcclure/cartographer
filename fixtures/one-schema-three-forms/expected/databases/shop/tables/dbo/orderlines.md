@@ -11,13 +11,11 @@ links:
   - type: references
     to: databases/shop/tables/dbo/orders
     name: FK_OrderLines_Orders
-    how: sql
     basis: extracted
     source: sql#L8
   - type: references
     to: databases/shop/tables/dbo/products
     name: FK_OrderLines_Products
-    how: sql
     basis: extracted
     source: sql#L9
 verified:

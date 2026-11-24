@@ -232,8 +232,11 @@ public static class SitePrepare
             if (forwarders.Contains(id)) { roles[id] = ("pass-through", false); continue; }
             var into = links.Where(l => l.To == id && !l.Call).ToList();
             var readers = Readers(id, new(StringComparer.Ordinal)).Count;
-            // Only a component: an external system read by two parts is where their data starts, not a lookup.
-            if (e.Kind == Kinds.Component && readers >= 2 && into.All(l => atlas.Find(l.From)?.Kind == Kinds.Database))
+            // Only a component, fed by at least one database and by nothing else: an external system read by two parts is
+            // where their data starts, and a call to another part with no known direction could be feeding it.
+            bool Database(string part) => atlas.Find(part)?.Kind == Kinds.Database;
+            var unknownCalls = links.Any(l => l.Call && (l.From == id && !Database(l.To) || l.To == id && !Database(l.From)));
+            if (e.Kind == Kinds.Component && readers >= 2 && into.Count > 0 && into.All(l => Database(l.From)) && !unknownCalls)
                 roles[id] = ("lookup", false);
         }
         return roles;

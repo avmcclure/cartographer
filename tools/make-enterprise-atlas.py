@@ -398,7 +398,8 @@ for key in ["pricing", "identity", "catalog", "customer"]:
                     l["type"], l["uses"], read = "reads", [l.get("uses", [f"GET /{key}"])[0].replace("POST", "GET").replace("PUT", "GET")], True
                 kept.append(l)
             entries[cid]["links"] = kept
-    readers = random.sample([c for cs in components.values() for c in cs if entries[c]["type"] != "library" and c not in chosen], 25)
+    pool = [c for cs in components.values() for c in cs if entries[c]["type"] != "library" and c not in chosen]
+    readers = random.sample(pool, min(25, len(pool)))
     for r in readers:
         link(r, {"type": "reads", "to": lid, "how": "http", "uses": [f"GET /{key}/{{id}}"], "basis": random.choice(["extracted", "inferred"]), "source": src()})
 

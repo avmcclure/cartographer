@@ -101,7 +101,7 @@ public sealed class SqlSchemaExtractor : IExtractor
         void Link(Entry e, string type, SqlName target, string? to, string file, int line, string? constraint = null) => Extraction.AddLink(e, new Link
         {
             Type = type, To = to, Name = to is null ? target.ToString() : constraint, Database = to is null ? target.Database : null,
-            How = "sql", Basis = Basis.Extracted, Source = cite(e, file, line),
+            How = type is "reads" or "writes" or "calls" ? "sql" : null, Basis = Basis.Extracted, Source = cite(e, file, line),
         });
         void Body(Entry e, SqlModule m)
         {
