@@ -127,6 +127,7 @@ public static class Indexer
         "calls" => "Called by",
         "reads" => "Read by",
         "writes" => "Written by",
+        "forwards-to" => "Forwarded to by",
         "uses" => "Used by",
         "publishes-to" => "Published to by",
         "consumes-from" => "Consumed by",

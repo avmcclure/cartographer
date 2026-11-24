@@ -118,6 +118,56 @@ public class CoreTests
     }
 
     [Fact]
+    public void A_read_over_wcf_resolves_to_the_component_providing_the_contract()
+    {
+        var atlas = NewAtlas();
+        var service = Component("acme-orders", "Acme.Orders");
+        service.Provides!.Add(new Provided { Name = "Acme.IOrderService", As = "contract", Basis = Basis.Extracted, Source = "proj" });
+        var client = Component("acme-web", "Acme.Web", new Link { Type = "reads", Name = "OrderRef.IOrderService", How = "wcf", Basis = Basis.Inferred, Source = "proj#L9" });
+        atlas.Entries[service.Id] = service;
+        atlas.Entries[client.Id] = client;
+        Resolver.Run(atlas);
+        Assert.Equal(service.Id, client.Links!.Single().To);
+
+        // A forward or an HTTP read that names nothing known stays a question, never a table that shares the name.
+        var gateway = Component("acme-edge", "Acme.Edge",
+            new Link { Type = "forwards-to", Name = "orders-api", How = "http", Basis = Basis.Inferred, Source = "proj#L4" },
+            new Link { Type = "reads", Name = "dbo.Orders", How = "http", Basis = Basis.Inferred, Source = "proj#L5" });
+        var table = new Entry { Id = Ids.DbObject("Sales", "tables", "dbo", "Orders"), Kind = Kinds.Table, Name = "dbo.Orders", Summary = "Orders.", Database = Ids.Database("Sales") };
+        atlas.Entries[gateway.Id] = gateway;
+        atlas.Entries[table.Id] = table;
+        Resolver.Run(atlas);
+        Assert.All(gateway.Links!, l => Assert.Null(l.To));
+        Assert.Equal(2, QuestionList.Parse(gateway.Body).Items.Count(q => q.Missing!.Contains("No scanned repository provides it")));
+
+        // With no transport, a read of a name a component provides goes to the component, not the table sharing it.
+        service.Provides!.Add(new Provided { Name = "dbo.Orders", As = "contract", Basis = Basis.Stated, Source = "person:a@2026-11-24" });
+        var bare = Component("acme-ui", "Acme.Ui", new Link { Type = "reads", Name = "dbo.Orders", Basis = Basis.Inferred, Source = "proj#L6" });
+        atlas.Entries[bare.Id] = bare;
+        Resolver.Run(atlas);
+        Assert.Equal(service.Id, bare.Links!.Single().To);
+    }
+
+    [Fact]
+    public void Transports_come_from_a_fixed_list_and_roles_belong_on_components()
+    {
+        var atlas = NewAtlas();
+        var api = Component("acme-api", "Acme.Api");
+        var gateway = Component("acme-edge", "Acme.Edge",
+            new Link { Type = "forwards-to", To = api.Id, How = "http", Uses = ["POST /orders"], Basis = Basis.Extracted, Source = "proj#L1" },
+            new Link { Type = "reads", To = api.Id, How = "REST", Basis = Basis.Extracted, Source = "proj#L2" });
+        gateway.Role = new Role { Name = "proxy", Basis = Basis.Stated, Source = "person:a@2026-11-24" };
+        var db = new Entry { Id = Ids.Database("Sales"), Kind = Kinds.Database, Name = "Sales", Summary = "Sales.", Role = new Role { Name = "lookup", Basis = Basis.Stated, Source = "person:a@2026-11-24" } };
+        foreach (var e in new[] { api, gateway, db }) atlas.Entries[e.Id] = e;
+        var issues = Validator.Check(atlas);
+        var errors = issues.Where(i => i.Error).Select(i => i.Message).ToList();
+        Assert.Contains(issues, i => !i.Error && i.Message.Contains("how 'REST' is not one of"));
+        Assert.Contains(errors, m => m.Contains("role 'proxy' is not one of"));
+        Assert.Contains(errors, m => m.Contains("role belongs on components and external systems only"));
+        Assert.DoesNotContain(errors, m => m.Contains("forwards-to") || m.Contains("cannot point at a component"));
+    }
+
+    [Fact]
     public void Indexes_reverse_lists_queries_and_rename_agree()
     {
         var atlas = NewAtlas("organisation: Test\nlimits: {index-rows: 2}\n");

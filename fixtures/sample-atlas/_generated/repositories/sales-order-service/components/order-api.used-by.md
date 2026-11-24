@@ -4,5 +4,8 @@ Direct users only. For indirect reach run `cartographer impact repositories/sale
 
 ## Called by
 
-- repositories/sales-storefront/components/webshop (inferred)
 - repositories/warehouse-stock/components/stock-service (stated)
+
+## Forwarded to by
+
+- repositories/sales-edge/components/order-gateway (extracted)

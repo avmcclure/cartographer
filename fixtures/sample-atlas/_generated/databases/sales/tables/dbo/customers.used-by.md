@@ -4,6 +4,7 @@ Direct users only. For indirect reach run `cartographer impact databases/sales/t
 
 ## Read by
 
+- repositories/sales-edge/components/customer-lookup (extracted)
 - repositories/sales-order-service/components/order-api (extracted)
 - repositories/sales-storefront/components/backoffice (extracted)
 - repositories/sales-storefront/components/webshop (extracted)

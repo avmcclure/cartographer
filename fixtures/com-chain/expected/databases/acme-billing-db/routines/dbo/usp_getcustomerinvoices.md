@@ -9,10 +9,12 @@ sources:
 links:
   - type: reads
     to: databases/acme-billing-db/tables/dbo/customers
+    how: sql
     basis: extracted
     source: sql#L8
   - type: reads
     to: databases/acme-billing-db/tables/dbo/invoices
+    how: sql
     basis: extracted
     source: sql#L7
 verified:

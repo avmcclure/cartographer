@@ -39,9 +39,18 @@ links:
     how: sql
     basis: extracted
     source: orders#L77
-  - type: calls
-    to: repositories/sales-order-service/components/order-api
+  - type: reads
+    to: repositories/sales-edge/components/customer-lookup
     how: http
+    uses:
+      - GET /customers/{id}
+    basis: inferred
+    source: account#L12-L20
+  - type: writes
+    to: repositories/sales-edge/components/order-gateway
+    how: http
+    uses:
+      - POST /orders
     basis: inferred
     source: checkout#L140-L158
 verified:
@@ -52,7 +61,7 @@ verified:
 
 ## Overview
 
-The shop trade customers use. They sign in, search the catalogue, fill a basket and check out. New orders are sent to the order API; a few older pages still talk to the Sales database directly.
+The shop trade customers use. They sign in, search the catalogue, fill a basket and check out. New orders are sent to the order API through the order gateway; a few older pages still talk to the Sales database directly.
 
 ## Technical detail
 
@@ -60,4 +69,4 @@ The shop trade customers use. They sign in, search the catalogue, fill a basket 
 64 `.asp` pages under `shop/`. One shared connection include, `shop/includes/conn.asp`: server `sql-prod-02`, database `Sales`.
 <!-- /extracted -->
 
-Checkout builds its `INSERT INTO Orders` statement as a string, so the write to Orders is inferred from the text, not read from a parsed statement. The call to the order API goes through `MSXML2.ServerXMLHTTP`; the address comes from an application variable set outside the repository.
+Checkout builds its `INSERT INTO Orders` statement as a string, so the write to Orders is inferred from the text, not read from a parsed statement. The call to the order gateway goes through `MSXML2.ServerXMLHTTP`; the address comes from an application variable set outside the repository.

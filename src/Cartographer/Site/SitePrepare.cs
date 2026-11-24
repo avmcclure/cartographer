@@ -45,7 +45,7 @@ public static class SitePrepare
 
         // Links between entries that both exist, as the site draws and selects them.
         var edges = atlas.Entries.Values.SelectMany(e => (e.Links ?? []).Where(l => l.To is not null && l.To != e.Id && atlas.Find(l.To) is not null)
-            .Select(l => (From: e.Id, To: l.To!, l.Type, l.Basis))).ToList();
+            .Select(l => (From: e.Id, To: l.To!, l.Type, l.Basis, l.How, Ops: l.Type is "depends-on" or "uses" ? null : l.Uses))).ToList();
 
         var inbound = Indexer.Inbound(atlas);
         var questions = atlas.Entries.Values.ToDictionary(e => e.Id, e => QuestionList.Parse(e.Body), StringComparer.Ordinal);
@@ -75,6 +75,7 @@ public static class SitePrepare
                 systems = e.Systems?.Select(s => new { system = Ref(s.Id), s.Basis, evidence = Ev(s.Source) }),
                 tags = e.Tags?.Select(t => new { t.Name, t.Basis, evidence = Ev(t.Source) }),
                 owner = e.Owner is { } o ? new { o.Name, o.Basis, evidence = Ev(o.Source) } : null,
+                role = e.Role is { } r ? new { r.Name, r.Basis, evidence = Ev(r.Source) } : null,
                 uses = e.Links?.Select(l => new { l.Type, verb = Verb(l.Type), to = Ref(l.To), unresolved = l.To is null ? l.Name : null, l.Name, l.Database, l.Version, l.How, via = Ref(l.Via), names = l.Uses, l.Count, l.Basis, evidence = Ev(l.Source) }),
                 usedBy,
                 drift = e.Drift?.Select(d => new { d.What, sources = d.Sources.Select(Ev) }),
@@ -95,16 +96,41 @@ public static class SitePrepare
 
         // The map: clusters, and the links between parts in the direction the data goes, with what they do, counted.
         // Calls carry requests rather than data and keep their own direction; code dependencies are left out.
+        // A pass-through carries data whichever way its callers move it: what is written into it goes on to its targets,
+        // and what is read from it comes back from them, through any chain of pass-throughs. With no caller moving data
+        // a known way, a forward is drawn as a call.
+        var into = edges.Where(e => e.Type is not ("depends-on" or "forwards-to") && Flow(e.Type) != 0).GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => Flow(e.Type)).ToHashSet(), StringComparer.Ordinal);
+        var forwardedBy = edges.Where(e => e.Type == "forwards-to").GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => e.From).ToList(), StringComparer.Ordinal);
+        // ponytail: walked afresh for each forward, no caching (a cache goes wrong in a loop of pass-throughs); cache per
+        // strongly connected group if an atlas ever has thousands of them.
+        HashSet<int> WaysThrough(string proxy, HashSet<string> seen)
+        {
+            var found = new HashSet<int>(into.GetValueOrDefault(proxy) ?? []);
+            if (seen.Add(proxy)) foreach (var outer in forwardedBy.GetValueOrDefault(proxy) ?? []) found.UnionWith(WaysThrough(outer, seen));
+            return found;
+        }
+        IEnumerable<int> Ways(string from, string type) => type != "forwards-to" ? [Flow(type)]
+            : WaysThrough(from, new(StringComparer.Ordinal)) is { Count: > 0 } w ? w.OrderDescending() : [0];   // no caller says which way: direction unknown, like a call
         var partLinks = edges.Where(e => e.Type != "depends-on")
-            .Select(e => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis, Flow: Flow(e.Type)))
+            .SelectMany(e => Ways(e.From, e.Type).Select(flow => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis, e.How, e.Ops, Flow: flow, Back: e.Type == "forwards-to" && flow < 0)))
             .Where(e => e.From is not null && e.To is not null && e.From != e.To)
             .Select(e => e.Flow < 0 ? e with { From = e.To, To = e.From } : e)
-            .GroupBy(e => (e.From!, e.To!, Call: e.Flow == 0)).OrderBy(g => g.Key.Item1, StringComparer.Ordinal).ThenBy(g => g.Key.Item2, StringComparer.Ordinal).ThenBy(g => g.Key.Call)
+            // Data read back through a pass-through is kept apart from ordinary links between the same two parts.
+            .GroupBy(e => (e.From!, e.To!, Call: e.Flow == 0, e.Back)).OrderBy(g => g.Key.Item1, StringComparer.Ordinal).ThenBy(g => g.Key.Item2, StringComparer.Ordinal).ThenBy(g => g.Key.Call).ThenBy(g => g.Key.Back)
             .Select(g => new
             {
                 from = g.Key.Item1, to = g.Key.Item2, call = g.Key.Call ? true : (bool?)null, count = g.Count(), basis = Weakest(g.Select(x => x.Basis)),
-                verbs = g.GroupBy(x => Verb(x.Type)).Select(v => new { verb = v.Key, count = v.Count() }).OrderByDescending(v => v.count).ThenBy(v => v.verb, StringComparer.Ordinal),
+                // Data read back through a pass-through: the target is read through it, it does not forward to it.
+                verbs = g.GroupBy(x => x.Back ? "is read through" : Verb(x.Type)).Select(v => new { verb = v.Key, count = v.Count() }).OrderByDescending(v => v.count).ThenBy(v => v.verb, StringComparer.Ordinal),
+                // Transports, with "" counting links that record none, so the map can filter on either.
+                over = g.Any(x => x.How is not null) ? g.GroupBy(x => x.How?.ToLowerInvariant() ?? "").Select(h => new { how = h.Key, count = h.Count() }).OrderBy(h => h.how == "").ThenByDescending(h => h.count).ThenBy(h => h.how, StringComparer.Ordinal) : null,
+                ops = g.Any(x => x.Ops is not null) && !g.Key.Back ? g.SelectMany(x => x.Ops ?? []).Distinct().Order(StringComparer.Ordinal) : null,   // a forward's routes say nothing about which way
+                forwards = g.Any(x => x.Type == "forwards-to") ? true : (bool?)null,
+                back = g.Key.Back ? true : (bool?)null,
             }).ToList();
+        var forwarders = edges.Where(e => e.Type == "forwards-to").Select(e => PartOf(e.From)).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        var targetsOf = edges.Where(e => e.Type == "forwards-to").GroupBy(e => e.From).ToDictionary(g => g.Key, g => g.Select(e => e.To).Distinct().Count(), StringComparer.Ordinal);
+        var roles = Roles(atlas, grouping, forwarders, targetsOf, partLinks.Select(l => (l.from, l.to, Call: l.call == true, Back: l.back == true, Verbs: l.verbs.Select(v => v.verb))).ToList());
         var questionsOf = atlas.Entries.Values.Where(e => PartOf(e.Id) is not null).GroupBy(e => PartOf(e.Id)!).ToDictionary(g => g.Key, g => g.Sum(Unsurveyed), StringComparer.Ordinal);
         Write("clusters.json", new
         {
@@ -112,7 +138,12 @@ public static class SitePrepare
             clusters = grouping.Clusters.Select(c => new
             {
                 key = keys[c], c.Name, c.Pinned, unlinked = c.Name == Clusters.Unlinked ? true : (bool?)null,
-                members = c.Members.Select(m => new { id = m, atlas.Entries[m].Name, atlas.Entries[m].Kind, atlas.Entries[m].Type, found = Found(atlas, atlas.Entries[m]), unsurveyed = questionsOf.GetValueOrDefault(m) }),
+                members = c.Members.Select(m => new
+                {
+                    id = m, atlas.Entries[m].Name, atlas.Entries[m].Kind, atlas.Entries[m].Type, found = Found(atlas, atlas.Entries[m]), unsurveyed = questionsOf.GetValueOrDefault(m),
+                    role = roles.TryGetValue(m, out var r) && r.Name != "stage" ? r.Name : null,
+                    roleBasis = r.Name is not (null or "stage") ? r.Basis : null, readers = r.Name == "lookup" ? r.Readers : (int?)null,
+                }),
             }),
             parts = partLinks,
             suggestion = grouping.Suggestion is { } s ? new
@@ -171,11 +202,52 @@ public static class SitePrepare
     /// </summary>
     public static int Flow(string type) => type switch
     {
-        "writes" or "publishes-to" or "sends-to" => 1,
+        "writes" or "publishes-to" or "sends-to" or "forwards-to" => 1,
         "reads" or "consumes-from" or "receives-from" => -1,
         "calls" or "uses" or "links-to" or "references" or "fires-on" => 0,
         _ => 0,   // ponytail: a link type added later is drawn as a call until it is placed here
     };
+
+    /// <summary>
+    /// Where each part sits (spec section 8). A pass-through forwards requests to other parts. A lookup is a component
+    /// that two or more parts read from, whose data comes only from databases, so it sits beside the flow rather than
+    /// in it; an external system is one only when an entry says so. A role an entry states wins. Parts with neither are stages, in the flow.
+    /// </summary>
+    /// <returns>Each part's role, the basis of the entry's own role when it set one, and how many parts read it.</returns>
+    static Dictionary<string, (string Name, string? Basis, int Readers)> Roles(Atlas atlas, Grouping grouping, HashSet<string> forwarders, Dictionary<string, int> targetsOf, List<(string From, string To, bool Call, bool Back, IEnumerable<string> Verbs)> links)
+    {
+        var roles = new Dictionary<string, (string, string?, int)>(StringComparer.Ordinal);
+        // Who reads a part, directly or through pass-throughs in front of it.
+        HashSet<string> Readers(string id, HashSet<string> seen)
+        {
+            var found = new HashSet<string>(StringComparer.Ordinal);
+            if (!seen.Add(id)) return found;
+            foreach (var l in links.Where(l => l.From == id && !l.Call))
+                // Through a pass-through only when it forwards to nothing else: otherwise its readers may want its other targets.
+                if (l.Back) { if (targetsOf.GetValueOrDefault(l.To) == 1) found.UnionWith(Readers(l.To, seen)); }
+                else if (l.Verbs.Any(v => v is "reads" or "receives from")) found.Add(l.To);
+            return found;
+        }
+        foreach (var id in grouping.Clusters.SelectMany(c => c.Members))
+        {
+            var e = atlas.Entries[id];
+            var readers = Readers(id, new(StringComparer.Ordinal)).Count;
+            // An entry's own role counts only where check would accept it.
+            if (e.Role is { } own && LinkTypes.Roles.Contains(own.Name, StringComparer.OrdinalIgnoreCase) && e.Kind is Kinds.Component or Kinds.External) { roles[id] = (own.Name.ToLowerInvariant(), own.Basis, readers); continue; }
+            if (forwarders.Contains(id)) { roles[id] = ("pass-through", null, readers); continue; }
+            var into = links.Where(l => l.To == id && !l.Call).ToList();
+            // Only a component, fed by at least one database and by nothing else: an external system read by two parts is
+            // where their data starts, and a call to another part with no known direction could be feeding it.
+            bool Database(string part) => atlas.Find(part)?.Kind == Kinds.Database;
+            var unknownCalls = links.Any(l => l.Call && (l.From == id && !Database(l.To) || l.To == id && !Database(l.From)));
+            // And all it sends on is reads served or writes to its own databases: a service that publishes or writes
+            // onward is part of the flow.
+            var onward = links.Where(l => l.From == id && !l.Call && !l.Back).All(l => Database(l.To) || l.Verbs.All(v => v is "reads" or "receives from"));
+            if (e.Kind == Kinds.Component && readers >= 2 && into.Count > 0 && into.All(l => Database(l.From)) && !unknownCalls && onward)
+                roles[id] = ("lookup", null, readers);
+        }
+        return roles;
+    }
 
     static string Weakest(IEnumerable<string> bases)
     {

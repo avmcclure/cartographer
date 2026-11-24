@@ -10,6 +10,7 @@ sources:
 links:
   - type: reads
     to: databases/shop/tables/dbo/orderlines
+    how: sql
     basis: extracted
     source: sql#L7
 verified:

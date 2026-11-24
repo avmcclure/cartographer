@@ -1,0 +1,390 @@
+<title>Atlas Links and Transports</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one map. Lanes are clusters; data flows left to right. Lookups sit in a band at the top of their lane, beside the flow. Details on the right. */
+:root {
+  --bg: #f3f5f7; --surface: #ffffff; --fg: #17202b; --muted: #56636f; --rule: #d6dde4; --accent: #0b6e8a; --accent-soft: #dcecf1;
+  --up: #8a4fb0; --up-soft: #efe4f6; --line: #8796a6; --band: #e9edf1;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161c; --surface: #19212a; --fg: #e4e9ee; --muted: #9aa7b4; --rule: #2c3743; --accent: #5cc0dc; --accent-soft: #173341;
+  --up: #c99be6; --up-soft: #2c2138; --line: #6c7b8a; --band: #151c23; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161c; --surface: #19212a; --fg: #e4e9ee; --muted: #9aa7b4; --rule: #2c3743; --accent: #5cc0dc; --accent-soft: #173341;
+  --up: #c99be6; --up-soft: #2c2138; --line: #6c7b8a; --band: #151c23; color-scheme: dark }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.5 var(--sans); display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;
+  padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+header { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+.brand { font-weight: 600; font-size: 17px; }
+.brand span { color: var(--muted); font-weight: 400; }
+.toggles { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; align-items: center; }
+.toggles label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.transports { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.chip { border: 1px solid var(--rule); background: var(--surface); border-radius: 999px; padding: 2px 9px; font: 500 12px var(--mono); }
+.chip[aria-pressed="false"] { opacity: 0.45; text-decoration: line-through; }
+.chip .n { color: var(--muted); margin-left: 4px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); align-items: center; }
+.legend svg { vertical-align: middle; margin-right: 4px; }
+
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; }
+@media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(460px, 65vh) auto; } }
+.stage { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; overflow: auto; min-height: 460px; }
+svg.map { display: block; }
+
+.lane-bg { fill: var(--bg); }
+.band-bg { fill: var(--band); }
+.lane-name { font: 600 13px var(--sans); fill: var(--fg); }
+.band-name { font: 500 10px var(--mono); fill: var(--muted); letter-spacing: 0.06em; }
+.edge { fill: none; stroke: var(--line); stroke-opacity: 0.6; stroke-width: 1.5; }
+.edge.call { stroke-dasharray: 2 4; }
+.edge.inferred { stroke-opacity: 0.3; }
+.edge.via { stroke-dasharray: 8 3; }
+.edge.look { stroke-width: 1.2; stroke-dasharray: 1 3; }
+.edge.down { stroke: var(--accent); stroke-opacity: 1; stroke-width: 2.2; }
+.edge.up { stroke: var(--up); stroke-opacity: 1; stroke-width: 2.2; }
+.tag { font: 500 10px var(--mono); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; fill: var(--fg); }
+.dim { opacity: 0.12; }
+.off { display: none; }
+.node { cursor: pointer; }
+.node rect, .node polygon { fill: var(--surface); stroke: var(--line); stroke-width: 1.4; }
+.node.lookup rect { stroke-dasharray: 4 3; }
+.node.proxy polygon { fill: var(--bg); }
+.node text { fill: var(--fg); font: 12px var(--sans); }
+.node .kind { fill: var(--muted); font: 10px var(--mono); }
+.node .pip { fill: var(--muted); stroke: none; }
+.node.sel rect, .node.sel polygon { stroke: var(--fg); stroke-width: 2.6; }
+.node.down rect, .node.down polygon { fill: var(--accent-soft); stroke: var(--accent); }
+.node.up rect, .node.up polygon { fill: var(--up-soft); stroke: var(--up); }
+.node:focus-visible { outline: none; }
+.node:focus-visible rect, .node:focus-visible polygon { stroke: var(--accent); stroke-width: 2.6; }
+
+aside { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; overflow: auto; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+aside h2 { margin: 0; font-size: 18px; font-weight: 600; overflow-wrap: anywhere; text-wrap: balance; }
+aside h3 { margin: 0 0 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+aside p { margin: 0; color: var(--muted); line-height: 1.5; }
+.cap { margin: 0 0 2px; font: 500 11px var(--mono); color: var(--muted); }
+.role { border-left: 3px solid var(--accent); padding: 6px 10px; background: var(--bg); border-radius: 0 6px 6px 0; color: var(--fg); }
+.role b { font-weight: 600; }
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows li { border-top: 1px solid var(--rule); }
+.rows li:first-child { border-top: 0; }
+.rows button { width: 100%; display: block; text-align: left; background: none; border: 0; padding: 7px 0; }
+.rows button:hover .name { color: var(--accent); }
+.rows .name { overflow-wrap: anywhere; }
+.rows .verb { display: block; color: var(--muted); font-size: 12px; }
+.rows .verb code { font: 11px var(--mono); }
+.empty { font-size: 13px; color: var(--muted); padding: 4px 0; }
+table.model { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.model td { border-top: 1px solid var(--rule); padding: 6px 4px; vertical-align: top; }
+table.model td:first-child { font-weight: 600; white-space: nowrap; padding-right: 10px; }
+table.model td:last-child { color: var(--muted); }
+.counts { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; font-size: 13px; }
+.counts code { font: 12px var(--mono); }
+.counts .bar { height: 6px; border-radius: 3px; background: var(--line); opacity: 0.6; }
+.counts .n { font: 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.example { font-size: 12px; color: var(--muted); margin: 0; }
+a.clear { color: var(--accent); font-size: 13px; }
+</style>
+
+<header>
+  <div class="brand">Kestrel Group <span>ordering, example data</span></div>
+  <div class="toggles">
+    <label><input type="checkbox" id="proxies" checked> Show pass-throughs</label>
+    <label><input type="checkbox" id="calls" checked> Show unknown direction</label>
+  </div>
+  <div class="transports" id="transports" role="group" aria-label="Transports shown"><span>Over</span></div>
+  <div class="legend" aria-label="Key">
+    <span><svg width="30" height="10" aria-hidden="true"><path d="M0 5 H24" stroke="currentColor" stroke-width="1.6"/><path d="M22 1 L30 5 L22 9 z" fill="currentColor"/></svg>data</span>
+    <span><svg width="30" height="10" aria-hidden="true"><path d="M0 5 H30" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 4"/></svg>direction unknown</span>
+    <span><svg width="22" height="14" aria-hidden="true"><polygon points="5,1 17,1 21,7 17,13 5,13 1,7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>pass-through</span>
+    <span><svg width="22" height="14" aria-hidden="true"><rect x="1" y="1" width="20" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 2"/></svg>lookup</span>
+  </div>
+</header>
+
+<main>
+  <section class="stage" aria-label="Data flow map"><svg class="map" id="svg" role="group" aria-label="Parts in lanes by cluster, data flowing left to right, lookups in a band at the top of each lane"></svg></section>
+  <aside id="panel" aria-live="polite"></aside>
+</main>
+<p class="example">Made-up example. Each link records which way data moves (its type), what it travels over (its transport) and the operation (its verb). Each part's role is worked out from its links unless a person has stated it.</p>
+
+<script>
+// ---- Example atlas -------------------------------------------------------------------------------------------
+const LANES = [['store', 'Storefront'], ['orders', 'Ordering'], ['fulfil', 'Fulfilment'], ['shared', 'Shared services']];
+const PARTS = [
+  ['web', 'Web shop', 'site', 'store'], ['app', 'Mobile app', 'app', 'store'], ['admin', 'Store admin', 'site', 'store'], ['checkout', 'Checkout service', 'service', 'store'],
+  ['gateway', 'Orders gateway', 'service', 'orders'], ['v1', 'Orders v1', 'wcf service', 'orders'], ['v2', 'Orders v2', 'service', 'orders'],
+  ['legacydb', 'OrdersLegacy', 'database', 'orders'], ['ordersdb', 'Orders', 'database', 'orders'], ['events', 'order-events', 'topic', 'orders'],
+  ['custmaster', 'Customer master', 'vb6 server', 'orders'], ['picks', 'PickTickets', 'queue', 'orders'],
+  ['wsync', 'Warehouse sync', 'job', 'fulfil'], ['ship', 'Shipping service', 'service', 'fulfil'], ['labels', 'Label printer bridge', 'desktop app', 'fulfil'],
+  ['parcelway', 'Parcelway', 'external', 'fulfil'],
+  ['pricing', 'Pricing API', 'service', 'shared'], ['pricedb', 'Pricing', 'database', 'shared'], ['priceadmin', 'Price admin', 'site', 'shared'],
+  ['tax', 'Taxware rates', 'external', 'shared'], ['auth', 'Identity service', 'service', 'shared'], ['flags', 'Feature flags', 'service', 'shared', 'lookup'],
+].map(([id, name, kind, lane, stated]) => ({ id, name, kind, lane, stated }));
+// [from, type, to, over, verb, basis]
+const LINKS = [
+  ['web', 'writes', 'checkout', 'http', 'POST /checkout'], ['app', 'writes', 'checkout', 'http', 'POST /checkout'],
+  ['web', 'reads', 'pricing', 'http', 'GET /prices'], ['app', 'reads', 'pricing', 'http', 'GET /prices'], ['checkout', 'reads', 'pricing', 'grpc', 'GetQuote'],
+  ['checkout', 'reads', 'tax', 'http', 'GET /rates'],
+  ['web', 'reads', 'auth', 'http', 'POST /token'], ['app', 'reads', 'auth', 'http', 'POST /token'], ['admin', 'reads', 'auth', 'http', 'POST /token'], ['checkout', 'reads', 'auth', 'http', 'GET /userinfo'],
+  ['checkout', 'writes', 'gateway', 'http', 'POST /orders'],
+  ['gateway', 'forwards-to', 'v1', 'soap', 'SubmitOrder'], ['gateway', 'forwards-to', 'v2', 'http', 'POST /v2/orders'],
+  ['admin', 'reads', 'v2', 'http', 'GET /v2/orders'], ['admin', 'writes', 'v2', 'http', 'PATCH /v2/orders/{id}'],
+  ['v1', 'writes', 'legacydb', 'sql', 'usp_InsertOrder'], ['v2', 'writes', 'ordersdb', 'sql', 'Orders, OrderLines'],
+  ['v2', 'publishes-to', 'events', 'kafka', 'OrderPlaced'], ['v1', 'publishes-to', 'picks', 'msmq', 'PickTicket'],
+  ['v1', 'reads', 'custmaster', 'remoting', 'ICustomerLookup.Find'], ['admin', 'reads', 'custmaster', 'remoting', 'ICustomerLookup.Search', 'inferred'],
+  ['v2', 'reads', 'flags', 'http', 'GET /flags'],
+  ['wsync', 'consumes-from', 'events', 'kafka', 'OrderPlaced'], ['wsync', 'reads', 'legacydb', 'sql', 'polls Orders every 5 min', 'inferred'],
+  ['wsync', 'writes', 'ship', 'http', 'POST /shipments'], ['ship', 'sends-to', 'parcelway', 'sftp', 'manifest_YYYYMMDD.csv'], ['ship', 'sends-to', 'parcelway', 'http', 'POST /labels'],
+  ['labels', 'consumes-from', 'picks', 'msmq', 'PickTicket'], ['ship', 'calls', 'labels', 'com', 'LabelBridge.Print'],
+  ['priceadmin', 'writes', 'pricedb', 'sql', 'PriceList'], ['pricing', 'reads', 'pricedb', 'sql', 'PriceList'],
+].map(([from, type, to, over, verb, basis = 'extracted']) => ({ from, type, to, over, verb, basis }));
+
+// ---- The model ------------------------------------------------------------------------------------------------
+// Which way data moves for each type: +1 from -> to, -1 to -> from, 0 unknown.
+const FLOW = { writes: 1, 'publishes-to': 1, 'sends-to': 1, 'forwards-to': 1, reads: -1, 'consumes-from': -1, 'receives-from': -1, calls: 0 };
+const byId = new Map(PARTS.map((p) => [p.id, p]));
+// Data edges: source of the data -> where it goes.
+const data = LINKS.filter((l) => FLOW[l.type]).map((l) => ({ ...l, src: FLOW[l.type] > 0 ? l.from : l.to, dst: FLOW[l.type] > 0 ? l.to : l.from }));
+// Roles: pass-through has forwards-to; lookup is a component or external that others only read from (two or more of them),
+// with nothing written or forwarded into it. A stated role wins.
+for (const p of PARTS) {
+  const into = LINKS.filter((l) => l.to === p.id && FLOW[l.type] > 0);
+  const readers = new Set(LINKS.filter((l) => l.to === p.id && l.type === 'reads').map((l) => l.from));
+  p.role = p.stated ?? (LINKS.some((l) => l.from === p.id && l.type === 'forwards-to') ? 'proxy'
+    : !['database', 'topic', 'queue'].includes(p.kind) && !into.length && readers.size >= 2 ? 'lookup' : 'stage');
+  p.basis = p.stated ? 'stated' : 'derived';
+}
+
+// ---- State ----------------------------------------------------------------------------------------------------
+const TRANSPORTS = Object.entries(Object.groupBy(LINKS, (l) => l.over)).map(([t, ls]) => [t, ls.length]).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+const state = { shown: new Set(TRANSPORTS.map(([t]) => t)), proxies: true, calls: true, picked: null };
+
+// Edges as drawn: lookups are read beside the flow; with pass-throughs hidden, what went in goes straight to each target.
+function edges() {
+  const on = (l) => state.shown.has(l.over);
+  const isLookup = (id) => byId.get(id).role === 'lookup';
+  let flow = data.filter((e) => on(e) && !(e.type === 'reads' && isLookup(e.to)));
+  if (!state.proxies) {
+    const proxies = new Set(PARTS.filter((p) => p.role === 'proxy').map((p) => p.id));
+    const out = flow.filter((e) => proxies.has(e.src)), into = flow.filter((e) => proxies.has(e.dst));
+    flow = flow.filter((e) => !proxies.has(e.src) && !proxies.has(e.dst));
+    for (const a of into) for (const b of out.filter((o) => o.src === a.dst))
+      flow.push({ ...b, src: a.src, dst: b.dst, via: byId.get(a.dst).name, verb: `${a.verb} → ${b.verb}`, over: a.over === b.over ? a.over : `${a.over} → ${b.over}` });
+  }
+  const looks = data.filter((e) => on(e) && e.type === 'reads' && isLookup(e.to));
+  const calls = state.calls ? LINKS.filter((l) => !FLOW[l.type] && on(l)) : [];
+  return { flow, looks, calls };
+}
+const visible = (p) => state.proxies || p.role !== 'proxy';
+
+// ---- Layout ---------------------------------------------------------------------------------------------------
+const COL_W = 196, NODE_W = 152, NODE_H = 40, ROW_H = 58, BAND_H = 62, LABEL_H = 30, X0 = 24;
+function layout(flow) {
+  const ids = PARTS.filter((p) => p.role !== 'lookup' && visible(p)).map((p) => p.id).sort();
+  const out = new Map(ids.map((i) => [i, []]));
+  for (const e of flow) out.get(e.src)?.push(e.dst);
+  // Break loops depth-first in ID order, then longest path.
+  const st = new Map(), keep = [];
+  const walk = (v) => { st.set(v, 1); for (const w of out.get(v) ?? []) { if (st.get(w) === 1) continue; keep.push([v, w]); if (!st.has(w)) walk(w); } st.set(v, 2); };
+  for (const v of ids) if (!st.has(v)) walk(v);
+  const col = new Map(ids.map((i) => [i, 0]));
+  for (let changed = true, n = 0; changed && n < ids.length; n++) { changed = false; for (const [a, b] of keep) if (col.get(b) < col.get(a) + 1) { col.set(b, col.get(a) + 1); changed = true; } }
+  // A part that only sends sits just before the first part it feeds.
+  for (const v of ids) { const tos = keep.filter(([a]) => a === v).map(([, b]) => col.get(b)); if (tos.length && !keep.some(([, b]) => b === v)) col.set(v, Math.min(...tos) - 1); }
+
+  const pos = new Map(); let y = 0; const lanes = [];
+  for (const [key, name] of LANES) {
+    const members = PARTS.filter((p) => p.lane === key && visible(p));
+    const looks = members.filter((p) => p.role === 'lookup'), flowers = members.filter((p) => p.role !== 'lookup');
+    const top = y, band = looks.length ? BAND_H : 0;
+    looks.forEach((p, i) => pos.set(p.id, { x: X0 + i * COL_W, y: top + LABEL_H + 10 }));
+    const rows = new Map();
+    for (const p of flowers.sort((a, b) => col.get(a.id) - col.get(b.id) || a.name.localeCompare(b.name))) {
+      const c = col.get(p.id), r = rows.get(c) ?? 0; rows.set(c, r + 1);
+      pos.set(p.id, { x: X0 + c * COL_W, y: top + LABEL_H + band + 8 + r * ROW_H });
+    }
+    const h = LABEL_H + band + 8 + Math.max(1, ...rows.values()) * ROW_H + 6;
+    lanes.push({ key, name, top, h, band });
+    y += h + 10;
+  }
+  const width = X0 * 2 + Math.max(0, ...[...pos.values()].map((p) => p.x)) + NODE_W;
+  return { pos, lanes, width, height: y };
+}
+
+// ---- Drawing --------------------------------------------------------------------------------------------------
+const svg = document.getElementById('svg'), NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent, text) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v); if (text != null) e.textContent = text; parent?.append(e); return e; };
+function route(a, b) {
+  const x1 = a.x + NODE_W, y1 = a.y + NODE_H / 2, x2 = b.x, y2 = b.y + NODE_H / 2;
+  if (x2 > x1 + 10) { const m = (x2 - x1) / 2; return `M${x1},${y1} C${x1 + m},${y1} ${x2 - m},${y2} ${x2 - 6},${y2}`; }
+  const d = Math.max(40, Math.abs(y2 - y1) / 2);
+  return `M${x1},${y1} C${x1 + 60},${y1 + d} ${x2 - 60},${y2 + d} ${x2 - 6},${y2}`;
+}
+function clip(s, max) { return s.length > max ? s.slice(0, max - 1) + '…' : s; }
+
+let drawn;
+function draw() {
+  const E = edges(), L = layout(E.flow);
+  svg.replaceChildren();
+  svg.setAttribute('width', L.width); svg.setAttribute('height', L.height); svg.setAttribute('viewBox', `0 0 ${L.width} ${L.height}`);
+  const defs = el('defs', {}, svg);
+  for (const [id, c] of [['a-line', 'var(--line)'], ['a-down', 'var(--accent)'], ['a-up', 'var(--up)']]) {
+    const m = el('marker', { id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M0,0 L10,5 L0,10 z', fill: c }, m);
+  }
+  for (const l of L.lanes) {
+    el('rect', { class: 'lane-bg', x: 0, y: l.top, width: L.width, height: l.h, rx: 6 }, svg);
+    el('text', { class: 'lane-name', x: X0, y: l.top + 20 }, svg, l.name);
+    if (l.band) { el('rect', { class: 'band-bg', x: 8, y: l.top + LABEL_H, width: L.width - 16, height: l.band, rx: 4 }, svg); el('text', { class: 'band-name', x: L.width - 16, y: l.top + LABEL_H + 14, 'text-anchor': 'end' }, svg, 'LOOKUPS, BESIDE THE FLOW'); }
+  }
+  const layer = el('g', {}, svg), tags = el('g', {}, svg), nodes = el('g', {}, svg);
+  const paths = [];
+  const add = (e, kind) => {
+    const [a, b] = kind === 'call' ? [L.pos.get(e.from), L.pos.get(e.to)] : [L.pos.get(e.src), L.pos.get(e.dst)];
+    if (!a || !b) return;
+    const d = kind === 'look' ? `M${a.x + NODE_W / 2},${a.y + NODE_H} C${a.x + NODE_W / 2},${(a.y + b.y) / 2} ${b.x + NODE_W / 2},${(a.y + b.y) / 2} ${b.x + NODE_W / 2},${b.y - 4}` : route(a, b);
+    const p = el('path', { d, class: `edge ${kind === 'call' ? 'call' : kind === 'look' ? 'look off' : ''} ${e.basis === 'inferred' ? 'inferred' : ''} ${e.via ? 'via' : ''}`, 'marker-end': kind === 'call' ? null : 'url(#a-line)' }, layer);
+    el('title', {}, p, `${e.over} · ${e.verb}${e.via ? ` · via ${e.via}` : ''}`);
+    paths.push({ e, kind, p, mid: kind === 'look' ? { x: (a.x + b.x) / 2 + NODE_W / 2, y: (a.y + NODE_H + b.y) / 2 } : { x: (a.x + NODE_W + b.x) / 2, y: (a.y + b.y) / 2 + NODE_H / 2 } });
+  };
+  E.flow.forEach((e) => add(e, 'flow')); E.looks.forEach((e) => add(e, 'look')); E.calls.forEach((e) => add(e, 'call'));
+
+  const nodeEls = new Map();
+  for (const p of PARTS) {
+    const at = L.pos.get(p.id); if (!at) continue;
+    const g = el('g', { class: `node ${p.role}`, transform: `translate(${at.x},${at.y})`, tabindex: 0, role: 'button', 'aria-label': `${p.name}, ${p.kind}${p.role !== 'stage' ? `, ${p.role === 'proxy' ? 'pass-through' : 'lookup'}` : ''}` }, nodes);
+    if (p.role === 'proxy') el('polygon', { points: `10,0 ${NODE_W - 10},0 ${NODE_W},${NODE_H / 2} ${NODE_W - 10},${NODE_H} 10,${NODE_H} 0,${NODE_H / 2}` }, g);
+    else el('rect', { width: NODE_W, height: NODE_H, rx: p.kind === 'database' ? 12 : 5 }, g);
+    el('text', { x: 10, y: 17 }, g, clip(p.name, 22));
+    el('text', { class: 'kind', x: 10, y: 31 }, g, clip(p.role === 'proxy' ? 'pass-through' : p.kind, 24));
+    // Pips: how many lookups this part reads, without drawing every line.
+    const n = E.looks.filter((e) => e.dst === p.id).length;
+    for (let i = 0; i < Math.min(n, 4); i++) el('circle', { class: 'pip', cx: NODE_W - 10 - i * 8, cy: 9, r: 2.6 }, g);
+    if (n) el('title', {}, g, `Reads ${n} lookup${n === 1 ? '' : 's'}`);
+    g.addEventListener('click', () => pick(p.id));
+    g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pick(p.id); } });
+    nodeEls.set(p.id, g);
+  }
+  drawn = { E, L, paths, nodeEls, tags };
+  mark();
+}
+
+// ---- Selection ------------------------------------------------------------------------------------------------
+function reach(id, dir) {
+  const { flow, looks } = drawn.E, all = [...flow, ...looks];
+  const seen = new Set([id]), hit = new Set(), q = [id];
+  while (q.length) {
+    const v = q.shift();
+    for (const e of all) {
+      const [from, to] = dir === 'down' ? [e.src, e.dst] : [e.dst, e.src];
+      if (from !== v) continue;
+      hit.add(e);
+      if (seen.has(to)) continue;
+      seen.add(to);
+      // A lookup's readers are where its data stops, unless the lookup itself is selected.
+      if (!(dir === 'down' && looks.includes(e) && v !== id)) q.push(to);
+    }
+  }
+  seen.delete(id);
+  return { parts: seen, edges: hit };
+}
+function mark() {
+  const { paths, nodeEls, tags } = drawn, id = state.picked;
+  tags.replaceChildren();
+  const down = id ? reach(id, 'down') : null, up = id ? reach(id, 'up') : null;
+  for (const [pid, g] of nodeEls) {
+    g.classList.toggle('sel', pid === id);
+    g.classList.toggle('down', !!down?.parts.has(pid)); g.classList.toggle('up', !!up?.parts.has(pid) && !down?.parts.has(pid));
+    g.classList.toggle('dim', !!id && pid !== id && !down.parts.has(pid) && !up.parts.has(pid));
+  }
+  for (const { e, kind, p, mid } of paths) {
+    const isDown = !!down?.edges.has(e), isUp = !!up?.edges.has(e), isCall = kind === 'call' && (e.from === id || e.to === id);
+    p.classList.toggle('down', isDown); p.classList.toggle('up', isUp && !isDown);
+    p.classList.toggle('dim', !!id && !isDown && !isUp && !isCall);
+    // Lookup lines show only for the selected lookup; a reader's lookups light up without lines across the map.
+    if (kind === 'look') p.classList.toggle('off', e.src !== id);
+    p.setAttribute('marker-end', kind === 'call' ? '' : isDown ? 'url(#a-down)' : isUp ? 'url(#a-up)' : 'url(#a-line)');
+    const touches = kind === 'call' ? isCall : kind === 'look' ? e.src === id : (e.src === id || e.dst === id);
+    if (id && touches) el('text', { class: 'tag', x: mid.x, y: mid.y - 4, 'text-anchor': 'middle' }, tags, e.over);
+  }
+  panel();
+}
+function pick(id) { state.picked = state.picked === id ? null : id; mark(); }
+
+// ---- Panel ----------------------------------------------------------------------------------------------------
+const panelEl = document.getElementById('panel');
+const h = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids.filter((k) => k != null)); return e; };
+const SAYS = { writes: 'writes to it', 'publishes-to': 'publishes to it', 'sends-to': 'sends to it', 'forwards-to': 'forwards to it', reads: 'reads it', 'consumes-from': 'consumes from it', 'receives-from': 'receives from it' };
+function row(other, e, words) {
+  const b = h('button', { type: 'button' }, h('span', { className: 'name', textContent: byId.get(other).name }),
+    h('span', { className: 'verb' }, `${words} over ${e.over} · `, h('code', { textContent: e.verb }), e.via ? ` · via ${e.via}` : null, e.basis === 'inferred' ? ' · inferred' : null));
+  b.addEventListener('click', () => { state.picked = other; mark(); });
+  return h('li', {}, b);
+}
+function list(title, items) { return h('div', {}, h('h3', { textContent: title }), items.length ? h('ul', { className: 'rows' }, ...items) : h('p', { className: 'empty', textContent: 'None' })); }
+function counts(links) {
+  const by = Object.entries(Object.groupBy(links, (l) => l.over)).map(([t, ls]) => [t, ls.length]).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...by.map(([, n]) => n));
+  return h('div', { className: 'counts' }, ...by.flatMap(([t, n]) => [h('code', { textContent: t }), h('span', { className: 'bar', style: `width:${(n / max) * 100}%` }), h('span', { className: 'n', textContent: n })]));
+}
+function panel() {
+  const id = state.picked;
+  if (!id) {
+    const roles = (r) => PARTS.filter((p) => p.role === r).map((p) => p.name).join(', ');
+    panelEl.replaceChildren(
+      h('div', {}, h('p', { className: 'cap', textContent: 'How links are modelled' }), h('h2', { textContent: 'Direction, transport and operation on every link' })),
+      h('p', { textContent: 'The type says which way data moves, so the map knows what is upstream. The transport says what it travels over. The verb names the operation.' }),
+      h('table', { className: 'model' }, h('tbody', {},
+        h('tr', {}, h('td', { textContent: 'Stage' }), h('td', { textContent: 'Data comes in and goes out. Sits in the flow.' })),
+        h('tr', {}, h('td', { textContent: 'Pass-through' }), h('td', { textContent: `Relays requests unchanged: ${roles('proxy')}. Sits in the flow between its callers and its targets.` })),
+        h('tr', {}, h('td', { textContent: 'Lookup' }), h('td', { textContent: `Only ever read by others: ${roles('lookup')}. Sits beside the flow; its readers show a dot for each.` })))),
+      h('div', {}, h('h3', { textContent: 'Links by transport' }), counts(LINKS)),
+      h('p', { className: 'small', textContent: 'Select a part to see what is upstream and downstream of it, and what each link travels over.' }));
+    return;
+  }
+  const p = byId.get(id), { flow, looks, calls } = drawn.E;
+  const lane = LANES.find(([k]) => k === p.lane)[1];
+  const upFlow = flow.filter((e) => e.dst === id), downFlow = flow.filter((e) => e.src === id);
+  const lookups = looks.filter((e) => e.dst === id), readBy = looks.filter((e) => e.src === id);
+  const word = (e, mine) => (mine ? { writes: 'it writes to', 'publishes-to': 'it publishes to', 'sends-to': 'it sends to', 'forwards-to': 'it forwards to', reads: 'it reads', 'consumes-from': 'it consumes from', 'receives-from': 'it receives from' } : SAYS)[e.type] ?? 'via';
+  const words = (e) => (e.from === id ? word(e, true) : word(e, false));
+  const clear = h('a', { href: '#', className: 'clear', textContent: 'Clear' }); clear.addEventListener('click', (ev) => { ev.preventDefault(); pick(id); });
+  const role = p.role === 'proxy'
+    ? h('p', { className: 'role' }, h('b', { textContent: 'Pass-through. ' }), `Relays what ${upFlow.map((e) => byId.get(e.src).name).join(' and ') || 'its callers'} send${upFlow.length === 1 ? 's' : ''} to ${downFlow.map((e) => byId.get(e.dst).name).join(' and ')}. Found from its forwards-to links.`)
+    : p.role === 'lookup'
+      ? h('p', { className: 'role' }, h('b', { textContent: 'Lookup. ' }), `Read by ${readBy.length} part${readBy.length === 1 ? '' : 's'} and written by none, so it sits beside the flow. ${p.basis === 'stated' ? 'A person stated this role.' : 'Worked out from its links.'}`)
+      : null;
+  const mine = LINKS.filter((l) => l.from === id || l.to === id);
+  panelEl.replaceChildren(...[
+    h('div', {}, h('p', { className: 'cap', textContent: `${p.role === 'proxy' ? 'pass-through' : p.kind} · ${lane}` }), h('h2', { textContent: p.name })),
+    h('p', {}, clear),
+    role,
+    list('Upstream: data comes from', upFlow.map((e) => row(e.src, e, words(e)))),
+    list('Downstream: data goes to', downFlow.map((e) => row(e.dst, e, words(e)))),
+    p.role === 'lookup' ? list('Read by', readBy.map((e) => row(e.dst, e, 'reads it'))) : list('Looks up', lookups.map((e) => row(e.src, e, 'it reads'))),
+    calls.some((l) => l.from === id || l.to === id) ? list('Direction unknown', calls.filter((l) => l.from === id || l.to === id).map((l) => row(l.from === id ? l.to : l.from, l, l.from === id ? 'it calls' : 'calls it'))) : null,
+    h('div', {}, h('h3', { textContent: 'Its links by transport' }), counts(mine))].filter(Boolean));
+}
+
+// ---- Controls -------------------------------------------------------------------------------------------------
+const tbox = document.getElementById('transports');
+for (const [t, n] of TRANSPORTS) {
+  const b = h('button', { type: 'button', className: 'chip' }, t, h('span', { className: 'n', textContent: n }));
+  b.setAttribute('aria-pressed', 'true');
+  b.addEventListener('click', () => { state.shown.has(t) ? state.shown.delete(t) : state.shown.add(t); b.setAttribute('aria-pressed', String(state.shown.has(t))); draw(); });
+  tbox.append(b);
+}
+document.getElementById('proxies').addEventListener('change', (e) => { state.proxies = e.target.checked; if (!state.proxies && byId.get(state.picked)?.role === 'proxy') state.picked = null; draw(); });
+document.getElementById('calls').addEventListener('change', (e) => { state.calls = e.target.checked; draw(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.picked) pick(state.picked); });
+state.picked = 'checkout';
+draw();
+</script>

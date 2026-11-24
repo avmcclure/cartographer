@@ -52,7 +52,9 @@ Work through the pending components one at a time. For each:
 **Links you can infer.** Read for what the parser cannot see, and add a link for each thing you find, with basis `inferred` and a `source` naming the file and line:
 
 - SQL built in code, stored procedures called by name, tables named in queries: `reads`, `writes`, `calls`.
-- HTTP, WCF or COM calls to another of the organisation's components: `calls` with `how`.
+- Calls to another of the organisation's components (HTTP, gRPC, WCF, SOAP, COM, remoting): record what the call does, not that it is a call. Fetching data (GET, a query, a `Find` or `Get` method) is `reads`; changing it (POST, PUT, PATCH, DELETE, a command) is `writes`; a component that does both gets both links. Set `how` to the transport and list the operations in `uses`. Use `calls` only when you cannot tell which way the data goes, and add an open question asking which it is.
+- A gateway, reverse proxy or adapter that passes requests on unchanged (YARP or Ocelot routes, nginx `proxy_pass`, an API Management policy, a controller that only relays to another client): `forwards-to` each component it sends to, with `how` and the routes in `uses`. Callers keep their own `reads` or `writes` to the gateway.
+- Every link you write: set `how` when the code or configuration shows the transport (`sql` for database access, `kafka` or `amqp` for a topic or queue client, `sftp` or `smb` for a file drop).
 - Queues, topics and file drops: `publishes-to`, `consumes-from`. Services outside the organisation: `sends-to`, `receives-from`.
 - A connection to a database where you cannot tell which tables are touched: `uses`.
 

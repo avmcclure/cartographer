@@ -42,6 +42,7 @@ Keys appear in this order. Leave out a key that has nothing in it. A key not in 
 | `systems` | component, database | List of `{id, basis, source}`. |
 | `tags` | table, view | List of `{name, basis, source}`: business-data tags such as `customer` or `payment`. |
 | `owner` | all | `{name, basis, source}`. |
+| `role` | component, external | `{name, basis, source}`: `stage`, `pass-through` or `lookup`. See below. |
 | `packages` | component | Public packages used, plain strings `"<name> <version>"`. Written by the CLI. |
 | `links` | all | The entry's links (next section). |
 | `drift` | database objects | Written by the CLI. |
@@ -63,8 +64,9 @@ links:
 | Type | From | To | Extra keys |
 |---|---|---|---|
 | `depends-on` | component | component | `name`, `version`, `uses`, `count` |
-| `calls` | component, routine, trigger | component, routine | `how` (`http`, `wcf`, `com`, `sql`), `via` |
-| `reads`, `writes` | component, routine, trigger | table, view | `via` |
+| `calls` | component, routine, trigger | component, routine | `via` |
+| `reads`, `writes` | component, routine, trigger | table, view, component | `via` |
+| `forwards-to` | component | component | `via` |
 | `uses` | component | database | |
 | `publishes-to`, `consumes-from` | component | channel | `via` |
 | `sends-to`, `receives-from` | component | external | `via` |
@@ -73,9 +75,26 @@ links:
 | `fires-on` | trigger | table, view | |
 | `defines` | repository | database | |
 
+Any link may also carry:
+
+- `how`: what it travels over. One of `http`, `grpc`, `soap`, `wcf`, `graphql`, `websocket`, `sql`, `amqp`, `kafka`, `msmq`, `sftp`, `smb`, `com`, `remoting`, `in-process`. Leave it out when you cannot tell.
+- `uses`: on a link to a component, the operations used, such as `GET /orders/{id}` or `ICustomerLookup.Find`. On `depends-on`, the library types used.
+
+```yaml
+  - type: reads
+    to: repositories/pricing/components/pricing-api
+    how: http
+    uses:
+      - GET /prices/{sku}
+    basis: inferred
+    source: prices#L22-L40
+```
+
+A component or external system can also have a `role` (`{name, basis, source}`, name one of `stage`, `pass-through`, `lookup`) when its links alone would put it in the wrong place on the map. Set it only when you have evidence, such as a README that says the service is read-only.
+
 - `basis` and `source` are required on every link, provided name, system membership, tag and owner.
 - `basis` is `extracted` (the CLI read it mechanically), `inferred` (an agent concluded it from reading code) or `stated` (a person said it). An agent writes `inferred`, except when folding in a person's answer, which is `stated`.
-- `uses` is the list of a library's types the consumer uses; `count` is the number of usage sites.
+- On `depends-on`, `uses` is the list of a library's types the consumer uses and `count` is the number of usage sites. On a link to a component, `uses` lists operations (above).
 - `via` is the ID of the library a link was reached through.
 - `uses` (the link type) is the fallback when only the connection to a database is known and no table or routine can be named.
 - Links the CLI extracted keep the real `name` beside `to`. You need not add `name` to a link that has a `to`.

@@ -1,13 +1,16 @@
 // Where each part sits on the map, worked out at build time so every reader sees the same picture.
 // Lanes are clusters; columns follow the data: each part one column right of the furthest part in its own lane that
 // feeds it. Counting within a lane keeps a long chain across many lanes from stretching the whole map; links between
-// lanes still show which way the data goes.
+// lanes still show which way the data goes. Lookups sit in a band beside the flow, so they take no column and their
+// links do not push other parts along.
 
 /** Lanes top to bottom: the biggest first, then whichever has the most links to the lanes already placed. */
 export function laneOrder(map) {
   const laneOf = new Map(map.clusters.flatMap((c) => c.members.map((m) => [m.id, c.key])));
-  const weight = new Map();
-  for (const l of map.parts) {
+  // Lookups sit beside the flow: being read from everywhere should not pull lanes towards theirs.
+  const weight = new Map(), twin = loopsBack(map);
+  const lookup = new Set(map.clusters.flatMap((c) => c.members.filter((m) => m.role === 'lookup').map((m) => m.id)));
+  for (const l of map.parts.filter((l) => !twin(l) && !lookup.has(l.from) && !lookup.has(l.to))) {
     const [a, b] = [laneOf.get(l.from), laneOf.get(l.to)];
     if (a === b) continue;
     for (const [x, y] of [[a, b], [b, a]]) weight.set(`${x}|${y}`, (weight.get(`${x}|${y}`) ?? 0) + l.count);
@@ -25,11 +28,23 @@ export function laneOrder(map) {
   return [...placed, ...last].map((c) => c.key);
 }
 
+/**
+ * Data read back through a pass-through runs from its target to it. When the same forward also carries writes onward,
+ * placing by both would loop the two, so the back link is left out of placement and of counts.
+ */
+export function loopsBack(map) {
+  const onward = new Set(map.parts.filter((l) => l.forwards && !l.back).map((l) => `${l.from}>${l.to}`));
+  return (l) => !!l.back && onward.has(`${l.to}>${l.from}`);
+}
+
 /** Part ID to column. Loops are broken where they close, walking parts in ID order. */
 export function columns(map) {
-  const ids = map.clusters.flatMap((c) => c.members.map((m) => m.id)).sort();
+  const lookup = new Set(map.clusters.flatMap((c) => c.members.filter((m) => m.role === 'lookup').map((m) => m.id)));
+  const ids = map.clusters.flatMap((c) => c.members.map((m) => m.id)).filter((i) => !lookup.has(i)).sort();
   const laneOf = new Map(map.clusters.flatMap((c) => c.members.map((m) => [m.id, c.key])));
-  const data = map.parts.filter((l) => !l.call && laneOf.get(l.from) === laneOf.get(l.to));
+  const back = loopsBack(map);
+  const inFlow = (l) => !lookup.has(l.from) && !lookup.has(l.to) && !back(l);
+  const data = map.parts.filter((l) => !l.call && inFlow(l) && laneOf.get(l.from) === laneOf.get(l.to));
   const out = new Map(ids.map((i) => [i, []]));
   for (const l of data) out.get(l.from)?.push(l.to);
   for (const list of out.values()) list.sort();
@@ -71,7 +86,7 @@ export function columns(map) {
   const fed = new Set(keep.flat());
   const callsOf = new Map();
   for (const l of map.parts)
-    if (l.call && laneOf.get(l.from) === laneOf.get(l.to)) for (const v of [l.from, l.to]) (callsOf.get(v) ?? callsOf.set(v, []).get(v)).push(l);
+    if (l.call && inFlow(l) && laneOf.get(l.from) === laneOf.get(l.to)) for (const v of [l.from, l.to]) (callsOf.get(v) ?? callsOf.set(v, []).get(v)).push(l);
   for (const v of ids) {
     if (fed.has(v)) continue;
     const calls = callsOf.get(v) ?? [];
@@ -82,5 +97,6 @@ export function columns(map) {
   const start = new Map();
   for (const v of ids) start.set(laneOf.get(v), Math.min(start.get(laneOf.get(v)) ?? Infinity, col.get(v)));
   for (const v of ids) col.set(v, col.get(v) - start.get(laneOf.get(v)));
+  for (const v of lookup) col.set(v, 0);
   return col;
 }

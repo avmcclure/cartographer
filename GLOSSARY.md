@@ -68,6 +68,18 @@ _Avoid_: confidence, certainty, provenance
 A disagreement about the same database between two sources, such as a repository and a live instance.
 _Avoid_: mismatch, divergence
 
+**Transport**:
+What a link travels over, such as HTTP, SQL, Kafka or COM. Recorded as the link's `how`.
+_Avoid_: protocol, channel (a channel is an entry)
+
+**Pass-through**:
+A component that relays requests to another component unchanged, such as a gateway in front of an old and a new API. Recorded with `forwards-to` links.
+_Avoid_: proxy, facade, wrapper
+
+**Lookup**:
+A component (or, when an entry says so, an external system) that other parts only read from, such as a pricing or identity service. Drawn beside the flow, not in it.
+_Avoid_: reference service, side service
+
 **Flow**:
 The path data takes across entries, found by following links. May also be narrated in an entry of its own.
 _Avoid_: pipeline, lineage, journey

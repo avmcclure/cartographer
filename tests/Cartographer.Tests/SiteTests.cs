@@ -103,6 +103,72 @@ public class SiteTests
     }
 
     [Fact]
+    public void Pass_throughs_and_lookups_get_their_role_and_links_carry_transport_and_operations()
+    {
+        var atlas = Copy();
+        var dir = Out();
+        SitePrepare.Run(atlas, dir);
+        var map = Json(dir, "clusters.json");
+        string? Role(JsonElement map, string id) => map.GetProperty("clusters").EnumerateArray().SelectMany(c => c.GetProperty("members").EnumerateArray())
+            .Single(m => m.GetProperty("id").GetString() == id).TryGetProperty("role", out var r) ? r.GetString() : null;
+        const string gateway = "repositories/sales-edge/components/order-gateway", lookup = "repositories/sales-edge/components/customer-lookup", api = "repositories/sales-order-service/components/order-api";
+        Assert.Equal("pass-through", Role(map, gateway));
+        Assert.Equal("lookup", Role(map, lookup));   // read by the shop and the order API, fed only by its database
+        Assert.Null(Role(map, api));
+
+        // A forward carries data on, like a write; transport and operations ride along.
+        var forward = map.GetProperty("parts").EnumerateArray().Single(l => l.GetProperty("from").GetString() == gateway && l.GetProperty("to").GetString() == api);
+        Assert.False(forward.TryGetProperty("call", out _));
+        Assert.Equal("http", forward.GetProperty("over")[0].GetProperty("how").GetString());
+        Assert.Equal(["GET /orders/{id}", "POST /orders"], forward.GetProperty("ops").EnumerateArray().Select(o => o.GetString()));
+
+        // Reading through a pass-through brings data back from what it forwards to.
+        bool Between(JsonElement map, string from, string to) => map.GetProperty("parts").EnumerateArray().Any(l => l.GetProperty("from").GetString() == from && l.GetProperty("to").GetString() == to && !l.TryGetProperty("call", out _));
+        Assert.False(Between(map, api, gateway));
+        var reader = Component("repositories/sales-edge/components/order-status", "OrderStatus", new Link { Type = "reads", To = gateway, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
+        atlas.Entries[reader.Id] = reader;
+        SitePrepare.Run(atlas, dir);
+        map = Json(dir, "clusters.json");
+        Assert.True(Between(map, api, gateway) && Between(map, gateway, reader.Id) && Between(map, gateway, api));   // the shop still writes through it
+        atlas.Entries.Remove(reader.Id);
+
+        // Through a chain of pass-throughs too: a read at the outer one comes back along every hop.
+        var outer = Component("repositories/sales-edge/components/edge", "Edge", new Link { Type = "forwards-to", To = gateway, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
+        var far = Component("repositories/sales-edge/components/far-reader", "FarReader", new Link { Type = "reads", To = outer.Id, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
+        atlas.Entries[outer.Id] = outer;
+        atlas.Entries[far.Id] = far;
+        SitePrepare.Run(atlas, dir);
+        map = Json(dir, "clusters.json");
+        Assert.True(Between(map, api, gateway) && Between(map, gateway, outer.Id) && Between(map, outer.Id, far.Id));
+        atlas.Entries.Remove(outer.Id);
+        atlas.Entries.Remove(far.Id);
+
+        // A lookup read only through a pass-through in front of it is still a lookup.
+        var front = Component("repositories/sales-edge/components/customer-front", "CustomerFront", new Link { Type = "forwards-to", To = lookup, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
+        var viaFront = Component("repositories/sales-edge/components/customer-portal", "CustomerPortal", new Link { Type = "reads", To = front.Id, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
+        var shop = atlas.Entries["repositories/sales-storefront/components/webshop"];
+        var direct = shop.Links!.Single(l => l.To == lookup);
+        shop.Links!.Remove(direct);
+        atlas.Entries[front.Id] = front;
+        atlas.Entries[viaFront.Id] = viaFront;
+        SitePrepare.Run(atlas, dir);
+        Assert.Equal("lookup", Role(Json(dir, "clusters.json"), lookup));   // read by the order API, and by the portal through the front
+        shop.Links!.Add(direct);
+        atlas.Entries.Remove(front.Id);
+        atlas.Entries.Remove(viaFront.Id);
+
+        // Anything written into a lookup makes it part of the flow again; a stated role wins over what the links say.
+        var writer = Component("repositories/sales-edge/components/customer-admin", "CustomerAdmin", new Link { Type = "writes", To = lookup, How = "http", Basis = Basis.Stated, Source = "person:test@2026-11-20" });
+        atlas.Entries[writer.Id] = writer;
+        atlas.Entries[api].Role = new Role { Name = "lookup", Basis = Basis.Stated, Source = "person:test@2026-11-20" };
+        SitePrepare.Run(atlas, dir);
+        map = Json(dir, "clusters.json");
+        Assert.Null(Role(map, lookup));
+        Assert.Equal("lookup", Role(map, api));
+        Assert.Empty(Validator.Check(atlas).Where(i => i.Error && i.Id == api));
+    }
+
+    [Fact]
     public void Pinned_names_and_a_regroup_suggestion_reach_the_site()
     {
         var atlas = Copy();

@@ -10,10 +10,12 @@ sources:
 links:
   - type: reads
     to: databases/shop/tables/dbo/customers
+    how: sql
     basis: extracted
     source: sql#L8
   - type: writes
     to: databases/shop/tables/dbo/orders
+    how: sql
     basis: extracted
     source: sql#L11
 verified:

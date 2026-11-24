@@ -107,6 +107,7 @@ const link = (r) => (r.kind === 'missing' ? r.id : r.name);
         {e.database && <><dt>Database</dt><dd><a href={entryHref(e.database.id)}>{e.database.name}</a></dd></>}
         {e.systems?.map((s) => <><dt>System</dt><dd><a href={entryHref(s.system.id)}>{s.system.name}</a> <span class="what"><Basis basis={s.basis} /><Evidence basis={s.basis} evidence={s.evidence} /></span></dd></>)}
         {e.owner && <><dt>Owner</dt><dd>{e.owner.name} <span class="what"><Basis basis={e.owner.basis} /><Evidence basis={e.owner.basis} evidence={e.owner.evidence} /></span></dd></>}
+        {e.role && <><dt>Role on the map</dt><dd>{e.role.name} <span class="what"><Basis basis={e.role.basis} /><Evidence basis={e.role.basis} evidence={e.role.evidence} /></span></dd></>}
         {e.tags?.map((t) => <><dt>Data tag</dt><dd><a href={href(`/tags/${t.name}/`)}>{t.name}</a> <span class="what"><Basis basis={t.basis} /><Evidence basis={t.basis} evidence={t.evidence} /></span></dd></>)}
         {e.provides?.map((p) => <><dt>Provides</dt><dd>{p.name} <span class="small">as {p.as}</span> <span class="what"><Basis basis={p.basis} /><Evidence basis={p.basis} evidence={p.evidence} /></span></dd></>)}
         {e.engine && <><dt>Engine</dt><dd>{e.engine}</dd></>}

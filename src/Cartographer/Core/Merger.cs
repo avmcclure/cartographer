@@ -46,8 +46,11 @@ public static class Merger
                 atlas.Entries[p.Id] = p;
                 continue;
             }
-            // What an agent added to an extracted link (the library types used and how often) survives the link being re-extracted.
-            var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null).GroupBy(l => l.Identity).ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count));
+            // What an agent added to an extracted link (the names or operations used, how often, and the transport) survives the link being re-extracted.
+            // A transport the extractor gives wins. One already on the link survives a re-extraction that gives none: an
+            // agent may have added it to an extracted link, which cannot be told apart from one the extractor once gave.
+            var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null || l.How is not null).GroupBy(l => l.Identity)
+                .ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count, g.First().How));
             DropFacts(e, origin);
             if (origin.StartsWith("instance:")) RecordDrift(e, p, origin);
             // Rename the incoming source keys that clash with keys kept from another origin.
@@ -77,7 +80,7 @@ public static class Merger
                 e.Links ??= [];
                 // An extracted link replaces the same link an agent inferred; a stated one stays.
                 e.Links.RemoveAll(o => o.Identity == l.Identity && o.Basis == Basis.Inferred);
-                if (usage.TryGetValue(l.Identity, out var kept)) { l.Uses ??= kept.Uses; l.Count ??= kept.Count; }
+                if (usage.TryGetValue(l.Identity, out var kept)) { l.Uses ??= kept.Uses; l.Count ??= kept.Count; l.How ??= kept.How; }
                 if (!e.Links.Any(o => o.Identity == l.Identity)) e.Links.Add(l);
             }
             foreach (var d in p.Drift ?? []) (e.Drift ??= []).Add(d);
@@ -136,8 +139,9 @@ public static class Merger
         e.Provides?.RemoveAll(p => Ours(p.Basis, p.Source));
         e.Links?.RemoveAll(l => Ours(l.Basis, l.Source));
         e.Drift?.RemoveAll(d => d.Sources.Contains(origin));
+        if (e.Role is { } role && Ours(role.Basis, role.Source)) e.Role = null;
         if (e.Sources is null) return;
-        var cited = new[] { e.Owner?.Source }.Concat((e.Provides ?? []).Select(p => p.Source)).Concat((e.Links ?? []).Select(l => l.Source))
+        var cited = new[] { e.Owner?.Source, e.Role?.Source }.Concat((e.Provides ?? []).Select(p => p.Source)).Concat((e.Links ?? []).Select(l => l.Source))
             .Concat((e.Systems ?? []).Select(s => s.Source)).Concat((e.Tags ?? []).Select(t => t.Source))
             .Where(s => s is not null).Select(s => Evidence.Bare(s!)).ToHashSet();
         foreach (var key in e.Sources.Where(s => Evidence.OriginOf(s.Value) == origin && !cited.Contains(s.Key)).Select(s => s.Key).ToList()) e.Sources.Remove(key);
@@ -160,6 +164,10 @@ public static class Resolver
     const string BrokenPrefix = "What replaces the link ";
     const string DriftPrefix = "Which source is right: ";
 
+    /// <summary>A read or write over a known transport other than SQL is to a component, not a table. Other words, from
+    /// atlases written before the list, are treated as before.</summary>
+    static bool NotSql(string? how) => how is not null && LinkTypes.Transports.Contains(how, StringComparer.OrdinalIgnoreCase) && !how.Equals("sql", StringComparison.OrdinalIgnoreCase);
+
     public static void Run(Atlas atlas)
     {
         var provided = atlas.OfKind(Kinds.Component).Where(c => c.Status is null)
@@ -167,12 +175,12 @@ public static class Resolver
         // Which components provide a name, counting only the kinds of name this link can mean.
         List<string> Providers(Entry from, Link l)
         {
-            string[] kinds = l.Type == "calls" ? [l.How == "com" ? "progid" : "contract"] : ["nuget", "assembly", "typelib"];
+            string[] kinds = l.Type != "depends-on" ? [l.How?.ToLowerInvariant() == "com" ? "progid" : "contract"] : ["nuget", "assembly", "typelib"];
             static string Bare(string n) => Regex.Replace(n, @"\.(dll|exe|ocx|tlb)$", "", RegexOptions.IgnoreCase);
             var candidates = provided.Where(p => kinds.Contains(p.As) && p.Id != from.Id).ToList();
             var hits = candidates.Where(p => Bare(p.Name).Equals(Bare(l.Name!), StringComparison.OrdinalIgnoreCase)).ToList();
             // A generated WCF client often names the contract "<ReferenceName>.IOrderService": fall back to the interface's own name.
-            if (hits.Count == 0 && l.How == "wcf") hits = candidates.Where(p => p.Name.Split('.')[^1].Equals(l.Name!.Split('.')[^1], StringComparison.OrdinalIgnoreCase)).ToList();
+            if (hits.Count == 0 && "wcf".Equals(l.How, StringComparison.OrdinalIgnoreCase)) hits = candidates.Where(p => p.Name.Split('.')[^1].Equals(l.Name!.Split('.')[^1], StringComparison.OrdinalIgnoreCase)).ToList();
             return hits.Select(p => p.Id).Distinct().Order(StringComparer.Ordinal).ToList();
         }
         var packageProviders = provided.Where(p => p.As is "nuget" or "assembly").GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
@@ -195,8 +203,11 @@ public static class Resolver
 
             foreach (var l in (e.Links ?? []).ToList())
             {
-                // A COM or WCF call names a provided name just as a depends-on does, but it is never a public package.
-                if ((l.Type == "depends-on" || l is { Type: "calls", How: "com" or "wcf" }) && l.To is null && l.Name is not null)
+                // A COM or WCF call, a forward, or a read or write of a component names a provided name just as a depends-on
+                // does, but it is never a public package: with no provider it stays a question. Other calls keep their
+                // older handling, so existing atlases do not gain a question per link.
+                if ((l.Type is "depends-on" or "forwards-to" || l.Type is "calls" && l.How?.ToLowerInvariant() is "com" or "wcf" || l.Type is "reads" or "writes" && NotSql(l.How))
+                    && l.To is null && l.Name is not null)
                 {
                     var ids = Providers(e, l);
                     if (ids.Count == 1)
@@ -207,7 +218,7 @@ public static class Resolver
                         wanted.Add(($"{ProviderPrefix}'{l.Name}' for this component; {ids.Count} components provide that name: {string.Join(", ", ids)}.", $"name {l.Name}", "One of the listed components, set as the link's 'to'."));
                     else if (prefixes.Any(p => p.IsMatch(l.Name)))
                         wanted.Add(($"{ProviderPrefix}'{l.Name}'. It matches an internal name prefix but no scanned repository provides it.", $"name {l.Name}", $"A component whose provides list contains {l.Name}, or a person stating it is public."));
-                    else if (l.Type == "calls" || Regex.IsMatch(l.Name, @"^\{|\.(dll|exe|ocx|tlb)$", RegexOptions.IgnoreCase))
+                    else if (l.Type != "depends-on" || Regex.IsMatch(l.Name, @"^\{|\.(dll|exe|ocx|tlb)$", RegexOptions.IgnoreCase))
                         // A file, type library or run-time contract is never a public package: it stays an unresolved reference.
                         wanted.Add(($"{ProviderPrefix}'{l.Name}'. No scanned repository provides it.", $"name {l.Name}", $"A component whose provides list contains {l.Name}, or a person stating it comes from outside the organisation."));
                     else if (l.Basis == Basis.Extracted && l.Type == "depends-on")
@@ -226,7 +237,8 @@ public static class Resolver
                 }
                 else if (l.To is null && l.Name is not null && l.Type is "calls" or "reads" or "writes")
                 {
-                    var match = MatchObject(atlas, databases, l);
+                    // With no transport given, a component that provides the name is preferred over a table that shares it.
+                    var match = l.How is null && l.Type is "reads" or "writes" && e.Kind == Kinds.Component && Providers(e, l) is [var provider] ? provider : MatchObject(atlas, databases, l);
                     if (match is not null && !e.Links!.Any(o => o != l && o.Type == l.Type && o.To == match && o.Via == l.Via)) { l.To = match; l.Database = null; }
                     else if (match is not null) e.Links!.Remove(l);
                 }

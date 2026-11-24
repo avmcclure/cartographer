@@ -8,6 +8,7 @@ stack:
   - csharp
   - net8.0
 sources:
+  cust: sales-order-service:src/Brackley.Orders.Api/Customers/CustomerClient.cs@4c1e9a2
   events: sales-order-service:src/Brackley.Orders.Api/Events/OrderPublisher.cs@4c1e9a2
   pay: sales-order-service:src/Brackley.Orders.Api/Payments/PaystreamClient.cs@4c1e9a2
   proj: sales-order-service:src/Brackley.Orders.Api/Brackley.Orders.Api.csproj@4c1e9a2
@@ -44,20 +45,31 @@ links:
     source: settings#L7
   - type: reads
     to: databases/sales/tables/dbo/customers
+    how: sql
     basis: extracted
     source: repo#L40-L58
   - type: reads
     to: databases/sales/tables/dbo/orders
+    how: sql
     basis: extracted
     source: repo#L61-L79
   - type: writes
     to: databases/sales/tables/dbo/orders
+    how: sql
     basis: extracted
     source: repo#L84-L103
   - type: writes
     to: databases/sales/tables/dbo/order-lines
+    how: sql
     basis: extracted
     source: repo#L105-L121
+  - type: reads
+    to: repositories/sales-edge/components/customer-lookup
+    how: http
+    uses:
+      - GET /customers/{id}/terms
+    basis: inferred
+    source: cust#L18-L44
   - type: calls
     to: databases/sales/routines/dbo/usp-closeorder
     how: sql
@@ -65,10 +77,12 @@ links:
     source: repo#L130
   - type: publishes-to
     to: channels/order-events
+    how: amqp
     basis: extracted
     source: events#L22
   - type: sends-to
     to: external/paystream
+    how: http
     basis: inferred
     source: pay#L35-L60
 verified:
