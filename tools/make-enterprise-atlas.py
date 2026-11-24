@@ -386,7 +386,8 @@ for key in ["pricing", "identity", "catalog", "customer"]:
         continue
     lid = random.choice(svcs)
     chosen.add(lid)
-    entries[lid]["links"] = [l for l in entries[lid]["links"] if l["type"] not in ("consumes-from", "receives-from") and not (l["type"] in ("reads", "calls") and l.get("to", "").startswith("repositories/"))]
+    # a lookup keeps its own tables and serves reads: nothing else in, nothing onward
+    entries[lid]["links"] = [l for l in entries[lid]["links"] if l["type"] not in ("consumes-from", "receives-from", "publishes-to", "sends-to") and not l.get("to", "").startswith("repositories/") or l["type"] == "depends-on"]
     # whatever pointed at it now reads it; a gateway in front of it keeps forwarding, and a part keeps one read
     for cs in components.values():
         for cid in cs:
