@@ -9,10 +9,12 @@ sources:
 links:
   - type: writes
     to: databases/shop/tables/dbo/orderaudit
+    how: sql
     basis: extracted
     source: sql#L9
   - type: fires-on
     to: databases/shop/tables/dbo/orders
+    how: sql
     basis: extracted
     source: sql#L2
 verified:

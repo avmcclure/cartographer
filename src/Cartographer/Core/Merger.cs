@@ -47,9 +47,9 @@ public static class Merger
                 continue;
             }
             // What an agent added to an extracted link (the names or operations used, how often, and the transport) survives the link being re-extracted.
-            // A transport an extractor gave is its own to change; only one an agent or person added is kept.
+            // A transport the extractor gives wins; one an agent added survives a re-extraction that gives none.
             var usage = (e.Links ?? []).Where(l => l.Uses is not null || l.Count is not null || l.How is not null).GroupBy(l => l.Identity)
-                .ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count, How: g.FirstOrDefault(l => l.Basis != Basis.Extracted)?.How));
+                .ToDictionary(g => g.Key, g => (g.First().Uses, g.First().Count, g.First().How));
             DropFacts(e, origin);
             if (origin.StartsWith("instance:")) RecordDrift(e, p, origin);
             // Rename the incoming source keys that clash with keys kept from another origin.

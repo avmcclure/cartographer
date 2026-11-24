@@ -8,7 +8,7 @@ const byKey = new Map(map.clusters.map((c) => [c.key, c]));
 const lanes = order.map((key, i) => ({ key, name: byKey.get(key).name, pinned: byKey.get(key).pinned, color: i, count: byKey.get(key).members.length }));
 const parts = order.flatMap((key) => byKey.get(key).members.map((m) => ({ id: m.id, name: m.name, kind: m.kind === 'external' ? 'external system' : m.kind, type: m.type, role: m.role, roleStated: m.roleStated, lane: key, col: col.get(m.id), found: m.found, href: entryHref(m.id) })))
   .sort((a, b) => order.indexOf(a.lane) - order.indexOf(b.lane) || a.col - b.col || a.name.localeCompare(b.name));
-const data = { lanes, parts, links: map.parts.map(({ from, to, call, count, basis, verbs, over, ops }) => ({ from, to, call, count, basis, verbs, over, ops })) };
+const data = { lanes, parts, links: map.parts.map(({ from, to, call, count, basis, verbs, over, ops, forwards, back }) => ({ from, to, call, count, basis, verbs, over, ops, forwards, back })) };
 // Links by transport, most first; links with none recorded last.
 // A forward drawn both ways (written through and read back) is one link: count it once.
 const twin = loopsBack(map);
@@ -146,7 +146,7 @@ const goneTo = (name) => {
       } else view.querySelector('[data-looks-block]').remove();
       const note = view.querySelector('[data-role]');
       if (p.role === 'pass-through') {
-        const forwards = (l) => l.verbs.some((v) => v.verb === 'forwards to');
+        const forwards = (l) => !!l.forwards;
         const mine = links.filter((l) => !l.call && (l.from === id || l.to === id)), other = (l) => part.get(l.from === id ? l.to : l.from).name;
         const onto = [...new Set(mine.filter(forwards).map(other))], callers = [...new Set(mine.filter((l) => !forwards(l)).map(other))];
         const list = (names) => (names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', '));

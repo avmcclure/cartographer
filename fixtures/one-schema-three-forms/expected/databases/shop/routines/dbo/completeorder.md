@@ -21,15 +21,18 @@ links:
     source: sql#L8
   - type: reads
     to: databases/shop/tables/dbo/orderlines
+    how: sql
     basis: extracted
     source: sql#L15
   - type: writes
     to: databases/shop/tables/dbo/orders
+    how: sql
     basis: extracted
     source: sql#L10
   - type: writes
     name: dbo.StockLevels
     database: Warehouse
+    how: sql
     basis: extracted
     source: sql#L14
 verified:

@@ -97,8 +97,8 @@ public static class SitePrepare
         // The map: clusters, and the links between parts in the direction the data goes, with what they do, counted.
         // Calls carry requests rather than data and keep their own direction; code dependencies are left out.
         // A pass-through carries data whichever way its callers move it: what is written into it goes on to its targets,
-        // and what is read from it comes back from them, through any chain of pass-throughs. With no callers known, a
-        // forward points onward.
+        // and what is read from it comes back from them, through any chain of pass-throughs. With no caller moving data
+        // a known way, a forward is drawn as a call.
         var into = edges.Where(e => e.Type is not ("depends-on" or "forwards-to") && Flow(e.Type) != 0).GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => Flow(e.Type)).ToHashSet(), StringComparer.Ordinal);
         var forwardedBy = edges.Where(e => e.Type == "forwards-to").GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => e.From).ToList(), StringComparer.Ordinal);
         // ponytail: walked afresh for each forward, no caching (a cache goes wrong in a loop of pass-throughs); cache per
@@ -110,7 +110,7 @@ public static class SitePrepare
             return found;
         }
         IEnumerable<int> Ways(string from, string type) => type != "forwards-to" ? [Flow(type)]
-            : WaysThrough(from, new(StringComparer.Ordinal)) is { Count: > 0 } w ? w.OrderDescending() : [1];
+            : WaysThrough(from, new(StringComparer.Ordinal)) is { Count: > 0 } w ? w.OrderDescending() : [0];   // no caller says which way: direction unknown, like a call
         var partLinks = edges.Where(e => e.Type != "depends-on")
             .SelectMany(e => Ways(e.From, e.Type).Select(flow => (From: PartOf(e.From), To: PartOf(e.To), e.Type, e.Basis, e.How, e.Ops, Flow: flow, Back: e.Type == "forwards-to" && flow < 0)))
             .Where(e => e.From is not null && e.To is not null && e.From != e.To)
@@ -120,7 +120,8 @@ public static class SitePrepare
             .Select(g => new
             {
                 from = g.Key.Item1, to = g.Key.Item2, call = g.Key.Call ? true : (bool?)null, count = g.Count(), basis = Weakest(g.Select(x => x.Basis)),
-                verbs = g.GroupBy(x => Verb(x.Type)).Select(v => new { verb = v.Key, count = v.Count() }).OrderByDescending(v => v.count).ThenBy(v => v.verb, StringComparer.Ordinal),
+                // Data read back through a pass-through: the target is read through it, it does not forward to it.
+                verbs = g.GroupBy(x => x.Back ? "is read through" : Verb(x.Type)).Select(v => new { verb = v.Key, count = v.Count() }).OrderByDescending(v => v.count).ThenBy(v => v.verb, StringComparer.Ordinal),
                 // Transports, with "" counting links that record none, so the map can filter on either.
                 over = g.Any(x => x.How is not null) ? g.GroupBy(x => x.How?.ToLowerInvariant() ?? "").Select(h => new { how = h.Key, count = h.Count() }).OrderBy(h => h.how == "").ThenByDescending(h => h.count).ThenBy(h => h.how, StringComparer.Ordinal) : null,
                 ops = g.Any(x => x.Ops is not null) ? g.SelectMany(x => x.Ops ?? []).Distinct().Order(StringComparer.Ordinal) : null,

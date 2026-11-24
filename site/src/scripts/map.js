@@ -118,7 +118,7 @@ export function createMap(svg, data, { onSelect }) {
     }
     // Links between what is drawn, added up where a closed lane stands several parts in one box.
     const edges = new Map();
-    for (const l of links) {
+    for (const l of links.filter(live)) {
       const [a, b] = [nodeOf(l.from), nodeOf(l.to)];
       if (a === b || !nodes.has(a) || !nodes.has(b)) continue;
       const key = `${a}>${b}>${l.call ? 1 : 0}`;
@@ -157,7 +157,6 @@ export function createMap(svg, data, { onSelect }) {
       const p = el('path', { class: `edge${e.call ? ' call' : ''}${e.look ? ' look' : ''}${a.lane !== b.lane ? ' cross' : ''}${e.links.every((l) => l.basis === 'inferred') ? ' inferred' : ''}`, d: route(a, b), 'stroke-width': 1.2 + Math.min(e.count, 10) * 0.25, 'marker-end': e.call ? null : 'url(#a-line)' }, edgeLayer);
       return { e, p, mid: [(a.x + W + b.x) / 2, (a.y + b.y + H) / 2] };
     });
-    tagLayer = el('g', { class: 'tags' }, layer);
     const reads = new Map();
     for (const l of links.filter(live)) if (readFromLookup(l, part)) (reads.get(l.to) ?? reads.set(l.to, new Set()).get(l.to)).add(l.from);
     boxes = [...view.nodes.values()].map((n) => {
@@ -185,6 +184,7 @@ export function createMap(svg, data, { onSelect }) {
       }
       return { n, g };
     });
+    tagLayer = el('g', { class: 'tags' }, layer);   // above the boxes, so labels are never covered
     mark();
   }
 
@@ -218,7 +218,7 @@ export function createMap(svg, data, { onSelect }) {
       const isDown = !!down && e.links.some((l) => down.links.has(l)), isUp = !!up && e.links.some((l) => up.links.has(l));
       const isCall = !!picked && e.call && e.links.some((l) => l.from === picked || l.to === picked);
       const touches = e.links.filter((l) => live(l) && (l.from === picked || l.to === picked));
-      p.classList.toggle('off', !e.links.some(live) || (e.look && !e.links.some((l) => l.from === picked)));
+      p.classList.toggle('off', !e.links.some(live) || (e.look && !touches.length));
       const over = [...new Set(touches.flatMap(transportsOf))].filter(Boolean);
       if (over.length && !p.classList.contains('off')) el('text', { class: `tag${e.call ? ' call' : ''}`, x: mid[0], y: mid[1] - 4, 'text-anchor': 'middle' }, tagLayer).textContent = over.join(', ');
       p.classList.toggle('down', isDown);

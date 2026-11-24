@@ -14,10 +14,12 @@ links:
     source: sql#L7
   - type: reads
     to: databases/shop/tables/dbo/customers
+    how: sql
     basis: extracted
     source: sql#L9
   - type: reads
     to: databases/shop/tables/dbo/orders
+    how: sql
     basis: extracted
     source: sql#L8
 verified:

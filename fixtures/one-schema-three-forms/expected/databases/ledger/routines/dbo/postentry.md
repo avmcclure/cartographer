@@ -9,6 +9,7 @@ sources:
 links:
   - type: writes
     to: databases/ledger/tables/dbo/entries
+    how: sql
     basis: extracted
     source: sql#L8
 verified:

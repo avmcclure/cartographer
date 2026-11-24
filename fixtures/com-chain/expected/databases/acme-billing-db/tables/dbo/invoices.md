@@ -9,6 +9,7 @@ links:
   - type: references
     to: databases/acme-billing-db/tables/dbo/customers
     name: FK_Invoices_Customers
+    how: sql
     basis: extracted
     source: sql#L4
 verified:

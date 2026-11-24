@@ -9,6 +9,7 @@ sources:
 links:
   - type: reads
     to: databases/acme-billing-db/tables/dbo/invoices
+    how: sql
     basis: extracted
     source: sql#L7
 verified:
