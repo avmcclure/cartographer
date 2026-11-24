@@ -1,0 +1,506 @@
+<title>Atlas Clusters</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a working tool. Bar on top, the map filling the left, what you selected on the right. */
+:root {
+  --bg: #f3f5f7; --surface: #ffffff; --fg: #17202b; --muted: #5d6b7a; --rule: #d6dde4; --accent: #0b6e8a; --accent-soft: #dcecf1;
+  --warn: #8a5a00; --warn-soft: #fbf0d9; --line: #8796a6;
+  --c0: #2f6fb3; --c1: #b5543a; --c2: #3c8a4e; --c3: #8a4fb0; --c4: #b08a1e; --c5: #2a8c8c; --c6: #b0446e; --c7: #5b6b2a;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161c; --surface: #19212a; --fg: #e4e9ee; --muted: #93a1af; --rule: #2c3743; --accent: #5cc0dc; --accent-soft: #173341;
+  --warn: #f0c062; --warn-soft: #33290f; --line: #6c7b8a;
+  --c0: #6aa6e6; --c1: #e98a6e; --c2: #73c486; --c3: #bf8ae0; --c4: #e0bd55; --c5: #5fc4c4; --c6: #e57aa3; --c7: #a7b86a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161c; --surface: #19212a; --fg: #e4e9ee; --muted: #93a1af; --rule: #2c3743; --accent: #5cc0dc; --accent-soft: #173341;
+  --warn: #f0c062; --warn-soft: #33290f; --line: #6c7b8a;
+  --c0: #6aa6e6; --c1: #e98a6e; --c2: #73c486; --c3: #bf8ae0; --c4: #e0bd55; --c5: #5fc4c4; --c6: #e57aa3; --c7: #a7b86a; color-scheme: dark }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px; display: flex; flex-direction: column;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px; gap: 12px; box-sizing: border-box; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, a:focus-visible, .card:focus-visible, .node:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.brand { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
+.brand span { color: var(--muted); font-weight: 400; }
+nav { display: flex; gap: 4px; }
+nav button { background: none; border: 1px solid transparent; border-radius: 6px; padding: 5px 10px; color: var(--muted); }
+nav button[aria-current="page"] { color: var(--fg); background: var(--surface); border-color: var(--rule); }
+.search { margin-left: auto; position: relative; flex: 1 1 220px; max-width: 360px; }
+.search input { width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); color: var(--fg); font: inherit; }
+.results { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; max-height: 320px; overflow: auto; box-shadow: 0 8px 24px rgb(0 0 0 / 0.12); }
+.results button { display: flex; width: 100%; gap: 8px; align-items: baseline; text-align: left; padding: 7px 10px; background: none; border: 0; }
+.results button:hover, .results button.on { background: var(--accent-soft); }
+
+.notice { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: var(--warn-soft); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); border-radius: 8px; padding: 10px 14px; }
+.notice p { margin: 0; flex: 1 1 380px; min-width: 0; line-height: 1.45; }
+.notice strong { color: var(--warn); }
+.notice .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--rule); background: var(--surface); border-radius: 6px; padding: 6px 12px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn.quiet { background: none; }
+
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; }
+@media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(420px, 60vh) auto; } }
+.stage { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; min-height: 420px; }
+.crumbs { position: absolute; top: 10px; left: 12px; z-index: 2; display: flex; gap: 6px; align-items: center; background: var(--surface); padding: 6px 10px; border-radius: 6px; }
+.crumbs button { background: none; border: 0; color: var(--accent); padding: 2px 4px; }
+.crumbs span { color: var(--muted); }
+.legend { position: absolute; bottom: 10px; left: 12px; z-index: 2; color: var(--muted); font-size: 12px; background: var(--surface); padding: 6px 10px; border-radius: 6px; }
+svg.map { width: 100%; height: 100%; display: block; cursor: grab; }
+svg.map:active { cursor: grabbing; }
+
+.edge { fill: none; stroke: var(--line); stroke-opacity: 0.55; }
+.edge.on { stroke: var(--accent); stroke-opacity: 1; }
+.edge-count rect { fill: var(--surface); stroke: var(--rule); }
+.edge-count text { fill: var(--muted); font: 500 11px var(--mono); }
+.card rect.body { fill: var(--surface); stroke: var(--rule); stroke-width: 1.2; }
+.card rect.band { stroke: none; }
+.card text { fill: var(--fg); }
+.card .title { font: 600 14px var(--sans); }
+.card .meta { font: 12px var(--sans); fill: var(--muted); }
+.card .member { font: 12px var(--sans); }
+.card { cursor: pointer; }
+.card:hover rect.body { stroke: var(--line); }
+.card.moved rect.body { stroke: var(--warn); stroke-dasharray: 5 3; stroke-width: 1.6; }
+.node rect { fill: var(--surface); stroke-width: 1.4; }
+.node text { fill: var(--fg); font: 12px var(--sans); }
+.node .kind { fill: var(--muted); font: 10px var(--mono); }
+.node { cursor: pointer; }
+.node.away rect { fill: var(--bg); stroke-dasharray: 3 2; }
+.node.away text { fill: var(--muted); }
+.node.sel rect { stroke: var(--accent); stroke-width: 2.6; }
+.node.dim, .edge.dim { opacity: 0.18; }
+.node.moved rect { stroke: var(--warn); stroke-width: 2; stroke-dasharray: 5 3; }
+.arrow { fill: var(--line); }
+.arrow-on { fill: var(--accent); }
+
+aside { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; overflow: auto; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+aside h2 { margin: 0; font-size: 18px; font-weight: 600; text-wrap: balance; overflow-wrap: anywhere; }
+aside h3 { margin: 0 0 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+aside p { margin: 0; line-height: 1.5; color: var(--muted); }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule); border-radius: 999px; padding: 2px 9px; font-size: 12px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.rows li { border-top: 1px solid var(--rule); }
+.rows li:first-child { border-top: 0; }
+.rows button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; text-align: left; background: none; border: 0; padding: 7px 0; align-items: baseline; }
+.rows button:hover .name { color: var(--accent); }
+.rows .name { overflow-wrap: anywhere; }
+.rows .verb, .rows .n { color: var(--muted); font-size: 12px; }
+.rows .n { font: 500 12px var(--mono); }
+.namefield { display: flex; gap: 8px; align-items: center; }
+.namefield input { flex: 1; min-width: 0; font: 600 18px var(--sans); color: var(--fg); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 2px 6px; margin-left: -6px; }
+.namefield input:hover, .namefield input:focus { border-color: var(--rule); background: var(--bg); }
+.pin { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--rule); border-radius: 6px; padding: 4px 9px; background: none; font-size: 12px; white-space: nowrap; }
+.pin[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--bg); }
+.bar i { display: block; }
+
+.index { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; overflow: auto; }
+.index table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13px; }
+.index th, .index td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+.index th { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
+.index td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.index tbody tr { cursor: pointer; }
+.index tbody tr:hover { background: var(--accent-soft); }
+.example { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header>
+  <div class="brand">Example <span>atlas</span></div>
+  <nav aria-label="Views">
+    <button id="tab-map" aria-current="page">Map</button>
+    <button id="tab-index">Everything</button>
+  </nav>
+  <div class="search">
+    <input id="q" type="search" placeholder="Find a service, topic, database…" autocomplete="off" aria-label="Find anything">
+    <div class="results" id="results" hidden></div>
+  </div>
+</header>
+
+<div class="notice" id="notice">
+  <p id="notice-text"></p>
+  <div class="actions">
+    <button class="btn" id="preview" aria-pressed="false">Preview regrouping</button>
+    <button class="btn primary" id="apply">Regroup</button>
+    <button class="btn quiet" id="dismiss">Keep current clusters</button>
+  </div>
+</div>
+
+<main id="main">
+  <section class="stage" aria-label="Map">
+    <div class="crumbs" id="crumbs"></div>
+    <svg class="map" id="svg" role="img" aria-label="Clusters and the links between them"></svg>
+    <div class="legend" id="legend">Drag to pan · scroll to zoom · select a cluster to open it</div>
+  </section>
+  <aside id="panel" aria-live="polite"></aside>
+</main>
+<section class="index" id="index" hidden></section>
+<p class="example">Example data shaped like a real scan: 39 parts, 58 links. Clusters come from the links alone; owners are only shown.</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+/*LOGIC*/
+</script>
+<script>
+const byId = new Map(PARTS.map((p) => [p.id, p]));
+const ids = PARTS.map((p) => p.id);
+const LINKS = [...LINKS_PINNED, ...LINKS_NEW].map(([from, to, verb], i) => ({ i, from, to, verb, fresh: i >= LINKS_PINNED.length }));
+const pairs = LINKS.map((l) => [l.from, l.to]);
+
+// Clusters as they were pinned, from the links known then, with the names a person gave them.
+const pinnedGroup = louvain(ids, LINKS_PINNED);
+const NAMES = [
+  ['site-api', 'Site operations'], ['order-api', 'Ordering'], ['kitchen-display', 'Kitchen'], ['device-bridge', 'Site devices'],
+  ['delivery', 'Delivery'], ['reporting-etl', 'Reporting'],
+];
+function build(group, names) {
+  const clusters = new Map();
+  for (const [id, c] of group) {
+    if (!clusters.has(c)) clusters.set(c, { key: c, members: [], name: null, pinned: false });
+    clusters.get(c).members.push(id);
+  }
+  for (const cl of clusters.values()) {
+    const hit = names.find(([part]) => cl.members.includes(part));
+    cl.name = hit ? hit[1] : busiest(cl.members);
+  }
+  return [...clusters.values()];
+}
+function busiest(members) {
+  const deg = (id) => LINKS.filter((l) => l.from === id || l.to === id).length;
+  return byId.get([...members].sort((a, b) => deg(b) - deg(a))[0]).name;
+}
+
+let state = {
+  clusters: build(pinnedGroup, NAMES).map((c) => ({ ...c, pinned: true })),
+  suggestion: null, previewing: false, view: 'map', open: null, sel: null, tab: 'map',
+};
+state.clusters.forEach((c, i) => (c.color = i));
+const groupOf = () => new Map(state.clusters.flatMap((c) => c.members.map((m) => [m, c])));
+
+// The suggestion: cluster the links as they are now and carry names over by most shared members.
+function suggest() {
+  const now = louvain(ids, pairs);
+  const fresh = build(now, []);
+  const used = new Set();
+  for (const f of fresh) {
+    let best = null, overlap = 0;
+    for (const c of state.clusters) {
+      const n = f.members.filter((m) => c.members.includes(m)).length;
+      if (n > overlap && !used.has(c)) [best, overlap] = [c, n];
+    }
+    if (best) { used.add(best); f.name = best.name; f.color = best.color; f.was = best; }
+    else f.color = (Math.max(...state.clusters.map((c) => c.color)) + 1 + fresh.indexOf(f)) % 8;
+  }
+  const inside = (cls) => { const g = new Map(cls.flatMap((c) => c.members.map((m) => [m, c]))); return LINKS.filter((l) => g.get(l.from) === g.get(l.to)).length / LINKS.length; };
+  const was = groupOf();
+  const moved = ids.filter((id) => { const f = fresh.find((c) => c.members.includes(id)); return f.was !== was.get(id); });
+  return { clusters: fresh, moved, before: inside(state.clusters), after: inside(fresh) };
+}
+
+function shown() { return state.previewing ? state.suggestion.clusters : state.clusters; }
+function movedSet() { return new Set(state.previewing ? state.suggestion.moved : []); }
+
+// ---------- notice ----------
+function renderNotice() {
+  const s = state.suggestion;
+  const box = document.getElementById('notice');
+  if (!s || s.after - s.before < 0.03 || s.moved.length === 0) { box.hidden = true; return; }
+  box.hidden = false;
+  const fresh = LINKS.filter((l) => l.fresh).length;
+  const absorbed = state.clusters.filter((c) => !s.clusters.some((f) => f.was === c));
+  const into = (c) => { const f = s.clusters.find((f) => f.members.includes(c.members[0])); return f ? f.name : 'another cluster'; };
+  const merges = absorbed.map((c) => `<strong>${esc(c.name)}</strong> would join <strong>${esc(into(c))}</strong>`);
+  const singles = s.moved.filter((id) => !absorbed.some((c) => c.members.includes(id))).map((id) => esc(byId.get(id).name));
+  document.getElementById('notice-text').innerHTML =
+    `Scans since these clusters were pinned found ${fresh} new links. ` +
+    `Regrouping would keep ${pct(s.after)} of links inside a cluster, up from ${pct(s.before)}. ` +
+    [...merges, singles.length ? `${singles.join(', ')} would move` : ''].filter(Boolean).join('; ') + '.';
+  const pv = document.getElementById('preview');
+  pv.setAttribute('aria-pressed', String(state.previewing));
+  pv.textContent = state.previewing ? 'Back to current clusters' : 'Preview regrouping';
+}
+const pct = (x) => `${Math.round(x * 100)}%`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+// ---------- drawing ----------
+const svg = d3.select('#svg');
+const zoomLayer = svg.append('g');
+svg.append('defs').html(`
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0 0 L10 5 L0 10 z"/></marker>
+  <marker id="arr-on" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow-on" d="M0 0 L10 5 L0 10 z"/></marker>`);
+const zoom = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (e) => zoomLayer.attr('transform', e.transform));
+svg.call(zoom).on('dblclick.zoom', null);
+const color = (i) => `var(--c${i % 8})`;
+
+function fit(box) {
+  const el = document.getElementById('svg');
+  const w = el.clientWidth, h = el.clientHeight, pad = 40;
+  const k = Math.min(1.4, (w - 2 * pad) / box.w, (h - 2 * pad - 30) / box.h);
+  svg.call(zoom.transform, d3.zoomIdentity.translate(w / 2 - k * (box.x + box.w / 2), h / 2 + 15 - k * (box.y + box.h / 2)).scale(k));
+}
+
+function textWidth(s, px) { return s.length * px * 0.56; }
+
+function drawMap() {
+  zoomLayer.selectAll('*').remove();
+  const cls = shown(), g = new Map(cls.flatMap((c) => c.members.map((m) => [m, c]))), moved = movedSet();
+  const W = 230, line = 18;
+  const cards = cls.map((c) => {
+    const shownMembers = [...c.members].sort((a, b) => kindOrder(a) - kindOrder(b)).slice(0, 6);
+    return { c, x: 0, y: 0, w: W, h: 62 + shownMembers.length * line + (c.members.length > 6 ? line : 0), shownMembers };
+  });
+  const between = new Map();
+  for (const l of LINKS) {
+    const a = g.get(l.from), b = g.get(l.to);
+    if (a === b) continue;
+    const k = [a.key, b.key].sort().join('|');
+    if (!between.has(k)) between.set(k, { a, b, n: 0 });
+    between.get(k).n++;
+  }
+  const idx = new Map(cards.map((c, i) => [c.c, i]));
+  const sim = d3.forceSimulation(cards)
+    .force('link', d3.forceLink([...between.values()].map((e) => ({ source: idx.get(e.a), target: idx.get(e.b), n: e.n }))).distance(300).strength((e) => Math.min(1, 0.15 + e.n * 0.08)))
+    .force('charge', d3.forceManyBody().strength(-900))
+    .force('collide', d3.forceCollide((d) => Math.hypot(d.w, d.h) / 2 + 24))
+    .force('x', d3.forceX(0).strength(0.04)).force('y', d3.forceY(0).strength(0.07)).stop();
+  for (let i = 0; i < 400; i++) sim.tick();
+
+  const edges = zoomLayer.append('g');
+  for (const e of between.values()) {
+    const A = cards[idx.get(e.a)], B = cards[idx.get(e.b)];
+    edges.append('line').attr('class', 'edge').attr('x1', A.x).attr('y1', A.y).attr('x2', B.x).attr('y2', B.y).attr('stroke-width', 1 + e.n * 1.3);
+    const t = edges.append('g').attr('class', 'edge-count').attr('transform', `translate(${(A.x + B.x) / 2},${(A.y + B.y) / 2})`);
+    const label = `${e.n} link${e.n > 1 ? 's' : ''}`;
+    t.append('rect').attr('x', -textWidth(label, 11) / 2 - 6).attr('y', -10).attr('width', textWidth(label, 11) + 12).attr('height', 20).attr('rx', 10);
+    t.append('text').attr('text-anchor', 'middle').attr('y', 4).text(label);
+  }
+  for (const d of cards) {
+    const inside = LINKS.filter((l) => g.get(l.from) === d.c && g.get(l.to) === d.c).length;
+    const node = zoomLayer.append('g').attr('class', 'card' + (d.c.members.some((m) => moved.has(m)) ? ' moved' : ''))
+      .attr('transform', `translate(${d.x - d.w / 2},${d.y - d.h / 2})`).attr('tabindex', 0).attr('role', 'button')
+      .attr('aria-label', `${d.c.name}, ${d.c.members.length} parts. Open`)
+      .on('click', () => openCluster(d.c)).on('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openCluster(d.c); } });
+    node.append('rect').attr('class', 'body').attr('width', d.w).attr('height', d.h).attr('rx', 8);
+    node.append('rect').attr('class', 'band').attr('width', d.w).attr('height', 5).attr('rx', 2).attr('fill', color(d.c.color));
+    node.append('text').attr('class', 'title').attr('x', 14).attr('y', 28).text(d.c.name).call(clip, d.w - 28);
+    node.append('text').attr('class', 'meta').attr('x', 14).attr('y', 46).text(`${d.c.members.length} parts · ${inside} links inside${d.c.pinned ? ' · pinned' : ''}`);
+    d.shownMembers.forEach((m, i) => {
+      const p = byId.get(m);
+      node.append('circle').attr('cx', 18).attr('cy', 64 + i * line).attr('r', 3.5).attr('fill', moved.has(m) ? 'var(--warn)' : color(d.c.color));
+      node.append('text').attr('class', 'member').attr('x', 28).attr('y', 68 + i * line).text(p.name).call(clip, d.w - 44);
+    });
+    if (d.c.members.length > 6) node.append('text').attr('class', 'meta').attr('x', 28).attr('y', 68 + 6 * line).text(`and ${d.c.members.length - 6} more`);
+  }
+  const xs = cards.flatMap((d) => [d.x - d.w / 2, d.x + d.w / 2]), ys = cards.flatMap((d) => [d.y - d.h / 2, d.y + d.h / 2]);
+  fit({ x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) });
+}
+const KINDS = ['service', 'web app', 'worker', 'function app', 'topic', 'file drop', 'database', 'stored procedure', 'external'];
+const kindOrder = (id) => KINDS.indexOf(byId.get(id).kind);
+function clip(sel, max) {
+  sel.each(function () {
+    const t = d3.select(this); let s = t.text();
+    if (textWidth(s, 13) <= max) return;
+    while (s.length > 3 && textWidth(s + '…', 13) > max) s = s.slice(0, -1);
+    t.text(s + '…').append('title').text(this.textContent);
+  });
+}
+
+function drawCluster(c) {
+  zoomLayer.selectAll('*').remove();
+  const g = new Map(shown().flatMap((x) => x.members.map((m) => [m, x]))), moved = movedSet();
+  const touching = LINKS.filter((l) => g.get(l.from) === c || g.get(l.to) === c);
+  const away = [...new Set(touching.flatMap((l) => [l.from, l.to]).filter((id) => g.get(id) !== c))];
+  const nodes = [...c.members, ...away].map((id) => {
+    const p = byId.get(id), w = Math.max(textWidth(p.name, 12), textWidth(p.kind, 10)) + 24;
+    return { id, p, w: Math.min(w, 250), h: 40, home: g.get(id), away: g.get(id) !== c };
+  });
+  const at = new Map(nodes.map((n) => [n.id, n]));
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(touching.map((l) => ({ source: at.get(l.from), target: at.get(l.to) }))).distance(150).strength(0.5))
+    .force('charge', d3.forceManyBody().strength(-500))
+    .force('collide', d3.forceCollide((d) => d.w / 2 + 14).strength(1))
+    .force('r', d3.forceRadial((d) => (d.away ? 430 : 0), 0, 0).strength((d) => (d.away ? 0.35 : 0.02)))
+    .force('y', d3.forceY(0).strength(0.05)).stop();
+  for (let i = 0; i < 500; i++) sim.tick();
+
+  const edgeLayer = zoomLayer.append('g');
+  const edgeSel = edgeLayer.selectAll('path').data(touching).join('path').attr('class', 'edge').attr('stroke-width', 1.4)
+    .attr('marker-end', 'url(#arr)').attr('d', (l) => curve(at.get(l.from), at.get(l.to)));
+  const nodeSel = zoomLayer.append('g').selectAll('g').data(nodes).join('g')
+    .attr('class', (d) => 'node' + (d.away ? ' away' : '') + (moved.has(d.id) ? ' moved' : ''))
+    .attr('transform', (d) => `translate(${d.x - d.w / 2},${d.y - d.h / 2})`).attr('tabindex', 0).attr('role', 'button')
+    .attr('aria-label', (d) => `${d.p.name}, ${d.p.kind}${d.away ? ', in ' + d.home.name : ''}`)
+    .on('click', (ev, d) => select(d.id)).on('keydown', (ev, d) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(d.id); } });
+  nodeSel.append('rect').attr('width', (d) => d.w).attr('height', (d) => d.h).attr('rx', 6).attr('stroke', (d) => color(d.home.color));
+  nodeSel.append('text').attr('x', 12).attr('y', 17).text((d) => d.p.name).each(function (d) { clipTo(this, d.w - 20, 12); });
+  nodeSel.append('text').attr('class', 'kind').attr('x', 12).attr('y', 31).text((d) => (d.away ? `${d.p.kind} · ${d.home.name}` : d.p.kind)).each(function (d) { clipTo(this, d.w - 20, 10); });
+
+  state.highlight = (id) => {
+    const near = new Set(id ? touching.filter((l) => l.from === id || l.to === id).flatMap((l) => [l.from, l.to]) : []);
+    nodeSel.classed('sel', (d) => d.id === id).classed('dim', (d) => id && !near.has(d.id));
+    edgeSel.classed('on', (l) => id && (l.from === id || l.to === id)).classed('dim', (l) => id && l.from !== id && l.to !== id)
+      .attr('marker-end', (l) => (id && (l.from === id || l.to === id) ? 'url(#arr-on)' : 'url(#arr)'));
+  };
+  state.highlight(state.sel);
+  const xs = nodes.flatMap((d) => [d.x - d.w / 2, d.x + d.w / 2]), ys = nodes.flatMap((d) => [d.y - d.h / 2, d.y + d.h / 2]);
+  fit({ x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) });
+}
+function clipTo(el, max, px) {
+  let s = el.textContent; const full = s;
+  if (textWidth(s, px) <= max) return;
+  while (s.length > 3 && textWidth(s + '…', px) > max) s = s.slice(0, -1);
+  el.textContent = s + '…'; d3.select(el).append('title').text(full);
+}
+// A line from the edge of one box to the edge of the other, bowed a little so two-way links stay apart.
+function curve(a, b) {
+  const edge = (n, tx, ty) => { const dx = tx - n.x, dy = ty - n.y, s = Math.min(n.w / 2 / Math.abs(dx || 1e-6), n.h / 2 / Math.abs(dy || 1e-6)); return [n.x + dx * s, n.y + dy * s]; };
+  const [x1, y1] = edge(a, b.x, b.y), [x2, y2] = edge(b, a.x, a.y);
+  const mx = (x1 + x2) / 2 - (y2 - y1) * 0.12, my = (y1 + y2) / 2 + (x2 - x1) * 0.12;
+  return `M${x1},${y1} Q${mx},${my} ${x2},${y2}`;
+}
+
+// ---------- panel ----------
+function renderPanel() {
+  const panel = document.getElementById('panel');
+  const g = new Map(shown().flatMap((x) => x.members.map((m) => [m, x])));
+  if (state.sel) {
+    const p = byId.get(state.sel), home = g.get(p.id);
+    const out = LINKS.filter((l) => l.from === p.id), inn = LINKS.filter((l) => l.to === p.id);
+    const row = (l, other) => `<li><button data-go="${other}"><span class="name">${esc(byId.get(other).name)}<br><span class="verb">${esc(l.verb)}${g.get(other) !== home ? ' · in ' + esc(g.get(other).name) : ''}${l.fresh ? ' · new' : ''}</span></span><span class="dot" style="background:${color(g.get(other).color)}"></span></button></li>`;
+    panel.innerHTML = `
+      <div><h3>${esc(p.kind)}</h3><h2>${esc(p.name)}</h2></div>
+      <dl class="kv"><dt>Cluster</dt><dd><button class="btn quiet" style="padding:0;border:0;color:var(--accent)" data-open="${home.key}">${esc(home.name)}</button></dd>
+      <dt>Found in</dt><dd>${p.owner ? esc(p.owner) : 'Not owned by a repository'}</dd></dl>
+      <div><h3>Uses · ${out.length}</h3>${out.length ? `<ul class="rows">${out.map((l) => row(l, l.to)).join('')}</ul>` : '<p>Nothing.</p>'}</div>
+      <div><h3>Used by · ${inn.length}</h3>${inn.length ? `<ul class="rows">${inn.map((l) => row(l, l.from)).join('')}</ul>` : '<p>Nothing.</p>'}</div>`;
+  } else if (state.open) {
+    const c = state.open;
+    const inside = LINKS.filter((l) => g.get(l.from) === c && g.get(l.to) === c).length;
+    const ties = new Map();
+    for (const l of LINKS) {
+      const a = g.get(l.from), b = g.get(l.to);
+      if ((a === c) === (b === c)) continue;
+      const o = a === c ? b : a; ties.set(o, (ties.get(o) || 0) + 1);
+    }
+    const owners = new Map();
+    for (const m of c.members) { const o = byId.get(m).owner || 'no repository'; owners.set(o, (owners.get(o) || 0) + 1); }
+    const ownerColors = ['var(--c0)', 'var(--c2)', 'var(--c4)', 'var(--c3)', 'var(--c5)', 'var(--line)'];
+    const ownerList = [...owners].sort((a, b) => b[1] - a[1]);
+    panel.innerHTML = `
+      <div class="namefield"><input id="cname" value="${esc(c.name)}" aria-label="Cluster name" ${state.previewing ? 'disabled' : ''}>
+        <button class="pin" id="pin" aria-pressed="${c.pinned}" ${state.previewing ? 'disabled' : ''}>${c.pinned ? 'Pinned' : 'Pin'}</button></div>
+      <p>${c.members.length} parts with ${inside} links between them. ${c.pinned ? 'Pinned: scans keep this grouping and suggest a regroup when the links drift.' : 'Not pinned: it follows the links on every scan.'}</p>
+      <div><h3>Talks most with</h3>${ties.size ? `<ul class="rows">${[...ties].sort((a, b) => b[1] - a[1]).map(([o, n]) => `<li><button data-open="${o.key}"><span class="name"><span class="dot" style="display:inline-block;background:${color(o.color)};margin-right:8px"></span>${esc(o.name)}</span><span class="n">${n}</span></button></li>`).join('')}</ul>` : '<p>Nothing outside.</p>'}</div>
+      <div><h3>Found in</h3><div class="bar" aria-hidden="true">${ownerList.map(([o, n], i) => `<i style="width:${(n / c.members.length) * 100}%;background:${ownerColors[Math.min(i, 5)]}"></i>`).join('')}</div>
+        <div class="chips" style="margin-top:8px">${ownerList.map(([o, n], i) => `<span class="chip"><span class="dot" style="background:${ownerColors[Math.min(i, 5)]}"></span>${esc(o)} · ${n}</span>`).join('')}</div></div>
+      <div><h3>Parts</h3><ul class="rows">${c.members.map((m) => `<li><button data-go="${m}"><span class="name">${esc(byId.get(m).name)}<br><span class="verb">${esc(byId.get(m).kind)}</span></span></button></li>`).join('')}</ul></div>`;
+    const input = document.getElementById('cname');
+    input?.addEventListener('change', () => { c.name = input.value.trim() || c.name; c.pinned = true; render(); });
+    document.getElementById('pin')?.addEventListener('click', () => { c.pinned = !c.pinned; render(); });
+  } else {
+    const cls = shown();
+    const inside = LINKS.filter((l) => g.get(l.from) === g.get(l.to)).length;
+    panel.innerHTML = `
+      <div><h3>${state.previewing ? 'Suggested regrouping' : 'Clusters'}</h3><h2>${cls.length} clusters, ${PARTS.length} parts</h2></div>
+      <p>Parts that talk to each other a lot are grouped together. ${inside} of ${LINKS.length} links stay inside a cluster. Open a cluster to see what is in it and what it talks to.</p>
+      <ul class="rows">${cls.map((c) => `<li><button data-open="${c.key}"><span class="name"><span class="dot" style="display:inline-block;background:${color(c.color)};margin-right:8px"></span>${esc(c.name)}${c.pinned ? ' <span class="verb">pinned</span>' : ''}</span><span class="n">${c.members.length}</span></button></li>`).join('')}</ul>`;
+  }
+  panel.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => go(b.dataset.go)));
+  panel.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openCluster(shown().find((c) => String(c.key) === b.dataset.open))));
+}
+
+function renderCrumbs() {
+  const el = document.getElementById('crumbs');
+  el.innerHTML = state.open ? `<button id="up">All clusters</button><span>›</span><strong>${esc(state.open.name)}</strong>` : `<strong>All clusters</strong>`;
+  document.getElementById('up')?.addEventListener('click', () => { state.open = null; state.sel = null; render(); });
+  document.getElementById('legend').textContent = state.open ? 'Dashed boxes belong to other clusters · select a part to trace it' : 'Drag to pan · scroll to zoom · select a cluster to open it';
+}
+
+// ---------- index ----------
+function renderIndex() {
+  const g = groupOf();
+  const rows = [...PARTS].sort((a, b) => a.name.localeCompare(b.name));
+  document.getElementById('index').innerHTML = `<table><thead><tr><th>Name</th><th>Kind</th><th>Cluster</th><th>Found in</th><th>Uses</th><th>Used by</th></tr></thead><tbody>${rows.map((p) =>
+    `<tr data-go="${p.id}" tabindex="0"><td>${esc(p.name)}</td><td>${esc(p.kind)}</td><td><span class="chip"><span class="dot" style="background:${color(g.get(p.id).color)}"></span>${esc(g.get(p.id).name)}</span></td><td>${esc(p.owner || '—')}</td><td class="n">${LINKS.filter((l) => l.from === p.id).length}</td><td class="n">${LINKS.filter((l) => l.to === p.id).length}</td></tr>`).join('')}</tbody></table>`;
+  document.querySelectorAll('#index [data-go]').forEach((r) => {
+    r.addEventListener('click', () => go(r.dataset.go));
+    r.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(r.dataset.go); });
+  });
+}
+
+// ---------- navigation ----------
+function openCluster(c) { if (!c) return; state.open = c; state.sel = null; setTab('map', false); render(); }
+function go(id) {
+  const c = new Map(shown().flatMap((x) => x.members.map((m) => [m, x]))).get(id);
+  setTab('map', false);
+  if (state.open !== c) { state.open = c; state.sel = id; render(); return; }
+  select(id);
+}
+function select(id) { state.sel = state.sel === id ? null : id; state.highlight?.(state.sel); renderPanel(); }
+function setTab(t, draw = true) {
+  state.tab = t;
+  document.getElementById('tab-map').setAttribute('aria-current', t === 'map' ? 'page' : 'false');
+  document.getElementById('tab-index').setAttribute('aria-current', t === 'index' ? 'page' : 'false');
+  document.getElementById('main').hidden = t !== 'map';
+  document.getElementById('index').hidden = t !== 'index';
+  if (t === 'index') renderIndex();
+  if (draw && t === 'map') render();
+}
+function render() {
+  if (state.open && !shown().includes(state.open)) state.open = shown().find((c) => c.members.includes(state.open.members[0])) || null;
+  renderNotice(); renderCrumbs();
+  state.open ? drawCluster(state.open) : (state.highlight = null, drawMap());
+  renderPanel();
+}
+
+document.getElementById('tab-map').addEventListener('click', () => setTab('map'));
+document.getElementById('tab-index').addEventListener('click', () => setTab('index'));
+document.getElementById('preview').addEventListener('click', () => { state.previewing = !state.previewing; render(); });
+document.getElementById('apply').addEventListener('click', () => {
+  const s = state.suggestion;
+  state.clusters = s.clusters.map((c) => ({ ...c, pinned: true }));
+  state.suggestion = null; state.previewing = false; state.open = null; state.sel = null;
+  document.getElementById('notice').hidden = true; render();
+});
+document.getElementById('dismiss').addEventListener('click', () => { state.suggestion = null; state.previewing = false; render(); });
+
+// search
+const q = document.getElementById('q'), results = document.getElementById('results');
+let hits = [], cursor = 0;
+q.addEventListener('input', () => {
+  const s = q.value.trim().toLowerCase();
+  hits = s ? PARTS.filter((p) => p.name.toLowerCase().includes(s) || p.kind.includes(s)).slice(0, 12) : [];
+  cursor = 0; showHits();
+});
+q.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') { cursor = Math.min(cursor + 1, hits.length - 1); showHits(); e.preventDefault(); }
+  if (e.key === 'ArrowUp') { cursor = Math.max(cursor - 1, 0); showHits(); e.preventDefault(); }
+  if (e.key === 'Enter' && hits[cursor]) pick(hits[cursor].id);
+  if (e.key === 'Escape') { q.value = ''; hits = []; showHits(); }
+});
+function showHits() {
+  results.hidden = hits.length === 0;
+  const g = groupOf();
+  results.innerHTML = hits.map((p, i) => `<button class="${i === cursor ? 'on' : ''}" data-id="${p.id}"><span class="dot" style="background:${color(g.get(p.id).color)}"></span><span>${esc(p.name)}</span><span style="color:var(--muted);font-size:12px;margin-left:auto">${esc(p.kind)}</span></button>`).join('');
+  results.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => pick(b.dataset.id)));
+}
+function pick(id) { q.value = ''; hits = []; showHits(); go(id); }
+document.addEventListener('click', (e) => { if (!e.target.closest('.search')) { hits = []; showHits(); } });
+window.addEventListener('resize', () => { if (state.tab === 'map') render(); });
+
+state.suggestion = suggest();
+render();
+</script>
