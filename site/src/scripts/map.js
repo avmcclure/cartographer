@@ -1,8 +1,7 @@
 // The map: one lane per cluster, data flowing left to right. A lane is either open, with a box per part, or
 // closed, with one box per column standing for the parts in it. Lookups, read from but never fed, sit in a band at
-// the top of their lane; their links show only when one is selected. Pass-throughs sit in the flow and can be hidden,
-// joining what goes into one straight to where it forwards. Selecting a part follows its data upstream and downstream
-// across every lane.
+// the top of their lane; their links show only when one is selected. Pass-throughs sit in the flow between their
+// callers and their targets. Selecting a part follows its data upstream and downstream across every lane.
 import { select } from 'd3-selection';
 import { zoom, zoomIdentity, zoomTransform } from 'd3-zoom';
 
@@ -65,46 +64,13 @@ export function reach(links, id, dir, steps = Infinity) {
 /** Data read from a lookup by another part, as opposed to what the lookup itself writes or publishes. */
 export const readFromLookup = (l, part) => !l.call && part.get(l.from)?.role === 'lookup' && l.verbs.every((v) => v.verb === 'reads' || v.verb === 'receives from');
 
-const RANK = { inferred: 0, extracted: 1, stated: 2 };
-const weakest = (...bases) => bases.reduce((w, b) => (RANK[b] < RANK[w] ? b : w));
-
 /** A link's transports, or [''] when none is recorded. */
 export const transportsOf = (l) => (l.over?.length ? l.over.map((o) => o.how) : ['']);
 
-/** Links with pass-throughs taken out: what went into one joins each part it forwards to. */
-export function bypass(links, parts) {
-  const through = new Set(parts.filter((p) => p.role === 'pass-through').map((p) => p.id));
-  if (!through.size) return links;
-  const kept = links.filter((l) => !through.has(l.from) && !through.has(l.to));
-  const joined = new Map();
-  // Join a caller's link with a forward, never two callers' links or two forwards: data written in goes on to the
-  // targets, data read out comes back from them.
-  const forwards = (l) => l.verbs.some((v) => v.verb === 'forwards to');
-  for (const a of links.filter((l) => !l.call && through.has(l.to) && !through.has(l.from)))
-    for (const b of links.filter((l) => !l.call && l.from === a.to && !through.has(l.to) && l.to !== a.from && forwards(l) !== forwards(a))) {
-      const key = `${a.from}>${b.to}`;
-      const j = joined.get(key) ?? joined.set(key, { from: a.from, to: b.to, count: 0, basis: 'stated', verbs: [], over: [], ops: [], via: [] }).get(key);
-      j.count += Math.min(a.count, b.count);
-      j.basis = weakest(j.basis, a.basis, b.basis);
-      // Say what the caller does, not that the pass-through forwards it.
-      const said = a.verbs.some((v) => v.verb === 'forwards to') ? b.verbs : a.verbs;
-      for (const v of said) if (!j.verbs.some((x) => x.verb === v.verb)) j.verbs.push({ ...v });
-      for (const o of [...(a.over ?? []), ...(b.over ?? [])]) if (!j.over.some((x) => x.how === o.how)) j.over.push({ ...o });
-      for (const o of [...(a.ops ?? []), ...(b.ops ?? [])]) if (!j.ops.includes(o)) j.ops.push(o);
-      if (!j.via.includes(a.to)) j.via.push(a.to);
-    }
-  // A call to a pass-through, direction unknown, becomes a call to each part it forwards to.
-  for (const a of links.filter((l) => l.call && through.has(l.to) && !through.has(l.from)))
-    for (const b of links.filter((l) => !l.call && l.from === a.to && !through.has(l.to) && l.to !== a.from && forwards(l))) {
-      const key = `${a.from}>${b.to}>call`;
-      if (!joined.has(key)) joined.set(key, { ...a, to: b.to, via: [a.to] });
-    }
-  return [...kept, ...joined.values()];
-}
-
 export function createMap(svg, data, { onSelect }) {
   const lanes = data.lanes, laneOf = new Map(data.parts.map((p) => [p.id, p.lane])), part = new Map(data.parts.map((p) => [p.id, p]));
-  let throughShown = true, hidden = new Set(), links = data.links;
+  let hidden = new Set();
+  const links = data.links;
   // Small atlases open every lane; large ones open only small lanes, and the rest open on demand.
   const open = new Set(data.parts.length <= 80 ? lanes.map((l) => l.key) : lanes.filter((l) => l.count <= 6).map((l) => l.key));
   // Following data all the way can cover most of an estate (a shared database feeds everything that reads it), so a
@@ -119,28 +85,24 @@ export function createMap(svg, data, { onSelect }) {
 
   // What is drawn for a part right now: its own box, or its column's box in a closed lane (one box for its lookups).
   const nodeOf = (id) => (open.has(laneOf.get(id)) ? id : `${laneOf.get(id)}@${part.get(id).role === 'lookup' ? 'look' : part.get(id).col}`);
-  const shown = (p) => throughShown || p.role !== 'pass-through';
   const live = (l) => transportsOf(l).some((t) => !hidden.has(t));
 
   function layout() {
     const nodes = new Map(), at = new Map();
     let y = 0, right = W;
     for (const lane of lanes) {
-      const members = data.parts.filter((p) => p.lane === lane.key && shown(p));
+      const members = data.parts.filter((p) => p.lane === lane.key);
       const band = members.some((p) => p.role === 'lookup') ? BAND : 0;
       const stacks = new Map();
       let looks = 0;
-      // With pass-throughs hidden, close up the columns they leave empty.
-      const used = [...new Set(members.filter((p) => p.role !== 'lookup').map((p) => p.col))].sort((a, b) => a - b);
-      const colOf = (p) => (throughShown ? p.col : used.indexOf(p.col));
       for (const p of members) {
         const key = nodeOf(p.id);
         if (!nodes.has(key)) {
           if (p.role === 'lookup') nodes.set(key, { id: key, lane, parts: [], look: true, x: looks++ * COL, y: y + HEAD + 4 });
           else {
-            const k = stacks.get(colOf(p)) ?? 0;
-            stacks.set(colOf(p), k + 1);
-            nodes.set(key, { id: key, lane, parts: [], x: colOf(p) * COL, y: y + HEAD + band + k * (H + GAP) });
+            const k = stacks.get(p.col) ?? 0;
+            stacks.set(p.col, k + 1);
+            nodes.set(key, { id: key, lane, parts: [], x: p.col * COL, y: y + HEAD + band + k * (H + GAP) });
           }
         }
         const n = nodes.get(key);
@@ -189,12 +151,12 @@ export function createMap(svg, data, { onSelect }) {
     const edgeLayer = el('g', {}, layer);
     drawn = view.edges.map((e) => {
       const a = view.nodes.get(e.from), b = view.nodes.get(e.to);
-      const p = el('path', { class: `edge${e.call ? ' call' : ''}${e.look ? ' look' : ''}${e.links.some((l) => l.via) ? ' via' : ''}${a.lane !== b.lane ? ' cross' : ''}${e.links.every((l) => l.basis === 'inferred') ? ' inferred' : ''}`, d: route(a, b), 'stroke-width': 1.2 + Math.min(e.count, 10) * 0.25, 'marker-end': e.call ? null : 'url(#a-line)' }, edgeLayer);
+      const p = el('path', { class: `edge${e.call ? ' call' : ''}${e.look ? ' look' : ''}${a.lane !== b.lane ? ' cross' : ''}${e.links.every((l) => l.basis === 'inferred') ? ' inferred' : ''}`, d: route(a, b), 'stroke-width': 1.2 + Math.min(e.count, 10) * 0.25, 'marker-end': e.call ? null : 'url(#a-line)' }, edgeLayer);
       return { e, p, mid: [(a.x + W + b.x) / 2, (a.y + b.y + H) / 2] };
     });
     tagLayer = el('g', { class: 'tags' }, layer);
     const reads = new Map();
-    for (const l of links) if (readFromLookup(l, part)) (reads.get(l.to) ?? reads.set(l.to, new Set()).get(l.to)).add(l.from);
+    for (const l of links.filter(live)) if (readFromLookup(l, part)) (reads.get(l.to) ?? reads.set(l.to, new Set()).get(l.to)).add(l.from);
     boxes = [...view.nodes.values()].map((n) => {
       const g = el('g', { class: `node${n.parts.length > 1 ? ' group' : ''}`, transform: `translate(${n.x},${n.y})` }, layer);
       const role = n.parts.length === 1 ? n.parts[0].role : n.look ? 'lookup' : null;
@@ -273,7 +235,7 @@ export function createMap(svg, data, { onSelect }) {
   }
 
   function pick(id) {
-    picked = picked === id || !part.has(id) || !shown(part.get(id)) ? null : id;
+    picked = picked === id || !part.has(id) ? null : id;
     history.replaceState(null, '', location.pathname + location.search + (picked ? `#p=${encodeURIComponent(picked)}${steps === 2 ? '' : `&d=${steps === Infinity ? 'all' : steps}`}` : ''));
     mark(true);
   }
@@ -294,19 +256,11 @@ export function createMap(svg, data, { onSelect }) {
 
   return {
     lane(key) { if (lanes.some((l) => l.key === key)) show(key); },
-    focus(id, depth) { if (!part.has(id) || !shown(part.get(id))) return; if (depth) steps = depth; show(laneOf.get(id), id); if (picked !== id) pick(id); else mark(true); },
+    focus(id, depth) { if (!part.has(id)) return; if (depth) steps = depth; show(laneOf.get(id), id); if (picked !== id) pick(id); else mark(true); },
     clear() { if (picked) pick(picked); },
-    /** Show or hide pass-throughs; hidden, what went into one joins each part it forwards to. */
-    passThroughs(on) {
-      throughShown = on;
-      links = on ? data.links : bypass(data.links, data.parts);
-      if (!on && part.get(picked)?.role === 'pass-through') pick(picked);
-      draw();
-      mark(true);   // the panel lists links, which have changed
-    },
     /** Hide links over these transports ('' for links with none recorded). */
-    transports(off) { hidden = new Set(off); mark(true); },
-    /** The links shown now: pass-throughs joined if hidden, hidden transports left out. */
+    transports(off) { hidden = new Set(off); draw(); mark(true); },
+    /** The links shown now: those over a hidden transport are left out. */
     get links() { return links.filter(live); },
     steps(n) { steps = n; history.replaceState(null, '', location.pathname + location.search + (picked ? `#p=${encodeURIComponent(picked)}${n === 2 ? '' : `&d=${n === Infinity ? 'all' : n}`}` : '')); mark(true); },
     get depth() { return steps; },

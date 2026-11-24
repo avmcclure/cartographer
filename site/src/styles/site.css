@@ -110,7 +110,6 @@ html:not(.js) svg.map, html:not(.js) .stage .hint { display: none; }
 .lane .band { fill: var(--surface); opacity: 0.6; }
 .lane .band-name { font: 500 10px var(--mono); fill: var(--muted); letter-spacing: 0.04em; }
 .edge.look { stroke-dasharray: 1 3; }
-.edge.via { stroke-dasharray: 8 3; }
 .edge.off { display: none; }
 .tags .tag { font: 500 10px var(--mono); fill: var(--fg); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; pointer-events: none; }
 .transports { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--muted); margin-bottom: 10px; }

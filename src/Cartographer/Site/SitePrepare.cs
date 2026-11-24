@@ -45,7 +45,7 @@ public static class SitePrepare
 
         // Links between entries that both exist, as the site draws and selects them.
         var edges = atlas.Entries.Values.SelectMany(e => (e.Links ?? []).Where(l => l.To is not null && l.To != e.Id && atlas.Find(l.To) is not null)
-            .Select(l => (From: e.Id, To: l.To!, l.Type, l.Basis, l.How, Ops: l.To.StartsWith("repositories/") && l.Type != "depends-on" ? l.Uses : null))).ToList();
+            .Select(l => (From: e.Id, To: l.To!, l.Type, l.Basis, l.How, Ops: l.Type is "depends-on" or "uses" ? null : l.Uses))).ToList();
 
         var inbound = Indexer.Inbound(atlas);
         var questions = atlas.Entries.Values.ToDictionary(e => e.Id, e => QuestionList.Parse(e.Body), StringComparer.Ordinal);
@@ -101,13 +101,13 @@ public static class SitePrepare
         // forward points onward.
         var into = edges.Where(e => e.Type is not ("depends-on" or "forwards-to") && Flow(e.Type) != 0).GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => Flow(e.Type)).ToHashSet(), StringComparer.Ordinal);
         var forwardedBy = edges.Where(e => e.Type == "forwards-to").GroupBy(e => e.To).ToDictionary(g => g.Key, g => g.Select(e => e.From).ToList(), StringComparer.Ordinal);
-        var ways = new Dictionary<string, HashSet<int>>(StringComparer.Ordinal);
+        // ponytail: walked afresh for each forward, no caching (a cache goes wrong in a loop of pass-throughs); cache per
+        // strongly connected group if an atlas ever has thousands of them.
         HashSet<int> WaysThrough(string proxy, HashSet<string> seen)
         {
-            if (ways.TryGetValue(proxy, out var known)) return known;
             var found = new HashSet<int>(into.GetValueOrDefault(proxy) ?? []);
             if (seen.Add(proxy)) foreach (var outer in forwardedBy.GetValueOrDefault(proxy) ?? []) found.UnionWith(WaysThrough(outer, seen));
-            return ways[proxy] = found;
+            return found;
         }
         IEnumerable<int> Ways(string from, string type) => type != "forwards-to" ? [Flow(type)]
             : WaysThrough(from, new(StringComparer.Ordinal)) is { Count: > 0 } w ? w.OrderDescending() : [1];
@@ -124,9 +124,10 @@ public static class SitePrepare
                 over = g.Any(x => x.How is not null) ? g.GroupBy(x => x.How?.ToLowerInvariant() ?? "").Select(h => new { how = h.Key, count = h.Count() }).OrderBy(h => h.how == "").ThenByDescending(h => h.count).ThenBy(h => h.how, StringComparer.Ordinal) : null,
                 ops = g.Any(x => x.Ops is not null) ? g.SelectMany(x => x.Ops ?? []).Distinct().Order(StringComparer.Ordinal) : null,
                 forwards = g.Any(x => x.Type == "forwards-to") ? true : (bool?)null,
+                back = g.Any(x => x.Type == "forwards-to" && x.Flow < 0) ? true : (bool?)null,
             }).ToList();
         var forwarders = edges.Where(e => e.Type == "forwards-to").Select(e => PartOf(e.From)).OfType<string>().ToHashSet(StringComparer.Ordinal);
-        var roles = Roles(atlas, grouping, forwarders, partLinks.Select(l => (l.from, l.to, Call: l.call == true, Verbs: l.verbs.Select(v => v.verb))).ToList());
+        var roles = Roles(atlas, grouping, forwarders, partLinks.Select(l => (l.from, l.to, Call: l.call == true, Back: l.back == true, Verbs: l.verbs.Select(v => v.verb))).ToList());
         var questionsOf = atlas.Entries.Values.Where(e => PartOf(e.Id) is not null).GroupBy(e => PartOf(e.Id)!).ToDictionary(g => g.Key, g => g.Sum(Unsurveyed), StringComparer.Ordinal);
         Write("clusters.json", new
         {
@@ -208,16 +209,26 @@ public static class SitePrepare
     /// external system that two or more parts read from, whose data comes only from databases, so it sits beside the
     /// flow rather than in it. A role an entry states wins. Parts with neither are stages, in the flow.
     /// </summary>
-    static Dictionary<string, (string Name, bool Stated)> Roles(Atlas atlas, Grouping grouping, HashSet<string> forwarders, List<(string From, string To, bool Call, IEnumerable<string> Verbs)> links)
+    static Dictionary<string, (string Name, bool Stated)> Roles(Atlas atlas, Grouping grouping, HashSet<string> forwarders, List<(string From, string To, bool Call, bool Back, IEnumerable<string> Verbs)> links)
     {
         var roles = new Dictionary<string, (string, bool)>(StringComparer.Ordinal);
+        // Who reads a part, directly or through pass-throughs in front of it.
+        HashSet<string> Readers(string id, HashSet<string> seen)
+        {
+            var found = new HashSet<string>(StringComparer.Ordinal);
+            if (!seen.Add(id)) return found;
+            foreach (var l in links.Where(l => l.From == id && !l.Call))
+                if (l.Back) found.UnionWith(Readers(l.To, seen));
+                else if (l.Verbs.All(v => v is "reads" or "receives from")) found.Add(l.To);
+            return found;
+        }
         foreach (var id in grouping.Clusters.SelectMany(c => c.Members))
         {
             var e = atlas.Entries[id];
             if (e.Role is { } stated) { roles[id] = (stated.Name, true); continue; }
             if (forwarders.Contains(id)) { roles[id] = ("pass-through", false); continue; }
             var into = links.Where(l => l.To == id && !l.Call).ToList();
-            var readers = links.Where(l => l.From == id && !l.Call && l.Verbs.All(v => v is "reads" or "receives from")).Select(l => l.To).Distinct().Count();
+            var readers = Readers(id, new(StringComparer.Ordinal)).Count;
             if (e.Kind is Kinds.Component or Kinds.External && readers >= 2 && into.All(l => atlas.Find(l.From)?.Kind == Kinds.Database))
                 roles[id] = ("lookup", false);
         }

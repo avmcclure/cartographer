@@ -10,7 +10,8 @@ const parts = order.flatMap((key) => byKey.get(key).members.map((m) => ({ id: m.
   .sort((a, b) => order.indexOf(a.lane) - order.indexOf(b.lane) || a.col - b.col || a.name.localeCompare(b.name));
 const data = { lanes, parts, links: map.parts.map(({ from, to, call, count, basis, verbs, over, ops }) => ({ from, to, call, count, basis, verbs, over, ops })) };
 // Links by transport, most first; links with none recorded last.
-const transports = Object.entries(Object.groupBy(map.parts.flatMap((l) => (l.over?.length ? l.over : [{ how: '', count: l.count }])), (o) => o.how))
+// A forward drawn both ways (written through and read back) is one link: count it once.
+const transports = Object.entries(Object.groupBy(map.parts.filter((l) => !l.back).flatMap((l) => (l.over?.length ? l.over : [{ how: '', count: l.count }])), (o) => o.how))
   .map(([how, list]) => ({ how, count: list.reduce((s, o) => s + o.count, 0) }))
   .sort((a, b) => (a.how === '') - (b.how === '') || b.count - a.count || a.how.localeCompare(b.how));
 const hasRole = (r) => parts.some((p) => p.role === r);
@@ -40,7 +41,6 @@ const goneTo = (name) => {
     <span><span class="swatch" style="background:var(--accent)"></span>fed by it</span>
     <label class="toggle"><input type="checkbox" id="cross" checked={parts.length <= 80} /> Links between clusters</label>
     <label class="toggle" style="margin-left:0"><input type="checkbox" id="calls" checked /> Calls</label>
-    {hasRole('pass-through') && <label class="toggle" style="margin-left:0"><input type="checkbox" id="through" checked /> Pass-throughs</label>}
   </div>
   {transports.length > 1 && (
     <div class="transports small" role="group" aria-label="Show links by what they travel over">
@@ -108,11 +108,10 @@ const goneTo = (name) => {
       li.append(span, dot);
       return li;
     }
-    // "writes 2 over http · POST /orders, GET /orders/{id} · via Orders gateway · inferred"
+    // "writes 2 over http · POST /orders, GET /orders/{id} · inferred"
     const verbs = (l) => [
       l.verbs.map((v) => `${v.verb} ${v.count}`).join(', ') + (l.over?.some((o) => o.how) ? ` over ${l.over.map((o) => o.how).filter(Boolean).join(', ')}` : ''),
       l.ops?.length ? l.ops.slice(0, 3).join(', ') + (l.ops.length > 3 ? ` and ${l.ops.length - 3} more` : '') : null,
-      l.via?.length ? `via ${l.via.map((v) => part.get(v)?.name ?? v).join(', ')}` : null,
       l.basis === 'inferred' ? 'inferred' : null,
     ].filter(Boolean).join(' · ');
 
@@ -169,7 +168,6 @@ const goneTo = (name) => {
     svg.classList.toggle('no-cross', !cross.checked);
     cross.addEventListener('change', () => svg.classList.toggle('no-cross', !cross.checked));
     document.getElementById('calls').addEventListener('change', (e) => svg.classList.toggle('no-calls', !e.target.checked));
-    document.getElementById('through')?.addEventListener('change', (e) => map.passThroughs(e.target.checked));
     const chips = [...document.querySelectorAll('.transports .chip')];
     for (const c of chips) c.addEventListener('click', () => {
       c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true'));

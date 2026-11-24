@@ -32,9 +32,7 @@ export function columns(map) {
   const ids = map.clusters.flatMap((c) => c.members.map((m) => m.id)).filter((i) => !lookup.has(i)).sort();
   const laneOf = new Map(map.clusters.flatMap((c) => c.members.map((m) => [m.id, c.key])));
   // Data read back through a pass-through runs from its target to it; placing by that too would loop the two.
-  const through = new Set(map.clusters.flatMap((c) => c.members.filter((m) => m.role === 'pass-through').map((m) => m.id)));
-  const back = (l) => through.has(l.to) && l.verbs.every((v) => v.verb === 'forwards to');
-  const inFlow = (l) => !lookup.has(l.from) && !lookup.has(l.to) && !back(l);
+  const inFlow = (l) => !lookup.has(l.from) && !lookup.has(l.to) && !l.back;
   const data = map.parts.filter((l) => !l.call && inFlow(l) && laneOf.get(l.from) === laneOf.get(l.to));
   const out = new Map(ids.map((i) => [i, []]));
   for (const l of data) out.get(l.from)?.push(l.to);

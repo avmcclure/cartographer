@@ -379,7 +379,8 @@ for key in ["ecom", "orders", "credit", "pricing"]:
 
 # lookups: services many parts read from and nothing feeds but their own database
 for key in ["pricing", "identity", "catalog", "customer"]:
-    svcs = [c for c in components[key] if entries[c]["type"] == "service" and not c.endswith("-gateway")]
+    behind = {l["to"] for cs in components.values() for c in cs for l in entries[c]["links"] if l["type"] == "forwards-to"}
+    svcs = [c for c in components[key] if entries[c]["type"] == "service" and not c.endswith("-gateway") and c not in behind]
     if not svcs:
         continue
     lid = random.choice(svcs)
